@@ -286,6 +286,43 @@ def test_schema_repair_receives_actual_error_paths_without_resampling(tmp_path,s
     assert sum(salt.endswith(':solve') for _,_,salt in gateway.calls)==1
 
 
+def test_alignment_cannot_replace_verified_reference_answer(tmp_path,settings,source,candidate):
+    pipe,_,_=setup_pipeline(tmp_path,settings,source,candidate)
+
+    class Author(FakeGateway):
+        async def call(self,role,prompt,salt,schema=None,**kw):
+            if schema is Solution:
+                return candidate.solution.model_copy(deep=True),digest(salt),'author'
+            if schema is Question:
+                item=candidate.item.model_copy(deep=True);item.answer='An independently reformatted answer: 36'
+                return item,digest(salt),'author'
+            return await super().call(role,prompt,salt,schema,**kw)
+
+    pipe.gateway=Author(candidate)
+    c=asyncio.run(pipe.generate(source,None,{'category':'Math','subtopic':'组合与图论'},0,0))
+    assert c.item.answer==c.solution.answer=='36' and c.consistency.passed()
+    events=[json.loads(line) for line in (pipe.run_dir/'events.jsonl').read_text().splitlines()]
+    assert any(e['event']=='align_answer_rebound' for e in events)
+
+
+def test_locked_reference_does_not_approve_a_changed_question_target(tmp_path,settings,source,candidate):
+    pipe,_,_=setup_pipeline(tmp_path,settings,source,candidate)
+
+    class Author(FakeGateway):
+        async def call(self,role,prompt,salt,schema=None,**kw):
+            if schema is Solution:return candidate.solution.model_copy(deep=True),digest(salt),'author'
+            if schema is Question:
+                item=candidate.item.model_copy(deep=True)
+                item.question=item.question.replace('37 vertices','38 vertices');item.answer='37'
+                return item,digest(salt),'author'
+            if schema is ConsistencyAudit:return defective_review(),digest(salt),'gpt-6-luna'
+            return await super().call(role,prompt,salt,schema,**kw)
+
+    pipe.gateway=Author(candidate)
+    c=asyncio.run(pipe.generate(source,None,{'category':'Math','subtopic':'组合与图论'},0,0))
+    assert c.item.answer=='36' and c.status=='rejected' and not c.trials
+
+
 def test_original_physics_counterexample_violates_lossless_power_and_dark_definition():
     # The historical P03B formula, independently falsified at an allegedly admissible point.
     r, kappa, omega = 2, .5j, 1

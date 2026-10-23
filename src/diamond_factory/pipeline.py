@@ -264,9 +264,14 @@ class Pipeline:
                 if repair == self.settings.max_repairs:
                     raise AuthoringRejected("; ".join(blueprint_errors))
                 continue
-            item, _, _ = await self.gateway.call("generator", self.prompts["align"] + "\n" +
+            item, align_request, _ = await self.gateway.call("generator", self.prompts["align"] + "\n" +
                                                 json.dumps({"solution": plan.model_dump(), "target": target},
                                                            ensure_ascii=False), salt + ":align", Question)
+            if item.answer != plan.answer:
+                # 题面生成不能重新决定金标；后续盲推导仍须验证题面是否匹配该参考解。
+                self.log("align_answer_rebound", candidate=identity, request_id=align_request,
+                         emitted_answer_sha256=digest(item.answer), reference_answer_sha256=digest(plan.answer))
+                item = Question.model_validate({**item.model_dump(), "answer": plan.answer})
             audit, _, _ = await self.gateway.call("auditor", self.prompts["audit"] + "\n" +
                                                  json.dumps({"source": source_data, "solution": plan.model_dump(),
                                                              "item": item.model_dump(),
