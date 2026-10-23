@@ -204,7 +204,15 @@ def compare(a, relation, b):
         return (a == b) if relation == "equal" else (a != b)
     if not isinstance(a, Exact) or not isinstance(b, Exact) or a.imag or b.imag:
         raise ValueError("Ordered comparison requires real scalars")
-    return a.real > b.real if relation == "greater" else a.real >= b.real
+    if relation == "greater":
+        return a.real > b.real
+    if relation == "greater_equal":
+        return a.real >= b.real
+    if relation == "less":
+        return a.real < b.real
+    if relation == "less_equal":
+        return a.real <= b.real
+    raise ValueError("Unsupported comparison relation")
 
 
 def run_case(case, item):

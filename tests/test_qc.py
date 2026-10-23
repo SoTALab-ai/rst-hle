@@ -113,7 +113,8 @@ class FakeGateway:
         if schema is ConsistencyAudit:
             return passing_consistency(), digest(salt), "gpt-6-luna"
         if schema is CertificateAudit:
-            data = json.loads(prompt.split("\n")[-1])
+            data = next(json.loads(line) for line in prompt.splitlines()
+                        if line.startswith("{") and '"proposed_checks"' in line)
             from diamond_factory.models import SubstitutionCase
             return CertificateAudit(faithful_translation=True, reason="All formulas match the literal fixture.",
                 checks=[SubstitutionCase.model_validate(c) for c in data["proposed_checks"]]), digest(salt), "gpt-6-luna"

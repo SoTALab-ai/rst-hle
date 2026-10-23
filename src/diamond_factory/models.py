@@ -121,7 +121,7 @@ class SubstitutionBinding(StrictModel):
 
 class SubstitutionRelation(StrictModel):
     lhs: str = Field(min_length=1, max_length=3000)
-    relation: Literal["equal", "not_equal", "greater", "greater_equal"]
+    relation: Literal["equal", "not_equal", "greater", "greater_equal", "less", "less_equal"]
     rhs: str = Field(min_length=1, max_length=3000)
 
 

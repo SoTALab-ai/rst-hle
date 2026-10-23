@@ -4,7 +4,7 @@ import pytest
 from conftest import passing_consistency
 
 from diamond_factory.models import SubstitutionBinding, SubstitutionCase, SubstitutionRelation
-from diamond_factory.substitution import Arithmetic, Exact, run_case, verify_substitutions
+from diamond_factory.substitution import Arithmetic, Exact, compare, run_case, verify_substitutions
 
 
 def physics_case(candidate, kappa="I/2"):
@@ -98,3 +98,8 @@ def test_matrix_dimension_mismatch_and_redefined_constants_cannot_pass(candidate
     assert run_case(case, item).verdict == "unsupported"
     case.bindings.append(SubstitutionBinding(name="I", expression="1"))
     assert run_case(case, item).verdict == "unsupported"
+
+
+@pytest.mark.parametrize("relation,expected",[("less",True),("less_equal",True),("greater",False),("greater_equal",False)])
+def test_ordered_relations_have_explicit_direction(relation,expected):
+    assert compare(Exact(Fraction(2)),relation,Exact(Fraction(3))) is expected

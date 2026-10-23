@@ -258,6 +258,32 @@ def test_theory100_cannot_bypass_required_blueprint_and_design(tmp_path,settings
     assert not gateway.calls
 
 
+def test_schema_repair_receives_actual_error_paths_without_resampling(tmp_path,settings,source,candidate):
+    pipe,_,gateway=setup_pipeline(tmp_path,settings,source,candidate)
+    gateway.directory=tmp_path/'requests';gateway.directory.mkdir()
+    original=gateway.call
+    failed=[]
+
+    async def call(role,prompt,salt,schema=None,**kw):
+        if schema is CertificateAudit and not failed:
+            failed.append(salt)
+            payload=CertificateAudit(faithful_translation=True,reason="Faithful translation for the test fixture.",
+                checks=passing_consistency().substitution_checks).model_dump()
+            condition=payload['checks'][0]['domain_conditions'][0]
+            condition['name']=condition.pop('lhs')
+            (gateway.directory/'bad-fields.json').write_text(json.dumps({'content':json.dumps(payload)}))
+            raise ModelResponseError(role,'bad-fields','invalid_schema')
+        if schema is CertificateAudit:
+            data=json.loads(prompt.splitlines()[-1])
+            assert any(e['location']==['checks',0,'domain_conditions',0,'lhs'] for e in data['errors'])
+            assert 'FORMAT REPAIR ONLY' in prompt
+        return await original(role,prompt,salt,schema,**kw)
+
+    gateway.call=call
+    assert asyncio.run(pipe.preflight(candidate))
+    assert sum(salt.endswith(':solve') for _,_,salt in gateway.calls)==1
+
+
 def test_original_physics_counterexample_violates_lossless_power_and_dark_definition():
     # The historical P03B formula, independently falsified at an allegedly admissible point.
     r, kappa, omega = 2, .5j, 1

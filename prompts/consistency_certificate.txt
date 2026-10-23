@@ -17,3 +17,7 @@ conj, adjoint, inverse, norm2 only. No decimals, attributes, generated code or e
 has ordered bindings and nonempty domain_conditions. For noncomputational tasks an empty list is allowed.
 Bindings are local to each case. Matrix dimensions must match and cannot exceed 8. Check all proposed
 entries; do not silently drop a failing genuine constraint. A physical contradiction is not difficulty.
+Do not multiply or gratuitously expand the proposed test list. Keep the smallest set that preserves
+coverage, distinct boundaries and genuine counterexamples. domain_conditions entries contain EXACTLY
+lhs, relation, rhs; do not use a name key there. Valid relations: equal, not_equal, greater, greater_equal,
+less, less_equal. Prefer short exact anchors copied from the literal strings, not a paraphrased sentence.
