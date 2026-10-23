@@ -108,7 +108,7 @@ class Gateway:
                 self._save(path, trace)
             if self.store:
                 for attempt in trace.get("attempts", []):
-                    self.store.save_attempt(self.run_id, attempt)
+                    self.store.save_attempt(attempt.get("run_id", self.run_id), attempt)
             reason = trace.get("response_error")
             if reason in ("unexpected_actual_model", "http_401", "http_403", "http_404"):
                 raise GatewayConfigurationError(f"Gateway configuration failure for {role}: {reason}")
@@ -128,7 +128,8 @@ class Gateway:
         return parsed, request_id, trace["actual_model"]
 
     def _attempt_receipt(self, request_id, ordinal, data):
-        body = {"event": "model_http_attempt", "request_id": request_id, "ordinal": ordinal, **data}
+        body = {"event": "model_http_attempt", "run_id": self.run_id,
+                "request_id": request_id, "ordinal": ordinal, **data}
         atomic_json(self.directory / "attempts" / request_id / (str(ordinal) + ".json"), body)
         # DB ledger registration happens only after the full response journal is durable.
         # A DB outage here must never discard a just-paid model response.

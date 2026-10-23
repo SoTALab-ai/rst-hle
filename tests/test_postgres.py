@@ -134,3 +134,28 @@ def test_pg_paid_response_journal_recovers_missing_db_index(pg, tmp_path, settin
     assert pg.db.execute("SELECT http_attempts FROM diamond.runs WHERE id='test'").fetchone()[0] == 1
     assert pg.db.execute("SELECT count(*) FROM diamond.model_requests").fetchone()[0] == 1
     assert pg.db.execute("SELECT count(*) FROM diamond.stage_events WHERE event='model_http_attempt'").fetchone()[0] == 1
+
+
+def test_pg_cross_run_cache_reuse_keeps_attempts_with_original_run(pg, tmp_path, settings, monkeypatch):
+    import asyncio
+
+    import httpx
+    from test_gateway import install_mock
+
+    from diamond_factory.llm import Gateway
+
+    run_meta(pg, "source-run"); run_meta(pg, "subset-run")
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(200, json={"model": "glm-5.2", "choices": [
+            {"message": {"content": "36"}, "finish_reason": "stop"}], "usage": {"completion_tokens": 2}})
+
+    install_mock(monkeypatch, handler)
+    first = asyncio.run(Gateway(settings, tmp_path / "first", pg, "source-run").call("solver", "Q", "namespace:0"))
+    second = asyncio.run(Gateway(settings, tmp_path / "second", pg, "subset-run").call("solver", "Q", "namespace:0"))
+    assert first == second and len(calls) == 1
+    assert pg.db.execute("SELECT http_attempts FROM diamond.runs WHERE id='subset-run'").fetchone()[0] == 0
+    assert pg.db.execute("SELECT count(*) FROM diamond.stage_events WHERE event='model_http_attempt'").fetchone()[0] == 1
+    assert pg.db.execute("SELECT run_id FROM diamond.stage_events WHERE event='model_http_attempt'").fetchone()[0] == "source-run"
