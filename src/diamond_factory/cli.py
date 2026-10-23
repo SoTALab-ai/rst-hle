@@ -40,6 +40,12 @@ def main():
     catalog.add_argument("manifest")
     papers = sub.add_parser("papers", help="Query the versioned paper catalog; no model calls")
     papers.add_argument("--domain", choices=["Math", "Physics"])
+    papers.add_argument("--journal")
+    papers.add_argument("--theory-only",action="store_true")
+    fetch = sub.add_parser("catalog-fetch", help="Collect full texts and inert LaTeX for a pinned paper catalog")
+    fetch.add_argument("manifest")
+    fetch.add_argument("--directory",default="work/papers")
+    fetch.add_argument("--pdf-only",action="store_true")
     route = sub.add_parser("route-sources", help="Classify the source library before generation")
     route.add_argument("--run-id", required=True)
     route.add_argument("--output")
@@ -91,7 +97,11 @@ def main():
             print(json.dumps({"cataloged_papers":len(rows)}))
         elif args.command == "papers":
             from .catalog import catalog_rows
-            print(json.dumps(catalog_rows(store,args.domain),ensure_ascii=False,indent=2))
+            print(json.dumps(catalog_rows(store,args.domain,args.journal,args.theory_only),ensure_ascii=False,indent=2))
+        elif args.command == "catalog-fetch":
+            from .catalog import fetch_catalog_sources, read_catalog
+            for row in fetch_catalog_sources(store,read_catalog(args.manifest),args.directory,not args.pdf_only):
+                print(json.dumps(row,ensure_ascii=False),flush=True)
         elif args.command == "route-sources":
             output = args.output or settings.source_routes_path or "work/source-routes.json"
             book = asyncio.run(route_sources(settings, store, args.run_id, output))

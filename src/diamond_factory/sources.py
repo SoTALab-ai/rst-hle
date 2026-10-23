@@ -1,6 +1,8 @@
 import hashlib
+import io
 import json
 import re
+import tarfile
 import time
 import uuid
 import xml.etree.ElementTree as ET
@@ -11,6 +13,45 @@ import httpx
 from pypdf import PdfReader
 
 from .models import Source
+
+
+def latex_from_archive(content: bytes) -> str:
+    """Read TeX as inert data; never extract paths, execute TeX, or run archive code."""
+    if len(content)>20_000_000:
+        raise ValueError("Source archive exceeds size cap")
+    try:
+        with tarfile.open(fileobj=io.BytesIO(content),mode="r|*") as archive:
+            rows=[]
+            expanded=0
+            for i,member in enumerate(archive):
+                expanded+=member.size
+                if i>=1000 or expanded>60_000_000:
+                    raise ValueError("Expanded source archive exceeds limits")
+                if not member.isfile() or not member.name.lower().endswith(".tex"):
+                    continue
+                if member.size>2_000_000:
+                    raise ValueError("TeX member exceeds size cap")
+                text=archive.extractfile(member).read().decode("utf-8","replace")
+                if sum(len(t) for _,t in rows)+len(text)>5_000_000:
+                    raise ValueError("Expanded TeX exceeds size cap")
+                rows.append((member.name,text))
+            # Prefer the main manuscript over supplementary documents, then larger source files.
+            rows.sort(key=lambda row:("\\begin{document}" in row[1],
+                not any(s in row[0].lower() for s in ("supp","appendix")),len(row[1])),reverse=True)
+            text="\n\n".join("[LaTeX file "+name+"]\n"+body for name,body in rows)
+    except tarfile.ReadError:
+        import gzip
+        try:
+            with gzip.GzipFile(fileobj=io.BytesIO(content)) as stream:
+                content=stream.read(5_000_001)
+        except (OSError,EOFError):
+            pass
+        if len(content)>5_000_000:
+            raise ValueError("Expanded TeX exceeds size cap")
+        text=content.decode("utf-8")
+    if "\\begin" not in text or len(text)<1000:
+        raise ValueError("No usable TeX source")
+    return text
 
 
 def import_sources(path: str | Path):

@@ -5,7 +5,7 @@ import pytest
 from test_qc import FakeGateway, setup_pipeline
 
 from diamond_factory.catalog import Paper, catalog_rows, save_catalog
-from diamond_factory.costs import measure_cost, price_usage
+from diamond_factory.costs import measure_cost, price_usage, validate_pricing
 from diamond_factory.experiment import ExperimentPlan, QuestionExperiment, RootPlan, branch
 from diamond_factory.llm import ModelResponseError
 from diamond_factory.models import Source, digest
@@ -83,6 +83,20 @@ def test_usage_cost_prices_cache_and_leaves_missing_usage_unknown():
              "prompt_tokens_details":{"cached_tokens":100,"cache_write_tokens":200}}
     assert price_usage("glm-5.2",usage,pricing()) == pytest.approx(.00481)
     assert price_usage("glm-5.2",{"completion_tokens":100},pricing()) is None
+
+
+def test_missing_or_unverified_prices_fail_before_any_model_purchase(settings):
+    with pytest.raises(ValueError,match="dated USD"):
+        validate_pricing(settings,pricing())
+    p=dict(pricing(),currency="USD")
+    with pytest.raises(ValueError,match="Missing verified"):
+        validate_pricing(settings,p)
+
+
+def test_corrupt_math_escape_is_rejected_instead_of_silently_repaired(candidate,source,quotas):
+    from diamond_factory.gates import static_errors
+    candidate.item.question+=' Evaluate \x0crac{1}{2} and \right.'
+    assert 'invalid_control_character_in_math_text' in static_errors(candidate,{source.id:source},quotas)
 
 
 def test_cost_counts_paid_truncation_and_unindexed_cancellation_once(tmp_path,settings):

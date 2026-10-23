@@ -33,6 +33,16 @@ def evidence_errors(evidence, sources: dict[str, Source]) -> list[str]:
 def static_errors(candidate: Candidate, sources: dict, quotas: dict) -> list[str]:
     q = candidate.item
     errors = evidence_errors(q.evidence + candidate.solution.evidence, sources)
+    def has_control(value):
+        if isinstance(value,str):
+            return bool(re.search(r"[\x00-\x08\x0b\x0c\x0e-\x1f]|\r(?!\n)",value))
+        if isinstance(value,dict):
+            return any(has_control(v) for v in value.values())
+        if isinstance(value,list):
+            return any(has_control(v) for v in value)
+        return False
+    if has_control(q.model_dump()) or has_control(candidate.solution.model_dump()):
+        errors.append("invalid_control_character_in_math_text")
     if not any(x["category"] == q.category and x["subtopic"] == q.subtopic for x in quotas["quotas"]):
         errors.append("unknown_v3_category_subtopic")
     if q.answer != candidate.solution.answer:

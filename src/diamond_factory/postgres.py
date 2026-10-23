@@ -83,6 +83,11 @@ class PostgresStore:
         return [Source.model_validate(self.objects.get(*r)) for r in self.db.execute(
             "SELECT object_key,object_sha256,object_size FROM diamond.sources ORDER BY id")]
 
+    def get_source(self,source_id):
+        row=self.db.execute("SELECT object_key,object_sha256,object_size FROM diamond.sources WHERE id=%s",
+                            (source_id,)).fetchone()
+        return Source.model_validate(self.objects.get(*row)) if row else None
+
     def save_paper(self, paper):
         if not self.db.execute("SELECT to_regclass('diamond.paper_catalog')").fetchone()[0]:
             raise ValueError("Paper catalog migration required; run diamond db-init")

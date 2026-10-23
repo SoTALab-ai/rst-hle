@@ -1,9 +1,28 @@
 """Price actual gateway receipts, including failed/retried HTTP attempts, exactly once."""
 import json
+import math
 from collections import defaultdict
 from pathlib import Path
 
 from .llm import BudgetExceeded, Gateway
+
+
+def validate_pricing(settings,pricing):
+    if pricing.get("currency") != "USD" or not pricing.get("observed_at"):
+        raise ValueError("Provide a dated USD gateway price snapshot")
+    fx=pricing.get("rmb_reference_exchange_rate")
+    if not isinstance(fx,(int,float)) or not math.isfinite(fx) or fx<=0:
+        raise ValueError("Positive reference exchange rate required")
+    for role in ("generator","auditor","solver","judge"):
+        model=getattr(settings,role).model
+        rates=pricing.get("rates_per_million",{}).get(model)
+        if not rates:
+            raise ValueError("Missing verified gateway rates for "+model)
+        for tier in [rates]+([rates["above_limit"]] if "input_tier_limit" in rates else []):
+            for name in ("input","output","cache_read","cache_write"):
+                value=tier.get(name)
+                if not isinstance(value,(int,float)) or isinstance(value,bool) or not math.isfinite(value) or value<0:
+                    raise ValueError("Invalid per-million rate: "+model+"/"+name)
 
 
 def price_usage(model, usage, pricing):
@@ -64,6 +83,7 @@ class MeteredGateway(Gateway):
     """A guard on already-returned usage; in-flight and unreturned fees remain unknown."""
     def __init__(self, *args, pricing, visible_cost_limit_usd, **kwargs):
         super().__init__(*args, **kwargs)
+        validate_pricing(self.settings,pricing)
         self.pricing = pricing
         self.visible_cost_limit_usd = visible_cost_limit_usd
 

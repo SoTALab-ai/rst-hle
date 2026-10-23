@@ -35,6 +35,10 @@ class Store:
     def sources(self):
         return [Source.model_validate_json(r[0]) for r in self.db.execute("SELECT body FROM sources ORDER BY id")]
 
+    def get_source(self,source_id):
+        row=self.db.execute("SELECT body FROM sources WHERE id=?",(source_id,)).fetchone()
+        return Source.model_validate_json(row[0]) if row else None
+
     def save(self, candidate: Candidate):
         self.db.execute("INSERT OR REPLACE INTO candidates VALUES (?, ?)",
                         (candidate.id, candidate.model_dump_json()))
