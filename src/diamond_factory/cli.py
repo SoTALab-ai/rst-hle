@@ -5,10 +5,11 @@ from pathlib import Path
 
 from .calibration import BenchmarkQuestion, Calibration
 from .config import load
-from .gates import correct_count, production_blockers, static_errors
+from .gates import can_count, correct_count, production_blockers, static_errors
 from .models import Submission, digest
 from .pipeline import Pipeline, report
 from .postgres import open_store
+from .routing import route_sources
 from .sources import crawl_arxiv, import_sources
 
 
@@ -35,6 +36,9 @@ def main():
     sub.add_parser("doctor", help="Check procurement configuration; makes no model calls")
     sub.add_parser("report")
     sub.add_parser("db-init", help="Explicitly apply PostgreSQL schema; startup never migrates")
+    route = sub.add_parser("route-sources", help="Classify the source library before generation")
+    route.add_argument("--run-id", required=True)
+    route.add_argument("--output")
     calibrate = sub.add_parser("calibrate", help="Evaluate reference HLE questions without delivery admission")
     calibrate.add_argument("input")
     calibrate.add_argument("--run-id", required=True)
@@ -47,6 +51,9 @@ def main():
     export.add_argument("--output", default="outputs/delivery.jsonl")
     export.add_argument("--require-complete", action="store_true")
     args = parser.parse_args()
+    if hasattr(args, "run_id") and (not args.run_id or any(
+            c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for c in args.run_id)):
+        raise ValueError("Invalid run-id")
     settings = load(args.config)
     quotas = json.loads(Path(settings.quotas_path).read_text())
     store = open_store(args.db, initialize=args.command == "db-init")
@@ -73,6 +80,10 @@ def main():
                               "configured_external_corpora": len(settings.dedup_corpora),
                               "sources": len(store.sources()), "quotas": len(quotas["quotas"]),
                               "target": quotas["target"]}, ensure_ascii=False, indent=2))
+        elif args.command == "route-sources":
+            output = args.output or settings.source_routes_path or "work/source-routes.json"
+            book = asyncio.run(route_sources(settings, store, args.run_id, output))
+            print(json.dumps({"routed_sources": len(book["sources"]), "output": output}))
         elif args.command == "calibrate":
             if not args.run_id or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for c in args.run_id):
                 raise ValueError("Invalid run-id")
@@ -107,10 +118,11 @@ def main():
                 raise ValueError("All 61 subtopic quotas must be met separately; batch is incomplete")
             sources = {s.id: s for s in store.sources()}
             rows = []
-            for c in store.candidates():
-                if c.status != "accepted":
-                    continue
-                if static_errors(c, sources, quotas) or not c.audit.passed() or not 1 <= correct_count(c.trials) <= 8:
+            accepted = [c for c in store.candidates() if c.status == "accepted"]
+            for c in accepted:
+                if (static_errors(c, sources, quotas) or not c.audit.passed() or
+                        not 1 <= correct_count(c.trials) <= 8 or
+                        can_count(c, accepted, quotas, settings.max_per_root)):
                     raise ValueError("Stored candidate failed export revalidation: " + c.id)
                 rows.append({"id": c.id, **c.item.model_dump(), "lineage": {"root": c.root_id,
                              "parent": c.parent_id, "generation": c.generation},
@@ -121,7 +133,9 @@ def main():
             target.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows))
             scope = {"items": len(rows), "complete": not any(r["remaining"] for r in result["remaining"]),
                      "external_dedup": "configured_corpora" if settings.dedup_corpora else "skipped_per_user_request",
-                     "dataset_hash": digest(rows), "runs": store.runs()}
+                     "dataset_hash": digest(rows),
+                     "runs": {key: value for key, value in store.runs().items()
+                              if key in {c.run_id for c in accepted}}}
             target.with_suffix(".manifest.json").write_text(json.dumps(scope, ensure_ascii=False, indent=2))
             if hasattr(store, "export"):
                 store.export(scope)

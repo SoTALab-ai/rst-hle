@@ -59,3 +59,6 @@ uv run diamond doctor
 测试库必须是独立的、名称以 `_test` 结尾的数据库；测试拒绝清理其他数据库。设置 `DIAMOND_TEST_DATABASE_URL` 后运行 `uv run pytest tests/test_postgres.py -q`，覆盖题目和 16 次判分写回、对象损坏、预算跨连接原子性、租约过期/旧 worker 隔离及写锁互斥。
 
 未设置 `DIAMOND_DATABASE_URL` 时仍可用 SQLite 做快速离线测试。VM 试跑配置启用 PostgreSQL 后，请求缓存、HTTP 尝试预算、题目和状态均以数据库记录为准，本地 `work/runs` 只是便于查看的镜像。
+
+
+请求现在另有逐HTTP尝试收据，复用现有stage_events与内容寻址产物库，不修改已执行的001迁移。完整响应先落本地完整性日志、再提交数据库索引；索引或attempt登记短暂失败后可幂等恢复，不重新购买已有回答。实现与故障注入范围见[resilience.md](resilience.md)。

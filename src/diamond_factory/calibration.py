@@ -4,8 +4,9 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from .llm import Gateway
+from .llm import BudgetExceeded, Gateway, ModelResponseError
 from .models import Judgment, StrictModel, digest
+from .runtime import atomic_json, gather_cancel_on_error
 
 
 class BenchmarkQuestion(StrictModel):
@@ -20,6 +21,13 @@ class BenchmarkQuestion(StrictModel):
 
 
 def summarize(questions, trials, errors):
+    ids = {q.id for q in questions}
+    if any(t["question_id"] not in ids or type(t["sample_id"]) is not int or
+           not 0 <= t["sample_id"] < 16 or type(t["correct"]) is not bool for t in trials):
+        raise ValueError("Invalid calibration trial identity or verdict")
+    for role in ("solver", "judge"):
+        if len({t[role + "_request"] for t in trials}) != len(trials):
+            raise ValueError(f"Reused {role} response across calibration questions")
     rows = []
     for q in questions:
         found = [x for x in trials if x["question_id"] == q.id]
@@ -83,11 +91,13 @@ class Calibration:
         fingerprint = digest({"questions": [q.model_dump() for q in questions],
                               "settings": self.settings.model_dump(), "solver_system": self.solver_system,
                               "request_namespace": namespace,
-                              "judge_prompt": self.judge_prompt, "calibration_code": Path(__file__).read_text(),
-                              "gateway_code": Path(__file__).with_name("llm.py").read_text()})
+                              "judge_prompt": self.judge_prompt,
+                              "code": {p.name: digest(p.read_text()) for p in
+                                       sorted(Path(__file__).parent.glob("*.py"))}})
         if previous and previous["fingerprint"] != fingerprint:
             raise ValueError("Calibration inputs/config/code changed; use a new run-id")
         trial_rows = list(previous.get("trial_records", [])) if previous else []
+        summarize(questions, trial_rows, [])  # Validate before issuing any paid request on resume.
         failures = {(e["question_id"], e["sample_id"]): e for e in previous.get("errors", [])} if previous else {}
         meta = {"mode": "reference_calibration", "status": "running", "fingerprint": fingerprint,
                 "settings": self.settings.model_dump(), "question_count": len(questions),
@@ -133,7 +143,7 @@ class Calibration:
                     if hasattr(self.store, "event"):
                         self.store.event(self.run_id, progress)
                     print(json.dumps(progress, ensure_ascii=False), flush=True)
-                except (RuntimeError, ValueError, KeyError, TypeError) as error:
+                except ModelResponseError as error:
                     failure = {"question_id": q.id, "sample_id": sample_id,
                                "type": type(error).__name__, "message": str(error)[:180],
                                "request_id": getattr(error, "request_id", None)}
@@ -146,9 +156,9 @@ class Calibration:
                 finally:
                     queue.task_done()
         try:
-            await asyncio.gather(*(worker() for _ in range(self.settings.concurrency)))
-        except BaseException:
-            meta["status"] = "interrupted"
+            await gather_cancel_on_error(*(worker() for _ in range(self.settings.concurrency)))
+        except BaseException as error:
+            meta["status"] = "budget_exhausted" if isinstance(error, BudgetExceeded) else "interrupted"
             meta["errors"] = list(failures.values())
             self.store.run(self.run_id, meta)
             raise
@@ -159,4 +169,5 @@ class Calibration:
         result = summarize(questions, trial_rows, meta["errors"])
         result.update({"run_id": self.run_id, "settings": self.settings.model_dump(),
                        "status": meta["status"], "source_origins": meta["source_origins"], "fingerprint": fingerprint})
+        atomic_json(self.directory / "result.json", result)
         return result

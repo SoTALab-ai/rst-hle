@@ -10,6 +10,7 @@ request_timeout = 600.0
 request_deadline_seconds = 600.0
 evaluation_mode = "no_tools"
 source_max_candidates = 5
+source_routes_path = "work/source-routes.json"
 max_per_root = 1
 # User explicitly deferred old-train/official-eval dedup on 2026-10-23.
 external_dedup_required = false

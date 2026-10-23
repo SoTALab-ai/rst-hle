@@ -25,15 +25,16 @@ class Settings(StrictModel):
     judge: ModelConfig
     quotas_path: str = "configs/quotas.v3.json"
     prompts_dir: str = "prompts"
+    source_routes_path: str | None = None
     samples: int = 16
     correct_min: int = 1
     correct_max: int = 8
-    max_requests: int = 150
-    max_retries: int = 1
-    request_timeout: float = 180.0
+    max_requests: int = Field(default=150, ge=1)
+    max_retries: int = Field(default=1, ge=0)
+    request_timeout: float = Field(default=180.0, gt=0)
     request_deadline_seconds: float | None = Field(default=None, gt=0)
     evaluation_mode: Literal["no_tools"] = "no_tools"
-    concurrency: int = 4
+    concurrency: int = Field(default=4, ge=1)
     max_source_chars: int = 45000
     max_rounds: int = 3
     attempts_per_round: int = 2

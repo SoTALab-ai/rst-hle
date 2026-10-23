@@ -2,7 +2,7 @@
 
 从论文/预备材料库构造可追溯题目，按需求进行质检，再逐步接通递归演化。**当前优先交付质检模块，递归生成器为实验实现。** 本项目并非官方 HLE 项目，也不宣称产物已达到 HLE Diamond 质量。
 
-已实现：来源导入和 arXiv 全文抓取、题目数据契约、来源引文校验、独立复核调用、GLM5.2 的 16 次盲答、官方 HLE judge 模板、1–8/16 筛选、批次语义去重、分类配额、谱系、请求预算、缓存续跑、报告和导出。
+已实现：来源导入和 arXiv 全文抓取、来源到子类的路由、题目数据契约、来源引文校验、独立复核调用、GLM5.2 的 16 次盲答、官方 HLE judge 模板、1–8/16 筛选、批次语义去重、分类配额、谱系、请求预算、缓存续跑、报告和导出。
 
 需求原文通过 `feishu-cli wiki export` 保存于本地 `outputs/requirements-feishu.md`，未提交到公开仓库。配置包含文档中的 61 个采购子类，合计 2,000 道；沿用原分类，不重算已注明待修正的跨大类归属。原文 120 道示例仅进入本地排除库，不进入生成提示或交付。
 
@@ -11,7 +11,8 @@
 ```mermaid
 flowchart LR
     A[arXiv / 已有材料库] --> B[全文与哈希、可定位证据]
-    B --> C[先解答与推导、再生成题面]
+    B --> R[按来源路由至支持的v3子类]
+    R --> C[先解答与推导、再生成题面]
     U[已有题目 bundle] --> D
     C --> D[结构检查、证据检查、模型复核]
     D --> E[GLM5.2 独立盲答 16 次]
@@ -70,10 +71,13 @@ uv run diamond export --require-complete --output outputs/all-2000.jsonl
 
 ## 递归与个人 VM
 
-实验递归入口：
+先归类来源，再运行实验递归流程：
 
 ```bash
-uv run diamond run --subtopic 人工智能与机器学习 --run-id evolve-first --mode pilot
+uv run diamond route-sources --run-id route-first
+uv run diamond run --run-id evolve-first --mode pilot
+# 或明确指定人工试跑目标
+# uv run diamond run --subtopic 人工智能与机器学习 --run-id targeted-first --mode pilot
 ```
 
 顺序为解答蓝图 → 题面 → 复核 → 难度测量 → 去重/保留。`max_rounds`、修复次数、每来源候选数和请求预算均可配置。只有质量合格的题能成为父题；0/16 或 9–16/16 不交付，但可分别尝试降难度或升难度。默认每条根谱系最多计 1 道，防止同材料近似变体凑量。
@@ -85,7 +89,7 @@ python3 scripts/vm_run.py --host YOUR_SSH_ALIAS --directory ~/Developer/rst-hle 
   -- diamond qc examples/paper-qc.jsonl --run-id vm-smoke --mode pilot
 ```
 
-同一个数据库只允许一个写入进程；16 次模型请求内部并发。复用原 run-id 可续跑，配置/提示/材料/代码变更需新 run-id。预算按**实际 HTTP 尝试**计数，含失败和重试；不是费用上限。所有请求 token 限额可配置，未配置价格时不虚构美元成本。
+同一个数据库只允许一个写入进程；16 次模型请求内部并发。复用原 run-id 可续跑，配置/提示/材料/代码变更需新 run-id。预算按**实际 HTTP 尝试**计数，含失败和重试；不是费用上限。本轮解题不设客户端 token 限额；其他阶段按配置执行。未配置价格时不虚构美元成本。
 
 数据库已提供 **PostgreSQL + 独立文件产物库**，参考既有 ClawGym 的状态/产物分工。个人 VM 使用独立实例；离线测试保留 SQLite。详见 [数据库部署与 ClawGym 对照](docs/database.md)。首次显式运行 `diamond db-init`，普通启动只校验结构；GitHub CI 使用独立 PostgreSQL 覆盖真实读写、预算原子性与租约隔离。
 
@@ -98,3 +102,5 @@ python3 scripts/vm_run.py --host YOUR_SSH_ALIAS --directory ~/Developer/rst-hle 
 原始 HLE 参考题的并发难度校准入口见 [docs/calibration.md](docs/calibration.md)。用户已将判分模型更新为 gpt-6-luna medium。
 
 2026-10-23 的八领域限时校准结果见 [docs/calibration-results-2026-10-23.md](docs/calibration-results-2026-10-23.md)。
+
+来源路由、逐样本恢复、请求审计和故障注入覆盖见 [docs/resilience.md](docs/resilience.md)。

@@ -73,3 +73,64 @@ def test_pg_writer_lock_cross_process(pg):
     with other.lock():
         pass
     other.db.close()
+
+
+def test_pg_run_checkpoint_does_not_reset_request_budget(pg):
+    run_meta(pg)
+    assert pg.reserve_request("test", 2) == 1
+    pg.run("test", {"mode": "pilot", "status": "checkpointed", "fingerprint": "test"})
+    assert pg.reserve_request("test", 2) == 2
+    assert pg.reserve_request("test", 2) is None
+
+
+def test_pg_duplicate_accepted_lineage_rolls_back_without_partial_samples(pg, source, candidate):
+    import psycopg
+    run_meta(pg)
+    pg.add_source(source)
+    candidate.status = "accepted"
+    pg.save(candidate)
+    duplicate = candidate.model_copy(deep=True)
+    duplicate.id = "duplicate-root"
+    with pytest.raises(psycopg.errors.UniqueViolation):
+        pg.save(duplicate)
+    assert len(pg.candidates()) == 1
+    assert pg.db.execute("SELECT count(*) FROM diamond.candidate_sources").fetchone()[0] == 1
+
+
+@pytest.mark.parametrize("fault_phase", ["save_request", "save_attempt"])
+def test_pg_paid_response_journal_recovers_missing_db_index(pg, tmp_path, settings, monkeypatch, fault_phase):
+    import asyncio
+
+    import httpx
+    from test_gateway import install_mock
+
+    from diamond_factory.llm import Gateway
+
+    run_meta(pg)
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(200, json={"model": "glm-5.2", "choices": [
+            {"message": {"content": "36"}, "finish_reason": "stop"}], "usage": {"completion_tokens": 2}})
+
+    install_mock(monkeypatch, handler)
+    original = getattr(pg, fault_phase)
+    failed = False
+
+    def write(run, trace):
+        nonlocal failed
+        if not failed:
+            failed = True
+            raise OSError("Injected failure after object journal persistence")
+        original(run, trace)
+
+    monkeypatch.setattr(pg, fault_phase, write)
+    directory = tmp_path / "requests"
+    with pytest.raises(OSError):
+        asyncio.run(Gateway(settings, directory, pg, "test").call("solver", "Q", "sample:0"))
+    assert asyncio.run(Gateway(settings, directory, pg, "test").call("solver", "Q", "sample:0"))[0] == "36"
+    assert len(calls) == 1
+    assert pg.db.execute("SELECT http_attempts FROM diamond.runs WHERE id='test'").fetchone()[0] == 1
+    assert pg.db.execute("SELECT count(*) FROM diamond.model_requests").fetchone()[0] == 1
+    assert pg.db.execute("SELECT count(*) FROM diamond.stage_events WHERE event='model_http_attempt'").fetchone()[0] == 1

@@ -7,7 +7,7 @@
 可从需求文档的 120 道原始 Diamond 示例中分层抽样：默认 8 个大类各 3 题，各类优先选不同子类，随机种子 `20261023`。当前先以 `--per-category 1` 选八题完成 16 次采样，控制试跑费用。这个样本受原文示例选择与采购子类限制，**不是全部 728 道 Diamond 文本题的随机样本**，不能据此估计全量题数。每类仅一至三题，只用于早期方向判断。
 
 ```bash
-python3 scripts/select_reference_examples.py work/private/requirements/source.md
+uv run python scripts/select_reference_examples.py work/private/requirements/source.md
 uv run diamond --config configs/calibration.toml calibrate \
   work/private/calibration/selection24.jsonl --run-id YOUR_CALIBRATION_RUN
 ```
@@ -68,3 +68,15 @@ uv run python scripts/calibration_status.py work/private/calibration/selection8.
 ```
 
 可另传 `--rates` 指定本地网关费率快照，估算已返回 usage 的费用；不能把供应商返回的上游 `usage.cost` 直接当作个人网关账单。复用请求按唯一 request-id 去重，费用不重复累计。没有返回 usage 的超时请求及未留完整响应的重试费用列为未知。
+
+
+继续抽样时可以排除旧题及其子类，固定种子保证可复现：
+
+```bash
+uv run python scripts/select_reference_examples.py work/private/requirements/source.md \
+  --per-category 2 --categories Chemistry Humanities/SS Other Bio/Med CS/AI Engineering \
+  --exclude work/private/calibration/selection8.jsonl --new-subtopics \
+  --output work/private/calibration/wave2-six-domains12.jsonl
+```
+
+这是为寻找可用样本的分层探索，不是无偏的领域难度估计；预检查0次正确不能冒充完整0/16。每一轮都记录抽中题、被排除题、子类、种子、来源与选择哈希，并保留所有未通过结果。

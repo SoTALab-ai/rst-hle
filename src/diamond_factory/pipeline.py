@@ -1,4 +1,3 @@
-import asyncio
 import json
 from collections import Counter
 from datetime import UTC, datetime
@@ -12,8 +11,14 @@ from .gates import (
     read_corpus,
     static_errors,
 )
-from .llm import BudgetExceeded, Gateway
+from .llm import BudgetExceeded, Gateway, ModelResponseError
 from .models import Audit, Candidate, DedupVerdict, Judgment, Question, Record, Solution, Trial, digest
+from .routing import read_routes
+from .runtime import gather_cancel_on_error
+
+
+class SampleIncomplete(RuntimeError):
+    pass
 
 
 class Pipeline:
@@ -39,6 +44,8 @@ class Pipeline:
                                    "source_hashes": {s.id: s.sha256 for s in store.sources()},
                                    "code": {p.name: digest(p.read_text()) for p in
                                             sorted(Path(__file__).parent.glob("*.py"))}})
+        self.base_fingerprint = self.fingerprint
+        self.invocation = None
 
     def log(self, event: str, **data):
         self.run_dir.mkdir(parents=True, exist_ok=True)
@@ -52,6 +59,7 @@ class Pipeline:
     def metadata(self, status: str):
         self.store.run(self.run_id, {"fingerprint": self.fingerprint, "mode": self.mode,
                                     "status": status, "settings": self.settings.model_dump(),
+                                    "invocation": self.invocation,
                                     "prompt_hashes": {k: digest(v) for k, v in self.prompts.items()},
                                     "corpora": self.corpus_hashes,
                                     "quotas_sha256": digest(self.quotas),
@@ -108,28 +116,42 @@ class Pipeline:
         return result
 
     async def sample(self, candidate):
+        prior = list(candidate.trials)
+        if (len({t.sample_id for t in prior}) != len(prior) or
+                any(not 0 <= t.sample_id < self.settings.samples for t in prior)):
+            raise ValueError("Invalid persisted sample identities")
+        for role in ("solver", "judge"):
+            if len({getattr(t, role + "_request") for t in prior}) != len(prior):
+                raise ValueError("Reused persisted sample response")
+        done = {t.sample_id for t in prior}
+
         async def one(i):
-            response, sid, smodel = await self.gateway.call(
-                "solver", candidate.item.question, f"{candidate.id}:solver:{i}",
-                system_prompt=self.prompts["solver_hle_system"].strip())
-            # Judge sees the response and gold, never the author's rationale or source. Solver sees only question.
-            judgment, jid, jmodel = await self.gateway.call(
-                "judge", self.prompts["judge"].format(question=candidate.item.question,
-                                                      correct_answer=candidate.item.answer, response=response),
-                f"{candidate.id}:judge:{i}", Judgment)
+            try:
+                response, sid, smodel = await self.gateway.call(
+                    "solver", candidate.item.question, f"{candidate.id}:solver:{i}",
+                    system_prompt=self.prompts["solver_hle_system"].strip())
+                judgment, jid, jmodel = await self.gateway.call(
+                    "judge", self.prompts["judge"].format(question=candidate.item.question,
+                                                          correct_answer=candidate.item.answer, response=response),
+                    f"{candidate.id}:judge:{i}", Judgment)
+            except ModelResponseError as error:
+                self.log("sample_failed", candidate=candidate.id, sample=i,
+                         request_id=error.request_id, reason=error.reason)
+                return error
+            trial = Trial(sample_id=i, response=response, solver_request=sid, judge_request=jid,
+                          solver_actual_model=smodel, judge_actual_model=jmodel, judgment=judgment)
+            candidate.trials = sorted(candidate.trials + [trial], key=lambda t: t.sample_id)
+            self.store.save(candidate)  # Commit each paired result before waiting for slow siblings.
             self.log("sample_completed", candidate=candidate.id, sample=i, correct=judgment.correct)
-            return Trial(sample_id=i, response=response, solver_request=sid, judge_request=jid,
-                         solver_actual_model=smodel, judge_actual_model=jmodel, judgment=judgment)
-        results = await asyncio.gather(*(one(i) for i in range(self.settings.samples)), return_exceptions=True)
-        candidate.trials = sorted([x for x in results if isinstance(x, Trial)], key=lambda x: x.sample_id)
-        self.store.save(candidate)
+            return trial
+        results = await gather_cancel_on_error(*(one(i) for i in range(self.settings.samples) if i not in done))
         errors = [x for x in results if isinstance(x, Exception)]
         if errors:
             # Partial samples remain quality seeds, cannot pass the band or seed another round in this run.
             candidate.reasons = ["infrastructure_or_schema_error:" + type(e).__name__ + ":" + str(e)[:150]
                                  for e in errors]
             self.store.save(candidate)
-            raise RuntimeError(f"{len(errors)} samples failed; cached successes retained for resume")
+            raise SampleIncomplete(f"{len(errors)} samples failed; paired successes retained for resume")
         return correct_count(candidate.trials, self.settings.samples)
 
     async def duplicate(self, candidate):
@@ -174,7 +196,9 @@ class Pipeline:
         self.log("candidate_finished", candidate=c.id, status=c.status, reasons=c.reasons)
         return c
 
-    def start(self):
+    def start(self, invocation=None):
+        self.invocation = invocation
+        self.fingerprint = digest({"base": self.base_fingerprint, "invocation": invocation})
         if self.mode == "production":
             blockers = production_blockers(self.settings, self.quotas)
             if blockers:
@@ -188,8 +212,12 @@ class Pipeline:
 
     async def qc(self, submissions):
         """Quality control accepts authored bundles, never caller-provided scores or audit flags."""
-        self.start()
+        submissions = list(submissions)
+        if not submissions or len({s.id for s in submissions}) != len(submissions):
+            raise ValueError("Provide nonempty submissions with unique ids")
+        self.start({"command": "qc", "submissions_sha256": digest([s.model_dump() for s in submissions])})
         sources = {s.id: s for s in self.store.sources()}
+        incomplete = False
         try:
             for submission in submissions:
                 root_identity = digest(submission.model_dump())[:24]
@@ -198,11 +226,14 @@ class Pipeline:
                 if old:
                     if old.run_id != self.run_id:
                         raise ValueError("Submission already exists in a different run; use original run to resume")
-                    if len(old.trials) == 16 and old.status in ("accepted", "screened", "quality_seed"):
+                    if old.status in ("accepted", "screened"):
                         continue
                     if old.status == "rejected":
                         continue
-                    await self.evaluate(old)
+                    try:
+                        await self.evaluate(old)
+                    except SampleIncomplete:
+                        incomplete = True
                     continue
                 parent = next((c for c in self.store.candidates() if c.id == submission.parent_id), None)
                 if submission.parent_id and (parent is None or not parent.audit.passed()):
@@ -236,15 +267,17 @@ class Pipeline:
                     self.store.save(c)
                     continue
                 self.store.save(c)
-                await self.evaluate(c)
-        except Exception as error:
+                try:
+                    await self.evaluate(c)
+                except SampleIncomplete:
+                    incomplete = True
+        except BaseException as error:
             self.metadata("budget_exhausted" if isinstance(error, BudgetExceeded) else "interrupted")
             raise
-        self.metadata("completed")
+        self.metadata("completed_with_errors" if incomplete else "completed")
         return report(self.store, self.quotas)
 
     async def run(self, subtopic: str | None = None):
-        self.start()
         rows = self.quotas["quotas"]
         if subtopic:
             rows = [q for q in rows if q["subtopic"] == subtopic]
@@ -258,10 +291,17 @@ class Pipeline:
             raise ValueError("Import full-text sources before running")
         if self.mode == "production" and any(s.kind == "synthetic" for s in sources):
             raise ValueError("Synthetic offline fixtures cannot enter production")
+        routes = None if subtopic else read_routes(self.settings.source_routes_path, sources, self.quotas)
+        if routes is not None and not any(routes["sources"][s.id]["subtopics"] for s in sources):
+            raise ValueError("No source supports a procurement subtopic")
+        self.start({"command": "run", "subtopic": subtopic, "routes_sha256": digest(routes)})
+        incomplete = False
         try:
             for source in sources:
                 generated = 0
-                for target in rows:
+                source_rows = rows if routes is None else [r for r in rows if
+                    r["subtopic"] in routes["sources"][source.id]["subtopics"]]
+                for target in source_rows:
                     if counts[(target["category"], target["subtopic"])] >= target["count"]:
                         continue
                     parent = None
@@ -280,7 +320,11 @@ class Pipeline:
                             if c.status in ("accepted", "screened"):
                                 parent = c
                                 continue
-                            await self.evaluate(c)
+                            try:
+                                await self.evaluate(c)
+                            except SampleIncomplete:
+                                incomplete = True
+                                continue
                             if c.status == "accepted":
                                 counts[(c.item.category, c.item.subtopic)] += 1
                             if c.status != "rejected":
@@ -290,10 +334,10 @@ class Pipeline:
                             break
                     if generated >= self.settings.source_max_candidates:
                         break
-        except Exception as error:
+        except BaseException as error:
             self.metadata("budget_exhausted" if isinstance(error, BudgetExceeded) else "interrupted")
             raise
-        self.metadata("completed")
+        self.metadata("completed_with_errors" if incomplete else "completed")
         return report(self.store, self.quotas)
 
 

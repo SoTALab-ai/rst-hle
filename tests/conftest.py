@@ -45,7 +45,7 @@ def candidate(source):
 
 def trials(count):
     return [Trial(sample_id=i, response="36" if i < count else "37", solver_request=f"s{i}",
-                  judge_request=f"j{i}", solver_actual_model="glm-5.2", judge_actual_model="gpt-5.6-luna",
+                  judge_request=f"j{i}", solver_actual_model="glm-5.2", judge_actual_model="gpt-6-luna",
                   judgment=Judgment(extracted_final_answer="36" if i < count else "37", reasoning="Matched gold",
                                     correct="yes" if i < count else "no", confidence=100, strict=True))
             for i in range(16)]

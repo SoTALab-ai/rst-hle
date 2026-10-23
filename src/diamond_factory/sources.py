@@ -2,6 +2,7 @@ import hashlib
 import json
 import re
 import time
+import uuid
 import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
 from pathlib import Path
@@ -34,18 +35,27 @@ def pdf_text(path: Path) -> str:
     return "\n\n".join(f"[page {i+1}]\n" + (p.extract_text() or "") for i, p in enumerate(pages))
 
 
-def download(client, url: str, path: Path):
+def download(client, url: str, path: Path, max_bytes=40_000_000):
     # Crawler only downloads arXiv. Other primary material enters through explicit local import.
-    with client.stream("GET", url) as response:
-        response.raise_for_status()
-        with path.open("wb") as output:
-            size = 0
-            for chunk in response.iter_bytes():
-                size += len(chunk)
-                if size > 40_000_000:
-                    path.unlink(missing_ok=True)
-                    raise ValueError("Paper exceeds 40 MB download cap")
-                output.write(chunk)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(path.name + "." + uuid.uuid4().hex + ".part")
+    try:
+        with client.stream("GET", url) as response:
+            response.raise_for_status()
+            with temporary.open("wb") as output:
+                size = 0
+                for chunk in response.iter_bytes():
+                    size += len(chunk)
+                    if size > max_bytes:
+                        raise ValueError("Paper exceeds download size cap")
+                    output.write(chunk)
+        with temporary.open("rb") as content:
+            if not content.read(1024).lstrip().startswith(b"%PDF-"):
+                raise ValueError("Expected a PDF, received a different document")
+        PdfReader(temporary)  # Do not cache a truncated file merely because its first bytes say PDF.
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def crawl_arxiv(query: str | None, ids: list[str], limit: int, directory: Path):

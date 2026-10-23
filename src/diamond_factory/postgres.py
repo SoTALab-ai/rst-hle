@@ -119,6 +119,17 @@ class PostgresStore:
                         (trace["request_id"], run_id, trace["role"], trace["actual_model"],
                          Jsonb(trace["usage"]), key, sha, size))
 
+    def save_attempt(self, run_id, attempt):
+        key, sha, size = self.objects.put(attempt)
+        receipt = {"event": "model_http_attempt", "request_id": attempt["request_id"],
+                   "ordinal": attempt["ordinal"], "object_key": key, "object_sha256": sha, "object_size": size}
+        # CLI holds the database writer lock; replaying a recovered journal is idempotent.
+        self.db.execute("""INSERT INTO diamond.stage_events(run_id,event,data)
+            SELECT %s,'model_http_attempt',%s WHERE NOT EXISTS (
+                SELECT 1 FROM diamond.stage_events WHERE run_id=%s AND event='model_http_attempt'
+                AND data->>'request_id'=%s AND (data->>'ordinal')::int=%s)""",
+                        (run_id, Jsonb(receipt), run_id, attempt["request_id"], attempt["ordinal"]))
+
     def reserve_request(self, run_id, limit):
         row = self.db.execute("""UPDATE diamond.runs SET http_attempts=http_attempts+1
             WHERE id=%s AND http_attempts < %s RETURNING http_attempts""", (run_id, limit)).fetchone()

@@ -10,6 +10,7 @@ request_timeout = 600.0
 request_deadline_seconds = 600.0
 evaluation_mode = "no_tools"
 source_max_candidates = 2
+source_routes_path = "work/source-routes.json"
 max_per_root = 1
 # Old-train/full-eval exclusion was deferred by the user; batch dedup remains enabled.
 dedup_corpora = []

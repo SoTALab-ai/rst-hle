@@ -107,7 +107,7 @@ class FakeGateway:
         if schema is Judgment:
             return Judgment(extracted_final_answer="36" if "Final Answer: 36" in prompt else "37",
                             reasoning="Gold comparison only", correct="yes" if "Final Answer: 36" in prompt else "no",
-                            confidence=100, strict=True), digest(salt), "gpt-5.6-luna"
+                            confidence=100, strict=True), digest(salt), "gpt-6-luna"
         if schema is Audit:
             return self.candidate.audit, digest(salt), "gpt-5.6-luna"
         if schema is DedupVerdict:
