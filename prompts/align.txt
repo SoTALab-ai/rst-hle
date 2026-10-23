@@ -21,3 +21,6 @@ some conditions are to be discovered or are consequences of retained constraints
 well-defined problem and let independent QC determine whether the shortened task remains solvable and
 unique. Never replace the gold with a newly improvised answer. Do not turn a compact target into a long
 list of requested intermediate outputs. required_outputs must match the actual question exactly.
+Check the literal question against design.hidden_steps before returning: do not explicitly provide the
+intermediate lemma, spectral identity, transformation, branch criterion or solved interval that the
+design claims the solver must discover. Preserve primitive definitions and raw constraints instead.

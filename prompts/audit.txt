@@ -21,4 +21,9 @@ For a harder parent revision, require a substantive new reasoning step; reject r
 For an intentionally easier revision, require a substantive removal of one reasoning burden with validity preserved;
 do not insist that an easier problem adds a new inference. A correct auxiliary lemma may be supplied, not the answer.
 For a new seed, substantive_delta means the question involves substantive reasoning or discriminative knowledge.
+Compare solution.design.hidden_steps with the literal question when a design is supplied. A claim of
+hidden reasoning is not evidence that it was actually hidden. If the question directly supplies an
+intermediate lemma, identity, transformation, branch criterion or solved interval that the design claims
+must be discovered, set no_shortcut=false and identify the exposed step for revision. Do not reject raw
+observations or primitive definitions merely because the reference proof also uses them.
 Return all booleans and a specific reason. Any uncertainty in correctness should set valid=false.
