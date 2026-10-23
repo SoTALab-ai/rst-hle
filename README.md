@@ -108,6 +108,8 @@ python3 scripts/vm_run.py --host YOUR_SSH_ALIAS --directory ~/Developer/rst-hle 
 
 试验设计与 RST 的有效性边界见 [docs/rst-assessment.md](docs/rst-assessment.md)，验收条目见 [docs/acceptance.md](docs/acceptance.md)，真实 VM 试跑结果见 [docs/validation.md](docs/validation.md)。来源原文、密钥、题库、完整回答轨迹和运行数据库默认均被 Git 忽略；仅代码/配置与脱敏统计进入公开仓库。
 
+新版逆向出题与前置反代管线的[100条真实试产结果](docs/theory100-results-2026-10-24.md)：93条计划形成题面、共127个版本，37个版本首4次全对，1个版本3次正确后有1次超时；暂无1–8/16目标难度留存。当前结果不能证明RST已有效，质量门禁也仍有误拒和计算覆盖边界。
+
 原始 HLE 参考题的并发难度校准入口见 [docs/calibration.md](docs/calibration.md)。用户已将判分模型更新为 gpt-6-luna medium。
 
 2026-10-23 的八领域限时校准结果见 [docs/calibration-results-2026-10-23.md](docs/calibration-results-2026-10-23.md)。
