@@ -208,6 +208,7 @@ class QuestionExperiment(Pipeline):
             raise
         final = self.snapshot()
         missing = (final["roots_with_generated_question"]<len(self.plan.roots) or any(
-            v["decision"]=="incomplete" for r in final["roots"] for v in r["versions"]))
+            v["decision"]=="incomplete" for r in final["roots"] for v in r["versions"]) or
+            any(state.get("phase")=="prefix_failed" for state in self.plan_state.values()))
         self.metadata("completed_with_errors" if missing else "completed")
         return self.snapshot()

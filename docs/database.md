@@ -22,12 +22,16 @@ erDiagram
     RUNS ||--o{ STAGE_EVENTS : records
     CANDIDATES ||--o{ CANDIDATE_SOURCES : grounded_in
     SOURCES ||--o{ CANDIDATE_SOURCES : supports
+    SOURCES ||--o| PAPER_CATALOG : publication
+    PAPER_CATALOG ||--o{ PAPER_METADATA_VERSIONS : revisions
     CANDIDATES ||--o{ QC_SAMPLES : has_16
     MODEL_REQUESTS ||--o{ QC_SAMPLES : solver_and_judge
     CANDIDATES ||--o{ CANDIDATES : parent
 ```
 
 `sources` 保存来源标题、地址、全文哈希和正文对象收据；`candidates` 保存分类、父子谱系、material_key、状态和 bundle 收据；`qc_samples` 唯一约束 `(candidate_id, sample_id)`，并关联 solver/judge 请求。`model_requests` 保存模型、usage 和原始请求/响应对象收据。`quotas` 保存不可混淆的配额清单版本；`exports` 保存导出 manifest。
+
+显式迁移002添加 `paper_catalog` 和不可变的 `paper_metadata_versions`，保存固定全文版本对应的期刊、DOI、学科、理论筛选及许可元数据。全文仍在原内容寻址产物库，不塞入元数据表。新发现DOI先写有来源哈希的文件队列，通过理论适用性、版本与全文核查后再入正式目录；候选元数据数不冒充已入库全文数。采集与查询入口见 [theory-experiment.md](theory-experiment.md)。
 
 两个部分唯一索引保证 accepted 题中 root 和 material_key 只计一次；这比纯应用内计数更可靠。首版仍用全流程写锁串行执行配额保留，未宣称支持任意多写入生产。调整每谱系计数策略时必须先更新数据库约束和相应测试。
 

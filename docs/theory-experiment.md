@@ -6,6 +6,18 @@
 
 ## 论文库与采集
 
+可以先从5本配置期刊的ISSN批量发现近期DOI，形成候选材料队列（不调用模型、不购买全文，也不自动入库）：
+
+```bash
+uv run python scripts/discover_journal_papers.py \
+  --since 2025-01-01 --until 2026-10-23 --per-journal 20 \
+  --output work/paper-discovery.json
+```
+
+入口依据 [Crossref官方API](https://www.crossref.org/documentation/retrieve-metadata/rest-api/)，期刊配置见 [journals.json](../configs/papers/journals.json)。按ISSN核对记录，按DOI去重，记录原元数据哈希与查询窗口。每本期刊只取最近N条，是有限发现队列，不声称穷尽该时间窗。单刊失败会保留其他结果，记录失败并以非零状态退出。2026-10-23实际检查5刊各5条，共25条元数据；它们不计入已入库的22篇全文或本轮10篇选材。
+
+新发现材料仍需核实理论适用性、勘误/撤稿、精确arXiv版本、全文和许可，再转成策展清单。不能只靠期刊名称把实验论文、增补或更正收入出题库。日期保留线上/纸本原字段，查询条件沿用Crossref的发表日期口径。
+
 在配置好的PostgreSQL上显式升级一次，然后按固定版本采集：
 
 ```bash

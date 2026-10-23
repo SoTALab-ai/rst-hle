@@ -216,6 +216,26 @@ def test_assessment_defect_found_after_sampling_prevents_retention_and_descendan
     assert version['decision']=='quality_rejected' and not result['transitions']
 
 
+def test_failed_rewrite_without_a_saved_candidate_is_reported_as_completed_with_errors(tmp_path,settings,source,candidate):
+    settings.early_screen_samples=4
+    store=Store(tmp_path/'s.sqlite');store.add_source(source)
+    root=RootPlan(name='claim',source_id=source.id,category='Math',subtopic='组合与图论',
+                  focus='A controlled rewrite that fails its author response schema')
+    experiment=QuestionExperiment(settings,store,'r','pilot',tmp_path/'r',PatternGateway(candidate,set(range(16))),
+                                  plan=ExperimentPlan(roots=[root],max_revisions=2),pricing=pricing())
+
+    async def author(src,parent,target,generation,attempt,brief=None):
+        if generation:raise ModelResponseError('generator','fixture-request','invalid_schema')
+        c=candidate.model_copy(deep=True);c.id=experiment.root_identity(root,{source.id:source})
+        c.root_id=c.id;c.run_id='r';store.save(c);return c
+
+    experiment.generate=author
+    result=asyncio.run(experiment.run_experiment())
+    assert result['generated_versions']==1 and result['roots_with_retained_question']==0
+    assert result['roots'][0]['state']['phase']=='prefix_failed'
+    assert store.runs()['r']['status']=='completed_with_errors'
+
+
 def test_author_repair_resumes_after_a_saved_rejection_without_repeating_first_draft(tmp_path,settings,source,candidate):
     from diamond_factory.models import Audit, Question, Solution
     pipe,store,_=setup_pipeline(tmp_path,settings,source,candidate)

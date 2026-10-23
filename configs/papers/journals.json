@@ -1,0 +1,7 @@
+[
+  {"id":"annals","journal":"Annals of Mathematics","issn":"0003-486X","domain":"Math"},
+  {"id":"jams","journal":"Journal of the American Mathematical Society","issn":"0894-0347","domain":"Math"},
+  {"id":"inventiones","journal":"Inventiones mathematicae","issn":"0020-9910","domain":"Math"},
+  {"id":"prl","journal":"Physical Review Letters","issn":"0031-9007","domain":"Physics"},
+  {"id":"prx","journal":"Physical Review X","issn":"2160-3308","domain":"Physics"}
+]
