@@ -34,6 +34,9 @@ if isinstance(store, PostgresStore):
     result["unique_request_receipts"] = len(traces)
     result["new_http_attempts"] = store.db.execute("SELECT http_attempts FROM diamond.runs WHERE id=%s",
                                                     (args.run_id,)).fetchone()[0]
+    own_receipts = store.db.execute("SELECT count(*) FROM diamond.model_requests WHERE run_id=%s",
+                                   (args.run_id,)).fetchone()[0]
+    result["http_attempts_without_receipts"] = max(0, result["new_http_attempts"] - own_receipts)
     result["solver_client_token_caps"] = sum(
         "max_tokens" in t["request"] or "max_completion_tokens" in t["request"]
         for t in traces if t["role"] == "solver")
