@@ -2,7 +2,7 @@ import asyncio
 import json
 
 import pytest
-from conftest import trials
+from conftest import passing_consistency, trials
 from pydantic import ValidationError
 
 from diamond_factory.gates import (
@@ -12,7 +12,17 @@ from diamond_factory.gates import (
     production_blockers,
     static_errors,
 )
-from diamond_factory.models import Audit, DedupVerdict, Judgment, Source, Submission, digest
+from diamond_factory.models import (
+    Audit,
+    CertificateAudit,
+    ConsistencyAudit,
+    DedupVerdict,
+    IndependentSolution,
+    Judgment,
+    Source,
+    Submission,
+    digest,
+)
 from diamond_factory.pipeline import Pipeline
 from diamond_factory.store import Store
 
@@ -97,6 +107,16 @@ class FakeGateway:
 
     async def call(self, role, prompt, salt, schema=None, **kwargs):
         self.calls.append((role, prompt, salt))
+        if schema is IndependentSolution:
+            return IndependentSolution(outcome="solved", derivation=["The graph is a tree.", "37-1=36."],
+                answer="36", issues=[]), digest(salt), "gpt-6-luna"
+        if schema is ConsistencyAudit:
+            return passing_consistency(), digest(salt), "gpt-6-luna"
+        if schema is CertificateAudit:
+            data = json.loads(prompt.split("\n")[-1])
+            from diamond_factory.models import SubstitutionCase
+            return CertificateAudit(faithful_translation=True, reason="All formulas match the literal fixture.",
+                checks=[SubstitutionCase.model_validate(c) for c in data["proposed_checks"]]), digest(salt), "gpt-6-luna"
         if role == "solver":
             assert self.candidate.item.rationale not in prompt
             assert "solution" not in salt

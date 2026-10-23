@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .calibration import BenchmarkQuestion, Calibration
 from .config import load
+from .consistency import has_valid_consistency
 from .gates import can_count, correct_count, production_blockers, static_errors
 from .models import Submission, digest
 from .pipeline import Pipeline, report
@@ -25,8 +26,9 @@ def main():
     crawl.add_argument("--ids", nargs="*", default=[])
     crawl.add_argument("--limit", type=int, default=1)
     crawl.add_argument("--directory", default="work/papers")
-    for command in ("run", "qc"):
-        run = sub.add_parser(command, help="Evolve questions" if command == "run" else "QC existing authored bundles")
+    for command in ("run", "qc", "preflight"):
+        run = sub.add_parser(command, help={"run": "Evolve questions", "qc": "QC existing authored bundles",
+                                           "preflight": "Check correctness without difficulty sampling"}[command])
         run.add_argument("--run-id", required=True)
         run.add_argument("--mode", choices=["pilot", "production"], default="pilot")
         if command == "run":
@@ -118,15 +120,15 @@ def main():
             Path("outputs", args.run_id + ".json").write_text(json.dumps(result, ensure_ascii=False, indent=2))
             print(json.dumps({"by_category": result["by_category"], "totals": result["totals"]},
                              ensure_ascii=False, indent=2))
-        elif args.command in ("run", "qc"):
+        elif args.command in ("run", "qc", "preflight"):
             if not args.run_id or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for c in args.run_id):
                 raise ValueError("run-id must contain only letters, numbers, underscore or hyphen")
             directory = Path("work/runs") / args.run_id
             pipeline = Pipeline(settings, store, args.run_id, args.mode, directory)
-            if args.command == "qc":
+            if args.command in ("qc", "preflight"):
                 submissions = [Submission.model_validate_json(line) for line in
                                Path(args.submission).read_text().splitlines() if line.strip()]
-                result = asyncio.run(pipeline.qc(submissions))
+                result = asyncio.run(pipeline.qc(submissions, preflight_only=args.command == "preflight"))
             else:
                 result = asyncio.run(pipeline.run(args.subtopic))
             Path("outputs").mkdir(exist_ok=True)
@@ -143,12 +145,14 @@ def main():
             accepted = [c for c in store.candidates() if c.status == "accepted"]
             for c in accepted:
                 if (static_errors(c, sources, quotas) or not c.audit.passed() or
+                        not has_valid_consistency(c, sources) or
                         not 1 <= correct_count(c.trials) <= 8 or
                         can_count(c, accepted, quotas, settings.max_per_root)):
                     raise ValueError("Stored candidate failed export revalidation: " + c.id)
                 rows.append({"id": c.id, **c.item.model_dump(), "lineage": {"root": c.root_id,
                              "parent": c.parent_id, "generation": c.generation},
                              "correct_count": correct_count(c.trials),
+                             "consistency": c.consistency.model_dump(),
                              "trials": [t.model_dump() for t in c.trials], "run_id": c.run_id})
             target = Path(args.output)
             target.parent.mkdir(parents=True, exist_ok=True)

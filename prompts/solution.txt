@@ -17,5 +17,16 @@ Avoid mere renumbering, rephrasing, obscure trivia without evidence, gratuitous 
 The reasoning_delta must explain which inferences are added or removed relative to the parent, and why.
 At generation 0, describe the reasoning from the source instead.
 Feedback may request harder/easier questions or fix a concrete validity issue. Preserve evidence and solvability.
+Return a detailed design field identifying the exact source claim and locator, one compact target,
+all conditions used by the reference derivation, hidden reasoning steps, conditions the solver should
+infer, preserved invariants, inverse_construction, and an answer_check. The inverse construction should
+start from a validated result and work backwards to the smallest informative observations/constraints.
+Choose a theorem mechanism or a nontrivial proof/computation chain, not just the famous conclusion or
+an arbitrary number to disguise. Hide transformations, latent variables, case splits and intermediate
+lemmas aggressively. Do not pre-reveal a feasible parameter interval or a branch if its inference is
+the intended challenge. You may aggressively try deleting conditions: distinguish must-HOLD conditions
+from must-STATE conditions and explain what remaining constraints should entail them; downstream QC
+will reject deletions that actually introduce contradiction or nonuniqueness. The full reference proof
+must expose all assumptions even when the intended question omits their derived form.
 The eventual question must be fully text-contained: include needed equations, tables, code or rules.
 For knowledge questions include necessary source/version/date context and uniquely resolve the answer.

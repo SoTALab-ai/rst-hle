@@ -16,15 +16,19 @@
 flowchart LR
     A[arXiv / 已有材料库] --> B[全文与哈希、可定位证据]
     B --> R[按来源路由至支持的v3子类]
-    R --> C[先解答与推导、再生成题面]
+    R --> C[来源机制、完整参考解与逆构造设计]
+    C --> V[新理论实验：先审参考蓝图]
+    V --> W[逆向构造题面、积极隐藏推理]
     U[已有题目 bundle] --> D
-    C --> D[结构检查、证据检查、模型复核]
-    D --> E[GLM5.2 独立盲答 16 次]
+    W --> D[结构检查、证据检查、综合复核]
+    D --> K[独立盲推导、题目与金标自洽审查]
+    K -->|通过| E[GLM5.2 分阶段盲答 4 → 16 次]
+    K -->|错误或不确定| L[退回修题与金标、重新质检]
+    L --> C
     E --> F[官方 HLE judge + luna medium]
     F --> G{正确 1 至 8 次}
     G -->|是| H[批次去重、独立题与配额检查]
     H --> I[保留池、报告、导出]
-    D -->|质量合格| J[可演化种子]
     F -->|太易或太难| J
     J --> C
 ```
@@ -66,12 +70,13 @@ uv run diamond export --require-complete --output outputs/all-2000.jsonl
 
 - Solver：`glm-5.2`，16 个独立请求，默认 temperature=1.0、top_p=0.95；只看题面，以 600 秒墙钟时间为限，重试包含在内，不发送输出 token 上限。
 - Judge：`gpt-6-luna`，`reasoning_effort=medium`；使用官方 HLE 模板和输出字段，包含最终答案抽取、语义比较与数值小误差口径。
+- Consistency：单独的 `gpt-6-luna high` 角色，先只看题面独立推导，再核对题面/金标，另一次隔离调用检查验算公式的翻译；程序执行精确反代、合法参数点和输出覆盖检查。三次独立请求，不读取历史通过率；失败、不确定或计算检查未覆盖都阻止采样。100条新理论实验另启用题面生成前的参考蓝图复核。详见 [出题设计](docs/question-design.md)与[前置自洽审查](docs/consistency.md)。
 - 模板固定于官方仓库提交 `22ed3074b1e7b134bcbc09028d0ba320839b0655`，来源和哈希见 [configs/judge-contract.json](configs/judge-contract.json)。官方没有给出统一数值 epsilon，本项目也没有另加固定容差。
 - 当前只支持无工具评估；HLE-Diamond 另有受控搜索与离线代码模式，规则、官方 600 秒客户端设置与用户选择的硬限时之间的区别见 [docs/calibration.md](docs/calibration.md)。
 - 保存模型请求名、响应实际模型名、参数、模板哈希、16 个回答与判分、usage。不会把调用失败、截断、JSON 错误或超预算当作答错。
 - 网关需支持兼容的 `/v1/chat/completions`、JSON object 输出和 reasoning_effort。实际模型名不符会失败；如网关使用有证据的别名，可显式配置 `accepted_response_models`。
 
-当前 generator/auditor 默认使用同一模型的分离调用，只能减少上下文泄漏，不能消除同模型相关性错误。模型复核和引文存在性都不等价于学科正确性的证明。
+pilot/production 的 generator/auditor 仍默认使用同一模型的分离调用；新增的 consistency 使用另一配置角色和独立上下文，理论试产中与综合复核同为 gpt-6-luna。分工与盲推导能减少金标锚定，不能消除同模型相关性错误；模型审查通过不等价于数学证明或专家确认。
 
 ## 递归与个人 VM
 
@@ -84,7 +89,7 @@ uv run diamond run --run-id evolve-first --mode pilot
 # uv run diamond run --subtopic 人工智能与机器学习 --run-id targeted-first --mode pilot
 ```
 
-顺序为解答蓝图 → 题面 → 复核 → 难度测量 → 去重/保留。`max_rounds`、修复次数、每来源候选数和请求预算均可配置。只有质量合格的题能成为父题；0/16 或 9–16/16 不交付，但可分别尝试降难度或升难度。默认每条根谱系最多计 1 道，防止同材料近似变体凑量。
+顺序为解答蓝图 → 题面 → 综合复核 → 独立盲推导与自洽审查 → 难度测量 → 去重/保留。质量失败先修正确性，不进入难度演化；每个改写版本都重新审查。`max_rounds`、修复次数、每来源候选数和请求预算均可配置。只有质量合格的题能成为父题；0/16 或 9–16/16 不交付，但可分别尝试降难度或升难度。默认每条根谱系最多计 1 道，防止同材料近似变体凑量。
 
 在已有 SSH VM 上部署仓库、执行 `uv sync --frozen`，可从本机用下面的入口转发已有 API 环境变量（通过加密 SSH 标准输入，不写到命令参数或磁盘）：
 

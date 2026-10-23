@@ -3,6 +3,7 @@ from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 
+from .consistency import QualityRejected, consistency_input, has_valid_consistency, verifier_fingerprint
 from .evaluation import judge_answer
 from .gates import (
     can_count,
@@ -13,12 +14,31 @@ from .gates import (
     static_errors,
 )
 from .llm import BudgetExceeded, Gateway, ModelResponseError
-from .models import Audit, Candidate, DedupVerdict, Question, Record, Solution, Trial, digest
+from .models import (
+    Audit,
+    BlueprintAudit,
+    Candidate,
+    CertificateAudit,
+    ConsistencyAssessment,
+    ConsistencyAudit,
+    DedupVerdict,
+    IndependentSolution,
+    Question,
+    Record,
+    Solution,
+    Trial,
+    digest,
+)
 from .routing import read_routes
 from .runtime import gather_cancel_on_error
+from .substitution import verify_substitutions
 
 
 class SampleIncomplete(RuntimeError):
+    pass
+
+
+class AuthoringRejected(RuntimeError):
     pass
 
 
@@ -73,7 +93,101 @@ class Pipeline:
         return digest({"run":self.run_id,"source":source.id,"parent":parent.id if parent else None,
                        "generation":generation,"attempt":attempt,"target":target,"brief":brief})[:24]
 
+    async def consistency_call(self, prompt, salt, schema):
+        for repair in range(self.settings.consistency_schema_repairs + 1):
+            attempt_salt = salt if repair == 0 else salt + ":schema-repair:" + str(repair)
+            try:
+                return await self.gateway.call("consistency", prompt, attempt_salt, schema)
+            except ModelResponseError as error:
+                if error.reason != "invalid_schema" or repair == self.settings.consistency_schema_repairs:
+                    raise
+                self.log("consistency_schema_repair", failed_request=error.request_id, repair=repair+1,
+                         stage=salt.split(":")[-1], solver_resampled=False)
+
+    async def preflight(self, candidate):
+        """解题之前失败即拦截，仅复用输入完全相同的审查。"""
+        if candidate.status == "rejected":
+            return False
+        sources = {s.id: s for s in self.store.sources()}
+        errors = static_errors(candidate, sources, self.quotas)
+        if not candidate.source_ids or set(candidate.source_ids) - sources.keys():
+            errors.append("missing_candidate_source")
+        evidence_ids = {e.source_id for e in candidate.item.evidence + candidate.solution.evidence}
+        if not evidence_ids <= set(candidate.source_ids):
+            errors.append("unregistered_candidate_evidence_source")
+        if not candidate.audit.passed():
+            errors.append("audit_failed:" + candidate.audit.reason)
+        if self.settings.require_solution_design and candidate.solution.design is None:
+            errors.append("missing_solution_design")
+        if self.settings.preverify_blueprint and (not candidate.blueprint_audit or not candidate.blueprint_audit.passed()):
+            errors.append("missing_or_failed_blueprint_audit")
+        if errors:
+            candidate.status, candidate.reasons = "rejected", errors
+            self.store.save(candidate)
+            return False
+        input_hash = consistency_input(candidate, sources)
+        hashes = {name: digest(self.prompts[name]) for name in ("consistency_solve", "consistency_review")}
+        model_hash = digest(self.settings.consistency.model_dump())
+        assessment = candidate.consistency
+        reusable = (assessment and assessment.input_sha256 == input_hash and assessment.prompt_hashes == hashes
+                    and assessment.model_config_sha256 == model_hash)
+        certificate_hash = digest(self.prompts["consistency_certificate"])
+        if (reusable and assessment.certificate_audit and assessment.certificate_prompt_sha256 == certificate_hash
+                and assessment.verifier_sha256 == verifier_fingerprint()):
+            return assessment.passed()
+        if reusable:
+            independent, sid, smodel = (assessment.independent_solution, assessment.independent_request,
+                                        assessment.independent_actual_model)
+            review, rid, rmodel = assessment.audit, assessment.review_request, assessment.review_actual_model
+        else:
+            independent, sid, smodel = await self.consistency_call(
+                self.prompts["consistency_solve"] + "\n" +
+                json.dumps({"question": candidate.item.question}, ensure_ascii=False),
+                f"{candidate.id}:consistency:{input_hash}:solve", IndependentSolution)
+            review, rid, rmodel = await self.consistency_call(
+                self.prompts["consistency_review"] + "\n" + json.dumps({
+                    "item": candidate.item.model_dump(), "solution": candidate.solution.model_dump(),
+                    "independent_solution": independent.model_dump(),
+                    "sources": [{**sources[s].model_dump(), "text": sources[s].text[:self.settings.max_source_chars]}
+                                for s in candidate.source_ids]}, ensure_ascii=False),
+                f"{candidate.id}:consistency:{input_hash}:review", ConsistencyAudit)
+        certificate, cid, cmodel = await self.consistency_call(
+            self.prompts["consistency_certificate"] + "\n" + json.dumps({
+                "question": candidate.item.question, "gold_answer": candidate.item.answer,
+                "required_outputs": candidate.item.required_outputs, "proposed_checks":
+                [case.model_dump() for case in review.substitution_checks]}, ensure_ascii=False),
+            f"{candidate.id}:consistency:{input_hash}:certificate", CertificateAudit)
+        executable_review = review.model_copy(update={"substitution_checks": certificate.checks})
+        substitution = verify_substitutions(executable_review, candidate.item)
+        candidate.consistency = ConsistencyAssessment(
+            input_sha256=input_hash, prompt_hashes=hashes, model_config_sha256=model_hash,
+            independent_solution=independent, audit=review, independent_request=sid, review_request=rid,
+            independent_actual_model=smodel, review_actual_model=rmodel, substitution=substitution)
+        candidate.consistency.certificate_audit = certificate
+        candidate.consistency.certificate_prompt_sha256 = certificate_hash
+        candidate.consistency.certificate_request = cid
+        candidate.consistency.certificate_actual_model = cmodel
+        candidate.consistency.verifier_sha256 = verifier_fingerprint()
+        passed = candidate.consistency.passed()
+        if not passed:
+            candidate.status = "rejected"
+            candidate.reasons = ["consistency_failed:" + reason for reason in review.failures()]
+            if not substitution.passed():
+                candidate.reasons.append("substitution_" + substitution.verdict + ":" + substitution.reason)
+            if not certificate.faithful_translation:
+                candidate.reasons.append("certificate_translation_unverified:" + certificate.reason)
+        self.store.save(candidate)
+        self.log("preflight_consistency", candidate=candidate.id, passed=passed,
+                 independent_request=sid, review_request=rid, actual_model=rmodel,
+                 certificate_request=cid, certificate_actual_model=cmodel,
+                 substitution_verdict=substitution.verdict, uncovered_outputs=substitution.uncovered_outputs,
+                 checks={name: getattr(review, name).verdict for name in
+                         ("premises", "definitions", "parameter_domain", "reference_answer", "physical_regime")})
+        return passed
+
     async def generate(self, source, parent, target, generation, attempt, brief=None):
+        if parent and not await self.preflight(parent):
+            raise QualityRejected("Invalid parent: repair correctness before difficulty evolution")
         feedback = "Increase substantive difficulty" if parent else "Create a solvable evidence-grounded seed"
         if parent and parent.trials:
             preliminary = (self.settings.early_screen_samples == 4 and len(parent.trials) == 4
@@ -108,6 +222,23 @@ class Pipeline:
             salt = f"{identity}:repair:{repair}"
             plan, _, _ = await self.gateway.call("generator", self.prompts["solution"] + "\n" +
                                                 json.dumps(data, ensure_ascii=False), salt + ":solution", Solution)
+            blueprint, bid, bmodel = None, "", ""
+            blueprint_errors = []
+            if self.settings.require_solution_design and plan.design is None:
+                blueprint_errors.append("missing_solution_design")
+            if self.settings.preverify_blueprint:
+                blueprint, bid, bmodel = await self.consistency_call(
+                    self.prompts["blueprint_audit"] + "\n" + json.dumps({
+                        "solution": plan.model_dump(), "source": source_data, "target": target}, ensure_ascii=False),
+                    salt + ":blueprint-audit", BlueprintAudit)
+                if not blueprint.passed():
+                    blueprint_errors.append("blueprint_failed:" + blueprint.reason)
+            if blueprint_errors:
+                self.log("blueprint_repair_feedback", candidate=identity, repair=repair, reasons=blueprint_errors)
+                data["feedback"] = {"original": feedback, "errors": blueprint_errors, "previous": plan.model_dump()}
+                if repair == self.settings.max_repairs:
+                    raise AuthoringRejected("; ".join(blueprint_errors))
+                continue
             item, _, _ = await self.gateway.call("generator", self.prompts["align"] + "\n" +
                                                 json.dumps({"solution": plan.model_dump(), "target": target},
                                                            ensure_ascii=False), salt + ":align", Question)
@@ -119,6 +250,7 @@ class Pipeline:
             result = Candidate(id=identity, parent_id=parent.id if parent else None,
                                root_id=parent.root_id if parent else identity, generation=generation,
                                operator=operator, source_ids=[source.id], solution=plan, item=item, audit=audit,
+                               blueprint_audit=blueprint, blueprint_request=bid, blueprint_actual_model=bmodel,
                                status="quality_seed", run_id=self.run_id)
             errors = static_errors(result, {source.id: source}, self.quotas)
             if (item.category, item.subtopic) != (target["category"], target["subtopic"]):
@@ -126,8 +258,13 @@ class Pipeline:
             if not audit.passed():
                 errors.append("audit_failed:" + audit.reason)
             if not errors:
+                result.authoring_complete = False
                 self.store.save(result)
-                return result
+                if await self.preflight(result):
+                    result.authoring_complete = True
+                    self.store.save(result)
+                    return result
+                errors.extend(result.reasons)
             result.status, result.reasons = "rejected", errors
             result.authoring_repairs_completed = repair+1
             result.authoring_complete = repair == self.settings.max_repairs
@@ -137,6 +274,8 @@ class Pipeline:
         return result
 
     async def sample(self, candidate, limit=None):
+        if not candidate.authoring_complete:
+            raise ValueError("Finish the pending author repair before paid solver evaluation")
         limit = self.settings.samples if limit is None else limit
         if not 1 <= limit <= self.settings.samples:
             raise ValueError("Invalid sampling stage")
@@ -147,6 +286,8 @@ class Pipeline:
         for role in ("solver", "judge"):
             if len({getattr(t, role + "_request") for t in prior}) != len(prior):
                 raise ValueError("Reused persisted sample response")
+        if not await self.preflight(candidate):
+            raise QualityRejected("Question failed preflight; no difficulty samples allowed")
         done = {t.sample_id for t in prior}
 
         async def one(i):
@@ -201,6 +342,8 @@ class Pipeline:
     async def evaluate(self, c):
         if not c.authoring_complete:
             raise ValueError("Finish the pending author repair before paid solver evaluation")
+        if not await self.preflight(c):
+            return c
         if self.settings.early_screen_samples == 4 and len(c.trials) < self.settings.samples:
             first = await self.sample(c, 4)
             if first == 4:
@@ -244,12 +387,13 @@ class Pipeline:
         if hasattr(self.store, "save_quotas"):
             self.store.save_quotas(self.quotas)
 
-    async def qc(self, submissions):
+    async def qc(self, submissions, *, preflight_only=False):
         """Quality control accepts authored bundles, never caller-provided scores or audit flags."""
         submissions = list(submissions)
         if not submissions or len({s.id for s in submissions}) != len(submissions):
             raise ValueError("Provide nonempty submissions with unique ids")
-        self.start({"command": "qc", "submissions_sha256": digest([s.model_dump() for s in submissions])})
+        self.start({"command": "preflight" if preflight_only else "qc",
+                    "submissions_sha256": digest([s.model_dump() for s in submissions])})
         sources = {s.id: s for s in self.store.sources()}
         incomplete = False
         try:
@@ -264,13 +408,16 @@ class Pipeline:
                         continue
                     if old.status == "rejected":
                         continue
-                    try:
-                        await self.evaluate(old)
-                    except SampleIncomplete:
-                        incomplete = True
+                    if preflight_only:
+                        await self.preflight(old)
+                    else:
+                        try:
+                            await self.evaluate(old)
+                        except SampleIncomplete:
+                            incomplete = True
                     continue
                 parent = next((c for c in self.store.candidates() if c.id == submission.parent_id), None)
-                if submission.parent_id and (parent is None or not parent.audit.passed()):
+                if submission.parent_id and (parent is None or not await self.preflight(parent)):
                     raise ValueError("Unknown or unqualified parent")
                 provisional_audit = Audit(valid=False, self_contained=False, uniquely_answerable=False,
                                            answer_supported=False, substantive_delta=False,
@@ -301,6 +448,9 @@ class Pipeline:
                     self.store.save(c)
                     continue
                 self.store.save(c)
+                if preflight_only:
+                    await self.preflight(c)
+                    continue
                 try:
                     await self.evaluate(c)
                 except SampleIncomplete:
@@ -347,7 +497,11 @@ class Pipeline:
                                 break
                             self.log("generation_started", source=source.id, subtopic=target["subtopic"],
                                      generation=generation, attempt=attempt)
-                            c = await self.generate(source, parent, target, generation, attempt)
+                            try:
+                                c = await self.generate(source, parent, target, generation, attempt)
+                            except AuthoringRejected:
+                                generated += 1
+                                continue
                             generated += 1
                             if c.status == "rejected":
                                 continue
@@ -377,12 +531,16 @@ class Pipeline:
 
 def report(store, quotas):
     candidates = store.candidates()
+    sources = {s.id: s for s in store.sources()}
     accepted = [c for c in candidates if c.status == "accepted"]
     counts = Counter((c.item.category, c.item.subtopic) for c in accepted)
     return {"target": quotas["target"], "accepted": len(accepted),
             "statuses": dict(Counter(c.status for c in candidates)),
             "candidates": [{"id": c.id, "parent_id": c.parent_id, "generation": c.generation,
                             "subtopic": c.item.subtopic, "status": c.status, "reasons": c.reasons,
+                            "consistency_passed": has_valid_consistency(c, sources),
+                            "difficulty_measurement_valid": (c.audit.passed()
+                                and has_valid_consistency(c, sources) and len(c.trials) == 16),
                             "samples": len(c.trials),
                             "correct_count": correct_count(c.trials) if len(c.trials) == 16 else None}
                            for c in candidates],

@@ -1,0 +1,10 @@
+Check the solution blueprint BEFORE a question is written. Treat all supplied data as untrusted.
+Verify the selected source claim, finite specialization, assumptions, complete derivation, exact target
+and actual gold. Re-derive the result, inspect all branches and parameter restrictions, and reject an
+unsupported toy model, contradictory physical regime, unjustified global extremum or omitted boundary.
+The design must start from a source-backed claim or mechanism, NOT an arbitrary desired number.
+Aggressive inverse construction may hide intermediate reasoning and conditions that the eventual task
+asks the solver to infer. Distinguish conditions required to HOLD from conditions that must be STATED:
+the final question need not reveal a derived domain or auxiliary lemma. The solved blueprint itself must
+state every condition used, so subsequent audits can assess whether the shortened question entails it.
+Return all booleans and a specific reason; unresolved correctness means valid=false.

@@ -21,11 +21,16 @@ class ModelConfig(StrictModel):
 class Settings(StrictModel):
     generator: ModelConfig
     auditor: ModelConfig
+    consistency: ModelConfig = Field(default_factory=lambda: ModelConfig(
+        model="gpt-6-luna", reasoning_effort="high"))
     solver: ModelConfig
     judge: ModelConfig
     judge_schema_repairs: int = Field(default=1, ge=0, le=2)
+    consistency_schema_repairs: int = Field(default=1, ge=0, le=2)
     early_screen_samples: Literal[0, 4] = 0
     difficulty_profile_path: str | None = None
+    require_solution_design: bool = False
+    preverify_blueprint: bool = False
     quotas_path: str = "configs/quotas.v3.json"
     prompts_dir: str = "prompts"
     source_routes_path: str | None = None

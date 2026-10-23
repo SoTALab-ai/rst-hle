@@ -45,6 +45,25 @@ def test_pg_source_and_candidate_sample_roundtrip(pg, source, candidate):
         pg.sources()
 
 
+def test_pg_preflight_certificate_roundtrip_and_content_binding(pg, tmp_path, settings, source, candidate):
+    import asyncio
+
+    from test_qc import FakeGateway
+
+    from diamond_factory.consistency import has_valid_consistency
+    from diamond_factory.pipeline import Pipeline
+
+    run_meta(pg)
+    pg.add_source(source)
+    pipe = Pipeline(settings, pg, "test", "pilot", tmp_path / "run", FakeGateway(candidate))
+    assert asyncio.run(pipe.preflight(candidate))
+    loaded = pg.candidates()[0]
+    assert loaded.consistency == candidate.consistency and loaded.consistency.substitution.verdict == "pass"
+    assert has_valid_consistency(loaded, {source.id: source})
+    loaded.item.answer = "37"
+    assert not has_valid_consistency(loaded, {source.id: source})
+
+
 def test_pg_budget_atomic_between_connections(pg):
     run_meta(pg)
     other = PostgresStore(URL, pg.objects.root)

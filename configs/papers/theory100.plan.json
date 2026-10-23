@@ -1,0 +1,707 @@
+{
+  "roots": [
+    {
+      "name": "M0101",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Find a precise source-supported claim/mechanism for inverse admissible domain of a genuinely coupled mixed characteristic polynomial. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0101",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for inverse coherent-perfect-absorption from a passive reciprocal scattering kernel. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0201",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for Fourier eigenfunction reconstruction in a finite Gaussian-polynomial basis. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0201",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a passive susceptibility optimization with the admissible material domain left to infer. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0301",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "Find a precise source-supported claim/mechanism for a weighted signed-cube operator with a hidden anticommuting representation. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0301",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for exact lossless two-mode reconstruction with physically compatible real couplings. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0401",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for an energy-preserving finite triadic system with hidden invariant weights. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0401",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for simultaneous invisibility and reflectionlessness with hidden phase compatibility. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0501",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for inverse finite Weyl reconstruction through a hidden continued fraction. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0501",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for an exact polarization-zero charge in a specified two-component far-field model. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0102",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Find a precise source-supported claim/mechanism for barrier-function feasibility with a latent singular parameter. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0102",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for an exact maximal absorption invariant in an asymmetric finite two-port model. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0202",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for self-dual radial transform constraints with a hidden parity decomposition. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0202",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for anisotropic polarizability constraints and an exact channel transfer invariant. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0302",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "Find a precise source-supported claim/mechanism for principal-submatrix interlacing plus trace constraints determining a threshold. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0302",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for nontrivial background-scattering phase constraints on modal couplings. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0402",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for a rigorously solvable threshold from competing nonlinear conservation laws. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0402",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a grating cascade whose latent Jordan structure controls an exact threshold. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0502",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for positive Hankel moment constraints determining an unknown admissible interval. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0502",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for symmetry breaking that splits a multiple radiation zero into admissible branches. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0103",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Find a precise source-supported claim/mechanism for noncommuting rank-one updates and an exact coefficient invariant. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0103",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for two-frequency compatibility of a fully specified causal constitutive response. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0203",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for global radial positivity requiring a nontrivial exact factorization. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0203",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for multiple-scattering dipole coupling with an exact physical extremum. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0303",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "Find a precise source-supported claim/mechanism for an equality case whose latent eigenspace multiplicity fixes a scalar target. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0303",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for inverse nonorthogonal quasinormal-mode normalization with exact identities. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0403",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for an exact transfer-time ratio after inferring the finite cascade clock. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0403",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a reciprocal PT-symmetric flux identity with an unknown admissible coupling. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0503",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for interlacing poles and positive residues determining a missing spectral mass. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0503",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for creation and annihilation of polarization zeros through a hidden discriminant. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0104",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Find a precise source-supported claim/mechanism for inverse Gram realization under isotropy and positivity. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0104",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a cascade absorption-zero condition requiring transfer-matrix structure discovery. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0204",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for double-zero interpolation and a sharp normalization bound. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0204",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for inverse Lorentz-response compatibility from two constrained spectral observations. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0304",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "Find a precise source-supported claim/mechanism for inverse compatibility of noncommuting weighted cube coordinates. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0304",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for conjugate-pole constraints required by a physically exact unitary model. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0404",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for a homogeneity-rescaling invariant from a specified averaged finite model. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0404",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for an exceptional-point boundary condition selecting a unique physical branch. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0504",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for a boundary coefficient recovered from a finite trace identity. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0504",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a gauge-independent orientation invariant of a polarization zero. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0105",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Find a precise source-supported claim/mechanism for sharp two-part matrix norm bound with a hidden partition. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0105",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a time-reversal scattering-zero relation with an unknown admissible coupling. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0205",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for Laguerre/Gaussian transform inversion with latent coefficients. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0205",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a narrow-band finite rational model with a rigorously global optimum. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0305",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "Find a precise source-supported claim/mechanism for Schur-complement spectral reconstruction from a partially hidden block. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0305",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a channel-space dark state and a mode-space nullspace kept rigorously distinct. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0405",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for a cumulative cascade time requiring a derived telescoping representation. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0405",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for inverse transfer-matrix reconstruction constrained by its determinant. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0505",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for inverse Jacobi reconstruction from two coupled rational spectra. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0505",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for inverse zero-position reconstruction constrained by radiation symmetries. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0106",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Find a precise source-supported claim/mechanism for a differential-operator specialization whose vanishing coefficient determines a coupling. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0106",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for nonorthogonal absorption channels and an exact singular-value observable. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0206",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for a finite theta-identity specialization with a uniquely forced coefficient. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0206",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a low-rank Green-operator reduction that must be discovered before optimization. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0306",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "Find a precise source-supported claim/mechanism for a parity decomposition that must be discovered to evaluate a determinant. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0306",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for an invariant residue observable under independent mode normalization changes. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0406",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for a Lyapunov barrier and sharp feasible rate regime. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0406",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a multisegment grating with hidden nilpotent coupling cancellation. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0506",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for a fractional-linear Weyl transform with an inferable physical branch. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0506",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for charge conservation when zeros cross a specified momentum boundary. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0107",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Find a precise source-supported claim/mechanism for real-stability versus real-rootedness constraints in a finite specialization. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0107",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for multiplicity of a physically admissible scattering zero with latent parameters. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0207",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for a constrained auxiliary-function extremum with all boundary cases checked. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0207",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a fluctuation-response compatibility invariant from off-diagonal couplings. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0307",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "Find a precise source-supported claim/mechanism for switching equivalence and a spectral invariant with no supplied conjugation. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0307",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a reciprocal two-port pole/residue compatibility condition. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0407",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for inverse reconstruction of energy-flux coefficients from endpoint data. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0407",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a finite boundary-phase resonance whose indexing convention is explicit but solution hidden. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0507",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for a rank-one spectral-shift determinant invariant from compressed measurements. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0507",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a radiation-coupling nullspace with a physically admissible dark branch. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0108",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Find a precise source-supported claim/mechanism for Schur-complement reconstruction from compressed mixed spectral moments. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0108",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for phase reconstruction from coupled coherent absorption measurements. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0208",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for inverse finite moment reconstruction of a positivity certificate. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0208",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for reciprocal heat transfer under asymmetric material constraints. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0308",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "Find a precise source-supported claim/mechanism for an induced-subgraph positivity threshold under coupled vertex constraints. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0308",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a controlled coalescing-pole limit of an exactly specified admissible model. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0408",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for a finite nonlinear phase threshold with a uniquely selected admissible branch. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0408",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for an asymmetric reflection observable requiring correct port flux normalization. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0508",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for pole cancellation and excluded parameter values in a rational inverse problem. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0508",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for an integer winding invariant requiring discovery of a simpler real polynomial map. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0109",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Find a precise source-supported claim/mechanism for weighted partition compatibility with an unknown admissible weight. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0109",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a finite multiport absorption bound with a hidden rank constraint. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0209",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for contact-root selection from competing Fourier and sign constraints. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0209",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for an exact supremum with attainment or boundary behavior determined from passivity. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0309",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "Find a precise source-supported claim/mechanism for an exact weighted-edge norm extremum using the cube recursion. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0309",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for inverse basis-rescaling reconstruction of a scattering invariant. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0409",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for quartic energy compatibility with a hidden coupling relation. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0409",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a relabeling-invariant observable after inferring a transfer-matrix factorization. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0509",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for a symmetric discrete measure with latent weights fixed by mixed moments. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0509",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for the leading radiative-leakage exponent under a specified symmetry perturbation. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0110",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Find a precise source-supported claim/mechanism for coupled moment and trace constraints determining a sparsification invariant. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0110",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for inverse impedance matching under reciprocity and passivity constraints. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0210",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for a normalization-invariant ratio after discovering the transform sign convention. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0210",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a coupled-channel invariant after resolving a complex-response branch. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0310",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "Find a precise source-supported claim/mechanism for rank and eigenvalue multiplicity conditions determining a missing coefficient. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0310",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for a bright eigenphase-delay observable requiring hidden scalar factorization. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0410",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for a self-similar finite recurrence whose final invariant requires two structural reductions. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0410",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for an active/passive regime boundary with all gain and loss assumptions explicit in the reference proof. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "M0510",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Find a precise source-supported claim/mechanism for an exact spectral-gap extremum under positivity and trace constraints. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    },
+    {
+      "name": "P0510",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Find a precise source-supported claim/mechanism for the total charge of coupled Bloch-mode zeros after admissibility and multiplicity analysis. Build one compact exact target with at least two linked nontrivial inferences. Inverse-construct from the verified solution; aggressively hide intermediate representations, lemmas, feasible intervals and branch resolution. The full reference must justify conditions that the question leaves to infer. This is a distinct construction attempt, not renumbering an earlier problem. Do not invent a source claim or assume a physically impossible model."
+    }
+  ],
+  "max_revisions": 2,
+  "root_workers": 8,
+  "visible_cost_limit_usd": 450.0
+}

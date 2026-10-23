@@ -13,7 +13,7 @@ def validate_pricing(settings,pricing):
     fx=pricing.get("rmb_reference_exchange_rate")
     if not isinstance(fx,(int,float)) or not math.isfinite(fx) or fx<=0:
         raise ValueError("Positive reference exchange rate required")
-    for role in ("generator","auditor","solver","judge"):
+    for role in ("generator","auditor","consistency","solver","judge"):
         model=getattr(settings,role).model
         rates=pricing.get("rates_per_million",{}).get(model)
         if not rates:

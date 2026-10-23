@@ -10,3 +10,11 @@ Do not include the answer or derivation in the question. Do not mention private 
 For multiple choice provide at least A–E and make the answer a single option letter; prefer exactMatch.
 The rationale must fully explain the answer. material_key should identify the underlying material/claim and
 reasoning structure, invariant to superficial rewordings and number substitutions.
+Construct by reversing the solution's dependency chain: reveal the original observations, governing
+relations and target, while hiding the intermediate representation, auxiliary lemma, inversion trick,
+feasible parameter range and branch resolution whenever they can be inferred. Be aggressive about
+removing hints and conditions. Do not automatically copy every blueprint assumption into the prompt:
+some conditions are to be discovered or are consequences of retained constraints. Keep a minimal
+well-defined problem and let independent QC determine whether the shortened task remains solvable and
+unique. Never replace the gold with a newly improvised answer. Do not turn a compact target into a long
+list of requested intermediate outputs. required_outputs must match the actual question exactly.

@@ -30,6 +30,11 @@ model = "gpt-6-luna"
 accepted_response_models = ["gpt-6-luna", "gpt-6-luna-2026-09-22"]
 reasoning_effort = "high"
 
+[consistency]
+model = "gpt-6-luna"
+accepted_response_models = ["gpt-6-luna", "gpt-6-luna-2026-09-22"]
+reasoning_effort = "high"
+
 [solver]
 model = "glm-5.2"
 accepted_response_models = ["glm-5.2", "z-ai/glm-5.2"]

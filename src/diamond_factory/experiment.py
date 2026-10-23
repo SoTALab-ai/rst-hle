@@ -6,11 +6,12 @@ from itertools import pairwise
 
 from pydantic import Field
 
+from .consistency import QualityRejected, has_valid_consistency
 from .costs import measure_cost
 from .gates import correct_count
 from .llm import BudgetExceeded, ModelResponseError
 from .models import Audit, StrictModel, digest
-from .pipeline import Pipeline, SampleIncomplete
+from .pipeline import AuthoringRejected, Pipeline, SampleIncomplete
 from .runtime import atomic_json, gather_cancel_on_error
 
 
@@ -75,6 +76,9 @@ class QuestionExperiment(Pipeline):
             initial += bool(passed and passed[0].generation == 0)
             versions = [{"id":c.id,"generation":c.generation,"parent_id":c.parent_id,
                          "decision":branch(c),"samples":len(c.trials),
+                         "consistency_passed":has_valid_consistency(c, sources),
+                         "difficulty_measurement_valid":(c.audit.passed()
+                             and has_valid_consistency(c, sources) and len(c.trials)==16),
                          "observed_correct":sum(t.judgment.correct=="yes" for t in c.trials),
                          "status":c.status,"reasons":c.reasons} for c in lineage]
             for a,b in pairwise(versions):
@@ -173,6 +177,14 @@ class QuestionExperiment(Pipeline):
                         if n == 4:
                             await self.evaluate(c)
                     return c
+                except QualityRejected:
+                    return next((c for c in self.store.candidates() if c.run_id == self.run_id
+                                 and c.root_id == self.root_identity(root, sources)
+                                 and c.generation == generation), None)
+                except AuthoringRejected as error:
+                    self.plan_state[root.name] = {"phase":"authoring_rejected","reason":str(error)[:400]}
+                    self.log("experiment_authoring_rejected",root=root.name,generation=generation,reason=str(error)[:400])
+                    return None
                 except (ModelResponseError,SampleIncomplete) as error:
                     self.plan_state[root.name] = {"phase":"prefix_failed","reason":str(error)[:180]}
                     self.log("experiment_root_incomplete",root=root.name,generation=generation,
@@ -192,6 +204,8 @@ class QuestionExperiment(Pipeline):
                     # Dedup finalization is serialized so two parallel candidates cannot miss each other.
                     async with self.finalize_lock:
                         await self.evaluate(c)
+                except QualityRejected:
+                    return
                 except (ModelResponseError,SampleIncomplete) as error:
                     self.log("experiment_candidate_incomplete",candidate=c.id,reason=str(error)[:180])
                 finally:
