@@ -403,3 +403,58 @@ def test_concurrent_duplicate_logical_request_is_only_bought_once(tmp_path, sett
     answers = asyncio.run(exercise())
     assert len(calls) == 1 and len({a[1] for a in answers}) == 1
     assert gateway.attempts == 1
+
+
+@pytest.mark.parametrize("correct", ["yes", "no"])
+def test_judge_schema_repair_keeps_prompt_and_solver_fixed(correct):
+    from diamond_factory.evaluation import judge_answer
+
+    class Judge:
+        def __init__(self):
+            self.calls = []
+
+        async def call(self, role, prompt, salt, schema):
+            self.calls.append((role, prompt, salt))
+            if len(self.calls) == 1:
+                raise ModelResponseError(role, "bad-format", "invalid_schema")
+            return Judgment(extracted_final_answer="36", reasoning="Gold comparison", correct=correct,
+                            confidence=80, strict=True), "valid-format", "gpt-6-luna"
+
+    gateway = Judge()
+    response = asyncio.run(judge_answer(gateway, "EXACT_OFFICIAL_PROMPT_WITH_FIXED_RESPONSE", "sample:0"))
+    assert response[0].correct == correct
+    assert [role for role, _, _ in gateway.calls] == ["judge", "judge"]
+    assert len({prompt for _, prompt, _ in gateway.calls}) == 1
+    assert len({salt for _, _, salt in gateway.calls}) == 2
+
+
+def test_judge_valid_negative_is_never_retried():
+    from diamond_factory.evaluation import judge_answer
+
+    class Judge:
+        calls = 0
+
+        async def call(self, *args):
+            self.calls += 1
+            return Judgment(extracted_final_answer="37", reasoning="Does not match", correct="no",
+                            confidence=100, strict=True), "r", "gpt-6-luna"
+
+    gateway = Judge()
+    assert asyncio.run(judge_answer(gateway, "fixed", "s"))[0].correct == "no"
+    assert gateway.calls == 1
+
+
+def test_judge_format_repairs_have_a_fixed_limit():
+    from diamond_factory.evaluation import judge_answer
+
+    class Judge:
+        calls = 0
+
+        async def call(self, *args):
+            self.calls += 1
+            raise ModelResponseError("judge", "bad-format", "invalid_schema")
+
+    gateway = Judge()
+    with pytest.raises(ModelResponseError):
+        asyncio.run(judge_answer(gateway, "fixed", "s", schema_repairs=1))
+    assert gateway.calls == 2

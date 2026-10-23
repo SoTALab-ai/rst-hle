@@ -3,6 +3,7 @@ from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 
+from .evaluation import judge_answer
 from .gates import (
     can_count,
     correct_count,
@@ -12,7 +13,7 @@ from .gates import (
     static_errors,
 )
 from .llm import BudgetExceeded, Gateway, ModelResponseError
-from .models import Audit, Candidate, DedupVerdict, Judgment, Question, Record, Solution, Trial, digest
+from .models import Audit, Candidate, DedupVerdict, Question, Record, Solution, Trial, digest
 from .routing import read_routes
 from .runtime import gather_cancel_on_error
 
@@ -130,10 +131,10 @@ class Pipeline:
                 response, sid, smodel = await self.gateway.call(
                     "solver", candidate.item.question, f"{candidate.id}:solver:{i}",
                     system_prompt=self.prompts["solver_hle_system"].strip())
-                judgment, jid, jmodel = await self.gateway.call(
-                    "judge", self.prompts["judge"].format(question=candidate.item.question,
-                                                          correct_answer=candidate.item.answer, response=response),
-                    f"{candidate.id}:judge:{i}", Judgment)
+                judgment, jid, jmodel = await judge_answer(
+                    self.gateway, self.prompts["judge"].format(question=candidate.item.question,
+                                                               correct_answer=candidate.item.answer, response=response),
+                    f"{candidate.id}:judge:{i}", self.settings.judge_schema_repairs)
             except ModelResponseError as error:
                 self.log("sample_failed", candidate=candidate.id, sample=i,
                          request_id=error.request_id, reason=error.reason)

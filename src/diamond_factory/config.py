@@ -23,6 +23,7 @@ class Settings(StrictModel):
     auditor: ModelConfig
     solver: ModelConfig
     judge: ModelConfig
+    judge_schema_repairs: int = Field(default=1, ge=0, le=2)
     quotas_path: str = "configs/quotas.v3.json"
     prompts_dir: str = "prompts"
     source_routes_path: str | None = None

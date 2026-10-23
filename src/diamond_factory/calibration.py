@@ -4,8 +4,9 @@ import json
 from collections import Counter
 from pathlib import Path
 
+from .evaluation import judge_answer
 from .llm import BudgetExceeded, Gateway, ModelResponseError
-from .models import Judgment, StrictModel, digest
+from .models import StrictModel, digest
 from .runtime import atomic_json, gather_cancel_on_error
 
 
@@ -124,10 +125,10 @@ class Calibration:
                     response, sid, smodel = await self.gateway.call(
                         "solver", q.question, f"{namespace}:{q.id}:solver:{sample_id}",
                         system_prompt=self.solver_system)
-                    judgment, jid, jmodel = await self.gateway.call(
-                        "judge", self.judge_prompt.format(question=q.question, correct_answer=q.answer,
-                                                         response=response),
-                        f"{namespace}:{q.id}:judge:{sample_id}", Judgment)
+                    judgment, jid, jmodel = await judge_answer(
+                        self.gateway, self.judge_prompt.format(question=q.question, correct_answer=q.answer,
+                                                              response=response),
+                        f"{namespace}:{q.id}:judge:{sample_id}", self.settings.judge_schema_repairs)
                     record = {"question_id": q.id, "sample_id": sample_id, "correct": judgment.correct == "yes",
                               "solver_request": sid, "judge_request": jid,
                               "solver_actual_model": smodel, "judge_actual_model": jmodel,
