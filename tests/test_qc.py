@@ -95,7 +95,7 @@ class FakeGateway:
         self.fail_sample = fail_sample
         self.duplicate = duplicate
 
-    async def call(self, role, prompt, salt, schema=None):
+    async def call(self, role, prompt, salt, schema=None, **kwargs):
         self.calls.append((role, prompt, salt))
         if role == "solver":
             assert self.candidate.item.rationale not in prompt

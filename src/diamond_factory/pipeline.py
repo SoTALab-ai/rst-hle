@@ -110,8 +110,8 @@ class Pipeline:
     async def sample(self, candidate):
         async def one(i):
             response, sid, smodel = await self.gateway.call(
-                "solver", self.prompts["solver"] + "\n\n" + candidate.item.question,
-                f"{candidate.id}:solver:{i}")
+                "solver", candidate.item.question, f"{candidate.id}:solver:{i}",
+                system_prompt=self.prompts["solver_hle_system"].strip())
             # Judge sees the response and gold, never the author's rationale or source. Solver sees only question.
             judgment, jid, jmodel = await self.gateway.call(
                 "judge", self.prompts["judge"].format(question=candidate.item.question,

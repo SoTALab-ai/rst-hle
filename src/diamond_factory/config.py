@@ -1,5 +1,6 @@
 import tomllib
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field
 
@@ -12,7 +13,8 @@ class ModelConfig(StrictModel):
     api_key_env: str = "NEW_API_KEY"
     reasoning_effort: str | None = None
     temperature: float | None = None
-    max_tokens: int = 6000
+    top_p: float | None = None
+    max_tokens: int | None = Field(default=None, ge=1)
     accepted_response_models: list[str] = Field(default_factory=list)
 
 
@@ -29,6 +31,8 @@ class Settings(StrictModel):
     max_requests: int = 150
     max_retries: int = 1
     request_timeout: float = 180.0
+    request_deadline_seconds: float | None = Field(default=None, gt=0)
+    evaluation_mode: Literal["no_tools"] = "no_tools"
     concurrency: int = 4
     max_source_chars: int = 45000
     max_rounds: int = 3

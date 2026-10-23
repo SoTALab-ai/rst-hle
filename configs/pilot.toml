@@ -6,10 +6,12 @@ max_rounds = 2
 attempts_per_round = 1
 max_repairs = 1
 concurrency = 4
-request_timeout = 180.0
+request_timeout = 600.0
+request_deadline_seconds = 600.0
+evaluation_mode = "no_tools"
 source_max_candidates = 2
 max_per_root = 1
-# These local files are optional for pilot, mandatory train/eval inputs for production.
+# Old-train/full-eval exclusion was deferred by the user; batch dedup remains enabled.
 dedup_corpora = []
 
 [generator]
@@ -28,10 +30,9 @@ max_tokens = 8000
 model = "glm-5.2"
 accepted_response_models = ["glm-5.2", "z-ai/glm-5.2"]
 temperature = 1.0
-max_tokens = 10000
+top_p = 0.95
 
 [judge]
-model = "gpt-5.6-luna"
-accepted_response_models = ["gpt-5.6-luna", "gpt-5.6-luna-2026-07-09"]
+model = "gpt-6-luna"
+accepted_response_models = ["gpt-6-luna", "gpt-6-luna-2026-09-22"]
 reasoning_effort = "medium"
-max_tokens = 4000

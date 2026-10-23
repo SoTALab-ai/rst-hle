@@ -6,6 +6,9 @@ max_rounds = 4
 attempts_per_round = 3
 max_repairs = 2
 concurrency = 8
+request_timeout = 600.0
+request_deadline_seconds = 600.0
+evaluation_mode = "no_tools"
 source_max_candidates = 5
 max_per_root = 1
 # User explicitly deferred old-train/official-eval dedup on 2026-10-23.
@@ -28,10 +31,9 @@ max_tokens = 10000
 model = "glm-5.2"
 accepted_response_models = ["glm-5.2", "z-ai/glm-5.2"]
 temperature = 1.0
-max_tokens = 16000
+top_p = 0.95
 
 [judge]
-model = "gpt-5.6-luna"
-accepted_response_models = ["gpt-5.6-luna", "gpt-5.6-luna-2026-07-09"]
+model = "gpt-6-luna"
+accepted_response_models = ["gpt-6-luna", "gpt-6-luna-2026-09-22"]
 reasoning_effort = "medium"
-max_tokens = 4000

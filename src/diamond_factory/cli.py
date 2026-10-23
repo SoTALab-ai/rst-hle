@@ -3,6 +3,7 @@ import asyncio
 import json
 from pathlib import Path
 
+from .calibration import BenchmarkQuestion, Calibration
 from .config import load
 from .gates import correct_count, production_blockers, static_errors
 from .models import Submission, digest
@@ -34,6 +35,11 @@ def main():
     sub.add_parser("doctor", help="Check procurement configuration; makes no model calls")
     sub.add_parser("report")
     sub.add_parser("db-init", help="Explicitly apply PostgreSQL schema; startup never migrates")
+    calibrate = sub.add_parser("calibrate", help="Evaluate reference HLE questions without delivery admission")
+    calibrate.add_argument("input")
+    calibrate.add_argument("--run-id", required=True)
+    calibrate.add_argument("--max-new-samples", type=int,
+                           help="Checkpoint after this many new question/sample pairs; classification still requires 16")
     schema = sub.add_parser("schema")
     schema.add_argument("--output", default="outputs/submission.schema.json")
     export = sub.add_parser("export", help="Export accepted independent items; optional exact full-batch check")
@@ -66,6 +72,17 @@ def main():
                               "configured_external_corpora": len(settings.dedup_corpora),
                               "sources": len(store.sources()), "quotas": len(quotas["quotas"]),
                               "target": quotas["target"]}, ensure_ascii=False, indent=2))
+        elif args.command == "calibrate":
+            if not args.run_id or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for c in args.run_id):
+                raise ValueError("Invalid run-id")
+            questions = [BenchmarkQuestion.model_validate_json(line) for line in
+                         Path(args.input).read_text().splitlines() if line.strip()]
+            result = asyncio.run(Calibration(settings, store, args.run_id,
+                                            Path("work/runs") / args.run_id).run(questions, args.max_new_samples))
+            Path("outputs").mkdir(exist_ok=True)
+            Path("outputs", args.run_id + ".json").write_text(json.dumps(result, ensure_ascii=False, indent=2))
+            print(json.dumps({"by_category": result["by_category"], "totals": result["totals"]},
+                             ensure_ascii=False, indent=2))
         elif args.command in ("run", "qc"):
             if not args.run_id or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for c in args.run_id):
                 raise ValueError("run-id must contain only letters, numbers, underscore or hyphen")

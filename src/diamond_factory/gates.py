@@ -73,7 +73,7 @@ def production_blockers(settings, quotas: dict) -> list[str]:
     errors = []
     if (settings.samples, settings.correct_min, settings.correct_max) != (16, 1, 8):
         errors.append("requires_16_samples_and_1_to_8_correct")
-    if settings.solver.model != "glm-5.2" or settings.judge.model != "gpt-5.6-luna":
+    if settings.solver.model != "glm-5.2" or settings.judge.model != "gpt-6-luna":
         errors.append("procurement_model_config_mismatch")
     if settings.judge.reasoning_effort != "medium":
         errors.append("judge_requires_medium")

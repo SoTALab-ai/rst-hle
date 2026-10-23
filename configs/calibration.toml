@@ -1,0 +1,35 @@
+# 24 reference questions x 16 samples x (solver + judge) = 768 logical requests.
+# Benchmark-only: no QC author audit, no delivery/quota admissions, no question generation.
+samples = 16
+correct_min = 1
+correct_max = 8
+max_requests = 900
+max_retries = 1
+concurrency = 16
+# Official HLE example uses a 600s client timeout. The user additionally chose a
+# hard 600s wall-clock budget per logical call, including retries, on 2026-10-23.
+request_timeout = 600.0
+request_deadline_seconds = 600.0
+evaluation_mode = "no_tools"
+dedup_corpora = []
+external_dedup_required = false
+
+[generator]
+model = "gpt-5.6-luna"
+reasoning_effort = "medium"
+
+[auditor]
+model = "gpt-5.6-luna"
+reasoning_effort = "medium"
+
+[solver]
+model = "glm-5.2"
+accepted_response_models = ["glm-5.2", "z-ai/glm-5.2"]
+temperature = 1.0
+top_p = 0.95
+# No client-specified output token cap; the provider's inherent limits still apply.
+
+[judge]
+model = "gpt-6-luna"
+accepted_response_models = ["gpt-6-luna", "gpt-6-luna-2026-09-22"]
+reasoning_effort = "medium"
