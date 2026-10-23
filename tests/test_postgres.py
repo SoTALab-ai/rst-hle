@@ -83,6 +83,34 @@ def test_pg_run_checkpoint_does_not_reset_request_budget(pg):
     assert pg.reserve_request("test", 2) is None
 
 
+def test_pg_catalog_upgrade_preserves_existing_sources_and_run_budget(pg, source):
+    pg.add_source(source)
+    run_meta(pg)
+    pg.reserve_request("test",10)
+    pg.db.execute("DROP TABLE diamond.paper_catalog,diamond.paper_metadata_versions")
+    pg.db.execute("DELETE FROM diamond.schema_migrations WHERE version=2")
+    pg.migrate();pg.migrate()
+    assert pg.sources()[0].sha256==source.sha256
+    assert pg.db.execute("SELECT http_attempts FROM diamond.runs WHERE id='test'").fetchone()[0]==1
+    assert pg.db.execute("SELECT count(*) FROM diamond.schema_migrations").fetchone()[0]==2
+
+
+def test_pg_paper_metadata_history_and_domain_query(pg):
+    from diamond_factory.catalog import Paper, save_catalog
+    from diamond_factory.models import Source
+    p=Paper(source_id="arxiv:1304.4132v2",arxiv_id="1304.4132v2",title="Synthetic catalog fixture",
+        authors=["Test author"],domain="Math",subtopic="组合与图论",journal="Test journal",
+        publication_year=2020,doi="10.1000/test",publisher_url="https://example.org/paper",
+        venue_evidence_url="https://example.org/metadata",arxiv_categories=["math.CO"],
+        selection_reason="A controlled fixture, not a real publication claim.").sealed()
+    pg.add_source(Source(id=p.source_id,title=p.title,uri="synthetic://test",kind="synthetic",text="fixture "*40))
+    save_catalog(pg,[p]);save_catalog(pg,[p])
+    revised=p.model_copy(update={"journal":"Corrected test journal","metadata_sha256":""}).sealed()
+    save_catalog(pg,[revised])
+    assert pg.papers("Math")[0]["journal"]=="Corrected test journal" and pg.papers("Physics")==[]
+    assert pg.db.execute("SELECT count(*) FROM diamond.paper_metadata_versions").fetchone()[0]==2
+
+
 def test_pg_duplicate_accepted_lineage_rolls_back_without_partial_samples(pg, source, candidate):
     import psycopg
     run_meta(pg)

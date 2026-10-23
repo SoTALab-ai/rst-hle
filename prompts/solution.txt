@@ -3,9 +3,11 @@ Use only facts supported by the supplied full-text sources and explicit deductio
 Choose a precisely answerable, difficult problem in the requested category/subtopic.
 Give a complete derivation, exact answer, assumptions and verbatim evidence quotes with page/section locators.
 Quotes must occur verbatim in supplied text. Do not fabricate citations. Use short evidence quotes.
-For a parent, preserve its core valid reasoning and extend it substantively with the requested operator.
+For a harder parent revision, preserve its core valid reasoning and extend it substantively with the requested operator.
+For an easier revision, preserve the main problem but explicitly remove one inferential burden, supply a valid lemma,
+fix an auxiliary parameter or decouple one subsystem. Explain which steps become easier without revealing the answer.
 Avoid mere renumbering, rephrasing, obscure trivia without evidence, gratuitous complexity and missing premises.
-The reasoning_delta must explain what NEW inference is necessary relative to the parent.
+The reasoning_delta must explain which inferences are added or removed relative to the parent, and why.
 At generation 0, describe the reasoning from the source instead.
 Feedback may request harder/easier questions or fix a concrete validity issue. Preserve evidence and solvability.
 The eventual question must be fully text-contained: include needed equations, tables, code or rules.

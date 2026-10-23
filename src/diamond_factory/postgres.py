@@ -33,6 +33,18 @@ class PostgresStore:
                 self.db.execute(self.migration.read_text())
                 self.db.execute("INSERT INTO diamond.schema_migrations(version,checksum) VALUES(1,%s)",
                                 (self.checksum,))
+            for migration in sorted(self.migration.parent.glob("*.sql")):
+                version = int(migration.name.split("_")[0])
+                checksum = hashlib.sha256(migration.read_bytes()).hexdigest()
+                prior = self.db.execute("SELECT checksum FROM diamond.schema_migrations WHERE version=%s",
+                                        (version,)).fetchone()
+                if prior:
+                    if prior[0] != checksum:
+                        raise ValueError("Schema migration checksum mismatch")
+                    continue
+                self.db.execute(migration.read_text())
+                self.db.execute("INSERT INTO diamond.schema_migrations(version,checksum) VALUES(%s,%s)",
+                                (version, checksum))
             self.check_schema()
 
     def check_schema(self):
@@ -41,6 +53,10 @@ class PostgresStore:
         row = self.db.execute("SELECT checksum FROM diamond.schema_migrations WHERE version=1").fetchone()
         if not row or row[0] != self.checksum:
             raise ValueError("Schema migration checksum mismatch")
+        for version,checksum in self.db.execute("SELECT version,checksum FROM diamond.schema_migrations"):
+            files = list(self.migration.parent.glob(f"{version:03d}_*.sql"))
+            if len(files) != 1 or hashlib.sha256(files[0].read_bytes()).hexdigest() != checksum:
+                raise ValueError("Schema migration checksum mismatch")
 
     @contextmanager
     def lock(self):
@@ -66,6 +82,27 @@ class PostgresStore:
     def sources(self):
         return [Source.model_validate(self.objects.get(*r)) for r in self.db.execute(
             "SELECT object_key,object_sha256,object_size FROM diamond.sources ORDER BY id")]
+
+    def save_paper(self, paper):
+        if not self.db.execute("SELECT to_regclass('diamond.paper_catalog')").fetchone()[0]:
+            raise ValueError("Paper catalog migration required; run diamond db-init")
+        paper = paper.sealed()
+        with self.db.transaction():
+            self.db.execute("""INSERT INTO diamond.paper_metadata_versions(source_id,metadata_sha256,body)
+                VALUES(%s,%s,%s) ON CONFLICT DO NOTHING""",
+                (paper.source_id, paper.metadata_sha256, Jsonb(paper.model_dump())))
+            self.db.execute("""INSERT INTO diamond.paper_catalog
+                (source_id,arxiv_id,domain,subtopic,journal,publication_year,doi,metadata_sha256,body)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                ON CONFLICT(source_id) DO UPDATE SET domain=excluded.domain,subtopic=excluded.subtopic,
+                journal=excluded.journal,publication_year=excluded.publication_year,doi=excluded.doi,
+                metadata_sha256=excluded.metadata_sha256,body=excluded.body,updated_at=now()""",
+                (paper.source_id,paper.arxiv_id,paper.domain,paper.subtopic,paper.journal,
+                 paper.publication_year,paper.doi,paper.metadata_sha256,Jsonb(paper.model_dump())))
+
+    def papers(self, domain=None):
+        return [r[0] for r in self.db.execute("SELECT body FROM diamond.paper_catalog WHERE (%s::text IS NULL "
+                                             "OR domain=%s) ORDER BY source_id", (domain,domain))]
 
     def run(self, run_id, body):
         self.db.execute("""INSERT INTO diamond.runs(id,mode,status,fingerprint,body) VALUES(%s,%s,%s,%s,%s)

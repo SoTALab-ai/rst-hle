@@ -1,0 +1,23 @@
+{
+  "version": "20261023-hard-first",
+  "intent": "Create difficult theoretical seeds first, then calibrate downwards. A single paper may support several independent claims/problems; rewrites of one claim remain the same lineage.",
+  "anchors": [
+    {"id":"doc-hle-60-1","domain":"Physics","observed":"6/16 correct, complete","structure":"Invert a nonlocal constitutive law, derive an electromagnetic observable and optimize over a physically admissible parameter domain."},
+    {"id":"doc-hle-47-0","domain":"Math","observed":"8 correct, 14 valid judgments, 2 truncations; incomplete","structure":"Infer hidden algebraic or spectral structure from coupled functional relations, then extract an exact invariant. This anchor is not fully difficulty-accepted."}
+  ],
+  "seed_strategy": [
+    "Aim near or somewhat above the anchors in substantive mathematical reasoning; avoid starting with a routine textbook numerical exercise.",
+    "Use a precisely defined finite specialization or exactly solvable theoretical model, with a complete derivation and a short unambiguous target answer.",
+    "Require at least two linked nontrivial inferences, such as inverse reconstruction then a global extremum, or branch/domain discovery then an invariant.",
+    "The literature theorem may motivate the model, but the task must not be a lookup of the theorem's famous conclusion or a disguised open research problem.",
+    "Fully specify the model, conventions, units and admissibility rules. The numerical parameter interval may be an unknown to derive if the supplied constraints uniquely determine it.",
+    "Hide optional hints and intermediate transformations, not indispensable definitions or axioms. Reduce irrelevant background burden while retaining depth.",
+    "A finite numerical search is not a proof of a continuous global optimum. Check all algebraic branches and boundary cases.",
+    "Different roots from one paper must use different claims or reasoning structures; number changes alone do not establish independence.",
+    "Use at most three short verbatim source quotes with a total under 400 characters. All other derivation must be newly composed and source-supported."
+  ],
+  "hardening": ["Remove a provided intermediate identity or diagonalization hint.","Make an admissible parameter domain an inferable unknown.","Couple two previously separate constraints with a checkable compatibility condition."],
+  "easing": ["Supply one correct auxiliary lemma without supplying the answer.","Fix one nuisance parameter or restrict to a rigorously solvable subfamily.","Decouple one subsystem or replace one inversion step with supplied intermediate data."],
+  "too_hard_check": "For 0/16, independently inspect wrong gold, missing information, nonuniqueness and infeasibility before attempting an easier revision.",
+  "measurement": "First 4/4 correct triggers preliminary hardening only. Otherwise finish 16 valid judgments; 0/16 triggers validated easing, 1-8/16 is the observed target band, 9-16/16 triggers hardening. Infrastructure failures are not wrong answers."
+}

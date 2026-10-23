@@ -1,0 +1,147 @@
+{
+  "roots": [
+    {
+      "name": "M01A",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Infer the exact feasible coupling interval from a finite mixed characteristic polynomial subject to real-rootedness and isotropic rank-one vector constraints; require branch and boundary analysis."
+    },
+    {
+      "name": "P01A",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Inverse coherent-perfect-absorption problem for a fully specified passive multiport optical model, requiring phase reconstruction, passivity feasibility and an exact optimized observable."
+    },
+    {
+      "name": "M01B",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Reconstruct an unknown finite vector partition or matrix barrier from compressed spectral data, then compute an exact minimax invariant. Use a different claim from the first root, not changed numbers."
+    },
+    {
+      "name": "P01B",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "A distinct dispersive two-frequency coherent-absorption model: infer an admissible constitutive-parameter regime, then derive an exact radiation or absorption ratio. All material laws must be supplied."
+    },
+    {
+      "name": "M02A",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Construct a fully specified finite radial Gaussian-polynomial Fourier optimization inspired by linear-programming sphere-packing bounds. Infer the coefficient regime ensuring positivity for all radii, then optimize a scalar invariant."
+    },
+    {
+      "name": "P02A",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Two passive causal Lorentz-response materials subject to coupled spectral constraints: infer a feasible parameter domain and an exact global near-field heat-transfer bound or ratio. No quoting the paper bound as the answer."
+    },
+    {
+      "name": "M02B",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Use a different finite theta/Fourier interpolation mechanism to reconstruct an auxiliary function from vanishing and normalization constraints and evaluate an exact statistic. Do not ask for the famous E8 density."
+    },
+    {
+      "name": "P02B",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "A distinct finite dipole/Green-operator near-field model with multiple-scattering and energy-conservation constraints: derive an exact extremum after resolving physically admissible algebraic branches."
+    },
+    {
+      "name": "M03A",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "Infer the spectral structure of a recursively signed hypercube operator with unknown coupled parameters, then compute a constrained principal-submatrix invariant. Make block structure discoverable rather than giving diagonalization hints."
+    },
+    {
+      "name": "P03A",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Reconstruct a reciprocal scattering matrix from nonorthogonal quasinormal-mode data subject to passivity and time-reversal constraints, then compute an exact constrained extremum."
+    },
+    {
+      "name": "M03B",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "A distinct induced-subgraph/interlacing inverse threshold problem on a fully defined finite signed cube, with hidden admissibility restrictions that must be deduced. Do not merely state the famous square-root degree theorem."
+    },
+    {
+      "name": "P03B",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "A distinct common-radiation-channel inverse problem with overlapping complex poles and dark-state compatibility; derive a uniquely defined pole/residue invariant after finding the admissible parameter range."
+    },
+    {
+      "name": "M04A",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Create a rigorously solvable finite quadratic energy-transfer system inspired by the averaged-equation construction; infer a sharp blowup-versus-global threshold under competing invariants. Do not pose the real open Navier-Stokes problem."
+    },
+    {
+      "name": "P04A",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "A PT-symmetric finite optical grating with a fully specified transfer matrix: infer the admissible region for a nontrivial simultaneous invisibility and phase condition, checking reflectionless versus invisible behavior."
+    },
+    {
+      "name": "M04B",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Use a distinct explicit finite cascade or clocked energy-transfer model to infer a compatible rate regime and an exact cumulative-time or energy invariant. Give all model equations; prove the answer rather than extrapolating a simulation."
+    },
+    {
+      "name": "P04B",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "A distinct grating-cascade/Jordan-limit problem involving transfer-matrix powers and competing boundary conditions; derive an exact finite threshold or aggregate spectral statistic with no omitted conventions."
+    },
+    {
+      "name": "M05A",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Finite inverse Weyl/Stieltjes reconstruction with rational spectral data and positivity; infer unknown physical or spectral parameter ranges and compute an exact pole/mass invariant."
+    },
+    {
+      "name": "P05A",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Use a fully explicit two-component far-field polarization model; infer the parameter-dependent creation and annihilation of polarization zeros, and compute an exact topological-charge invariant."
+    },
+    {
+      "name": "M05B",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Use a separate finite trace-formula/moment specialization with an unknown boundary coefficient and interlacing constraints; resolve all branches before extracting one exact answer."
+    },
+    {
+      "name": "P05B",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "A distinct symmetry-broken radiation-cancellation problem: infer the physical parameter range and multiplicities of bound-state polarization zeros before computing one exact scalar target. Avoid asking for an unconstrained infinite quality factor."
+    }
+  ],
+  "max_revisions": 2,
+  "root_workers": 4,
+  "visible_cost_limit_usd": 90.0
+}

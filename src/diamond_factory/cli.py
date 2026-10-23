@@ -36,6 +36,10 @@ def main():
     sub.add_parser("doctor", help="Check procurement configuration; makes no model calls")
     sub.add_parser("report")
     sub.add_parser("db-init", help="Explicitly apply PostgreSQL schema; startup never migrates")
+    catalog = sub.add_parser("catalog-import", help="Import publication metadata after importing full texts")
+    catalog.add_argument("manifest")
+    papers = sub.add_parser("papers", help="Query the versioned paper catalog; no model calls")
+    papers.add_argument("--domain", choices=["Math", "Physics"])
     route = sub.add_parser("route-sources", help="Classify the source library before generation")
     route.add_argument("--run-id", required=True)
     route.add_argument("--output")
@@ -80,6 +84,14 @@ def main():
                               "configured_external_corpora": len(settings.dedup_corpora),
                               "sources": len(store.sources()), "quotas": len(quotas["quotas"]),
                               "target": quotas["target"]}, ensure_ascii=False, indent=2))
+        elif args.command == "catalog-import":
+            from .catalog import read_catalog, save_catalog
+            rows = read_catalog(args.manifest)
+            save_catalog(store,rows)
+            print(json.dumps({"cataloged_papers":len(rows)}))
+        elif args.command == "papers":
+            from .catalog import catalog_rows
+            print(json.dumps(catalog_rows(store,args.domain),ensure_ascii=False,indent=2))
         elif args.command == "route-sources":
             output = args.output or settings.source_routes_path or "work/source-routes.json"
             book = asyncio.run(route_sources(settings, store, args.run_id, output))

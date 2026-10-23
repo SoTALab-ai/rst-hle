@@ -28,6 +28,8 @@ class Pipeline:
         self.run_id, self.mode, self.run_dir = run_id, mode, run_dir
         self.quotas = json.loads(Path(settings.quotas_path).read_text())
         self.prompts = {p.stem: p.read_text() for p in Path(settings.prompts_dir).glob("*.txt")}
+        self.difficulty_profile = (json.loads(Path(settings.difficulty_profile_path).read_text())
+                                   if settings.difficulty_profile_path else None)
         self.gateway = gateway or Gateway(settings, run_dir / "requests", store=store, run_id=run_id)
         self.external = []
         self.corpus_hashes = {}
@@ -40,6 +42,7 @@ class Pipeline:
             self.corpus_hashes[path] = digest(Path(path).read_text())
         self.fingerprint = digest({"settings": settings.model_dump(), "mode": mode,
                                    "quotas": self.quotas, "prompts": self.prompts,
+                                   "difficulty_profile": self.difficulty_profile,
                                    "corpora": self.corpus_hashes,
                                    "judge_contract": Path(settings.judge_contract).read_text(),
                                    "source_hashes": {s.id: s.sha256 for s in store.sources()},
@@ -66,16 +69,23 @@ class Pipeline:
                                     "quotas_sha256": digest(self.quotas),
                                     "requests_directory": str(self.run_dir / "requests")})
 
-    async def generate(self, source, parent, target, generation, attempt):
+    def generation_identity(self, source, parent, target, generation, attempt, brief=None):
+        return digest({"run":self.run_id,"source":source.id,"parent":parent.id if parent else None,
+                       "generation":generation,"attempt":attempt,"target":target,"brief":brief})[:24]
+
+    async def generate(self, source, parent, target, generation, attempt, brief=None):
         feedback = "Increase substantive difficulty" if parent else "Create a solvable evidence-grounded seed"
         if parent and parent.trials:
-            n = correct_count(parent.trials, self.settings.samples)
+            preliminary = (self.settings.early_screen_samples == 4 and len(parent.trials) == 4
+                           and correct_count(parent.trials, 4) == 4)
+            n = self.settings.samples if preliminary else correct_count(parent.trials, self.settings.samples)
             feedback = "Increase difficulty" if n > self.settings.correct_max else "Keep in difficulty band"
             if n < self.settings.correct_min:
                 feedback = "Reduce difficulty while preserving a substantive task and complete correctness"
         operator = "bootstrap" if parent is None else self.settings.operators[(generation-1) % len(self.settings.operators)]
-        identity = digest({"run": self.run_id, "source": source.id, "parent": parent.id if parent else None,
-                           "generation": generation, "attempt": attempt, "target": target})[:24]
+        if parent and parent.trials and n < self.settings.correct_min:
+            operator = "supply_one_lemma_or_reduce_one_coupling"
+        identity = self.generation_identity(source,parent,target,generation,attempt,brief)
         existing = next((c for c in self.store.candidates() if c.id == identity), None)
         if existing:
             return existing
@@ -85,6 +95,10 @@ class Pipeline:
                 "parent_solution": parent.solution.model_dump() if parent else None,
                 "target": target, "generation": generation, "operator": operator,
                 "feedback": feedback}
+        if self.difficulty_profile:
+            data["difficulty_profile"] = self.difficulty_profile
+        if brief:
+            data["research_brief"] = brief
         result = None
         for repair in range(self.settings.max_repairs + 1):
             salt = f"{identity}:repair:{repair}"
@@ -116,7 +130,10 @@ class Pipeline:
             data["feedback"] = {"original": feedback, "errors": errors, "previous": item.model_dump()}
         return result
 
-    async def sample(self, candidate):
+    async def sample(self, candidate, limit=None):
+        limit = self.settings.samples if limit is None else limit
+        if not 1 <= limit <= self.settings.samples:
+            raise ValueError("Invalid sampling stage")
         prior = list(candidate.trials)
         if (len({t.sample_id for t in prior}) != len(prior) or
                 any(not 0 <= t.sample_id < self.settings.samples for t in prior)):
@@ -145,7 +162,7 @@ class Pipeline:
             self.store.save(candidate)  # Commit each paired result before waiting for slow siblings.
             self.log("sample_completed", candidate=candidate.id, sample=i, correct=judgment.correct)
             return trial
-        results = await gather_cancel_on_error(*(one(i) for i in range(self.settings.samples) if i not in done))
+        results = await gather_cancel_on_error(*(one(i) for i in range(limit) if i not in done))
         errors = [x for x in results if isinstance(x, Exception)]
         if errors:
             # Partial samples remain quality seeds, cannot pass the band or seed another round in this run.
@@ -153,7 +170,7 @@ class Pipeline:
                                  for e in errors]
             self.store.save(candidate)
             raise SampleIncomplete(f"{len(errors)} samples failed; paired successes retained for resume")
-        return correct_count(candidate.trials, self.settings.samples)
+        return correct_count([t for t in candidate.trials if t.sample_id < limit], limit)
 
     async def duplicate(self, candidate):
         refs = self.external + [Record(id=c.id, question=c.item.question, material_key=c.item.material_key)
@@ -176,6 +193,14 @@ class Pipeline:
         return []
 
     async def evaluate(self, c):
+        if self.settings.early_screen_samples == 4 and len(c.trials) < self.settings.samples:
+            first = await self.sample(c, 4)
+            if first == 4:
+                c.status, c.reasons = "quality_seed", ["preliminary_4_of_4_correct:needs_hardening"]
+                self.store.save(c)
+                self.log("preliminary_hardening", candidate=c.id, correct=4, valid_samples=4,
+                         full_16_sample_verdict=False)
+                return c
         n = await self.sample(c)
         self.log("difficulty", candidate=c.id, correct_count=n, total=self.settings.samples)
         c.reasons = []

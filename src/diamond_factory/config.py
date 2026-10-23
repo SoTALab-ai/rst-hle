@@ -24,6 +24,8 @@ class Settings(StrictModel):
     solver: ModelConfig
     judge: ModelConfig
     judge_schema_repairs: int = Field(default=1, ge=0, le=2)
+    early_screen_samples: Literal[0, 4] = 0
+    difficulty_profile_path: str | None = None
     quotas_path: str = "configs/quotas.v3.json"
     prompts_dir: str = "prompts"
     source_routes_path: str | None = None
