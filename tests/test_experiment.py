@@ -180,3 +180,36 @@ def test_catalog_requires_full_text_and_verifies_metadata_hash(tmp_path):
     assert catalog_rows(store,'Math')[0]['doi']==p.doi and catalog_rows(store,'Physics')==[]
     with pytest.raises(ValueError,match='hash mismatch'):
         p.model_copy(update={'doi':'10.1000/changed'}).sealed()
+
+
+def test_author_repair_resumes_after_a_saved_rejection_without_repeating_first_draft(tmp_path,settings,source,candidate):
+    from diamond_factory.models import Audit, Question, Solution
+    pipe,store,_=setup_pipeline(tmp_path,settings,source,candidate)
+
+    class Author:
+        def __init__(self,interrupt):
+            self.calls=[];self.interrupt=interrupt
+
+        async def call(self,role,prompt,salt,schema,**_kw):
+            self.calls.append(salt)
+            if self.interrupt and ':repair:1:solution' in salt:
+                raise OSError('simulated shutdown between author repairs')
+            if schema is Solution:answer=candidate.solution.model_copy(deep=True)
+            elif schema is Audit:answer=candidate.audit.model_copy(deep=True)
+            elif schema is Question:
+                answer=candidate.item.model_copy(deep=True)
+                if ':repair:0:' in salt:answer.evidence[0].quote='This claim is not in the synthetic source.'
+            else:raise AssertionError(schema)
+            return answer,digest(salt),'fixture-model'
+
+    pipe.gateway=Author(True)
+    target={'category':'Math','subtopic':'组合与图论'}
+    with pytest.raises(OSError,match='shutdown'):
+        asyncio.run(pipe.generate(source,None,target,0,0))
+    saved=store.candidates()[0]
+    assert saved.status=='rejected' and not saved.authoring_complete
+    assert saved.authoring_repairs_completed==1
+    pipe.gateway=Author(False)
+    fixed=asyncio.run(pipe.generate(source,None,target,0,0))
+    assert fixed.authoring_complete and fixed.status=='quality_seed'
+    assert len(pipe.gateway.calls)==3 and all(':repair:1:' in s for s in pipe.gateway.calls)

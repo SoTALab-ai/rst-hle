@@ -87,7 +87,7 @@ class Pipeline:
             operator = "supply_one_lemma_or_reduce_one_coupling"
         identity = self.generation_identity(source,parent,target,generation,attempt,brief)
         existing = next((c for c in self.store.candidates() if c.id == identity), None)
-        if existing:
+        if existing and existing.authoring_complete:
             return existing
         source_data = source.model_dump()
         source_data["text"] = source.text[:self.settings.max_source_chars]
@@ -99,8 +99,12 @@ class Pipeline:
             data["difficulty_profile"] = self.difficulty_profile
         if brief:
             data["research_brief"] = brief
+        first_repair = existing.authoring_repairs_completed if existing else 0
+        if existing:
+            data["feedback"] = {"original": feedback,"errors":existing.reasons,
+                                "previous":existing.item.model_dump()}
         result = None
-        for repair in range(self.settings.max_repairs + 1):
+        for repair in range(first_repair,self.settings.max_repairs + 1):
             salt = f"{identity}:repair:{repair}"
             plan, _, _ = await self.gateway.call("generator", self.prompts["solution"] + "\n" +
                                                 json.dumps(data, ensure_ascii=False), salt + ":solution", Solution)
@@ -125,6 +129,8 @@ class Pipeline:
                 self.store.save(result)
                 return result
             result.status, result.reasons = "rejected", errors
+            result.authoring_repairs_completed = repair+1
+            result.authoring_complete = repair == self.settings.max_repairs
             self.store.save(result)
             self.log("repair_feedback", candidate=identity, repair=repair, reasons=errors)
             data["feedback"] = {"original": feedback, "errors": errors, "previous": item.model_dump()}
@@ -193,6 +199,8 @@ class Pipeline:
         return []
 
     async def evaluate(self, c):
+        if not c.authoring_complete:
+            raise ValueError("Finish the pending author repair before paid solver evaluation")
         if self.settings.early_screen_samples == 4 and len(c.trials) < self.settings.samples:
             first = await self.sample(c, 4)
             if first == 4:

@@ -48,7 +48,7 @@ def test_pinned_catalog_reuses_immutable_full_text_without_any_network(tmp_path,
         arxiv_categories=["math.CO"],selection_reason="Controlled metadata used only by tests.").sealed()
     source=Source(id=p.source_id,title=p.title,uri="https://arxiv.org/abs/"+p.arxiv_id,text=tex("main"))
     store.add_source(source)
-    monkeypatch.setattr("httpx.Client.get",lambda *_a,**_kw:pytest.fail("Must not buy/refetch an existing version"))
+    monkeypatch.setattr("httpx.Client.send",lambda *_a,**_kw:pytest.fail("Must not buy/refetch an existing version"))
     rows=list(fetch_catalog_sources(store,[p],tmp_path/"papers"))
     assert rows[0]["reused_full_text"] is True and rows[0]["sha256"]==source.sha256
     assert rows[0]["format"]=="latex_and_pdf"

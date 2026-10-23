@@ -127,3 +127,5 @@ class Candidate(StrictModel):
     status: Literal["quality_seed", "rejected", "screened", "accepted"]
     reasons: list[str] = Field(default_factory=list)
     run_id: str
+    authoring_complete: bool = True
+    authoring_repairs_completed: int = Field(default=0, ge=0)
