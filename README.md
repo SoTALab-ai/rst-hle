@@ -92,5 +92,5 @@ python3 scripts/vm_run.py --host YOUR_SSH_ALIAS --directory ~/Developer/rst-hle 
 
 这是 QC 优先的 MVP：已实现数据库队列 repository，尚未接管理 API 和多 worker 调度；未提供任意学科的可执行证明器、未证明递归能提升跨学科独立合格率、未完成 2,000 道生产。自动抓取目前实现 arXiv；音乐、棋类、影视、历史等可先导入规则、谱文、原始文献和其他文本材料。源码不执行模型生成的代码。
 
-试验设计与 RST 的有效性边界见 [docs/rst-assessment.md](docs/rst-assessment.md)，验收条目见 [docs/acceptance.md](docs/acceptance.md)。来源原文、密钥、题库、完整回答轨迹和运行数据库默认均被 Git 忽略；仅代码/配置与脱敏统计进入公开仓库。
+试验设计与 RST 的有效性边界见 [docs/rst-assessment.md](docs/rst-assessment.md)，验收条目见 [docs/acceptance.md](docs/acceptance.md)，真实 VM 试跑结果见 [docs/validation.md](docs/validation.md)。来源原文、密钥、题库、完整回答轨迹和运行数据库默认均被 Git 忽略；仅代码/配置与脱敏统计进入公开仓库。
 
