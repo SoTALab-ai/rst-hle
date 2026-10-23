@@ -1,0 +1,37 @@
+samples = 16
+correct_min = 1
+correct_max = 8
+max_requests = 130
+max_rounds = 2
+attempts_per_round = 1
+max_repairs = 1
+concurrency = 4
+request_timeout = 180.0
+source_max_candidates = 2
+max_per_root = 1
+# These local files are optional for pilot, mandatory train/eval inputs for production.
+dedup_corpora = []
+
+[generator]
+model = "gpt-5.6-luna"
+accepted_response_models = ["gpt-5.6-luna", "gpt-5.6-luna-2026-07-09"]
+reasoning_effort = "medium"
+max_tokens = 10000
+
+[auditor]
+model = "gpt-5.6-luna"
+accepted_response_models = ["gpt-5.6-luna", "gpt-5.6-luna-2026-07-09"]
+reasoning_effort = "medium"
+max_tokens = 8000
+
+[solver]
+model = "glm-5.2"
+accepted_response_models = ["glm-5.2", "z-ai/glm-5.2"]
+temperature = 1.0
+max_tokens = 10000
+
+[judge]
+model = "gpt-5.6-luna"
+accepted_response_models = ["gpt-5.6-luna", "gpt-5.6-luna-2026-07-09"]
+reasoning_effort = "medium"
+max_tokens = 4000

@@ -1,0 +1,313 @@
+{
+  "version": "feishu-20261023-v3-procurement",
+  "source_sha256": "fa4939a3fc8f8e48402e6ba0eb78990d00424e1e7c175b5edc9bbf9c8b6c59a3",
+  "target": 2000,
+  "taxonomy_note": "61 positive-quota names transcribed exactly; 22 zero-quota categories and original numeric IDs not supplied; no remapping applied",
+  "quotas": [
+    {
+      "category": "Other",
+      "subtopic": "棋类与桌游",
+      "count": 171
+    },
+    {
+      "category": "Other",
+      "subtopic": "文字与综合解谜",
+      "count": 106
+    },
+    {
+      "category": "Other",
+      "subtopic": "乐理与乐谱分析",
+      "count": 95
+    },
+    {
+      "category": "Other",
+      "subtopic": "电子游戏与电竞",
+      "count": 69
+    },
+    {
+      "category": "Other",
+      "subtopic": "影视",
+      "count": 61
+    },
+    {
+      "category": "Other",
+      "subtopic": "音乐作品与音乐史",
+      "count": 55
+    },
+    {
+      "category": "Other",
+      "subtopic": "视觉艺术与建筑史",
+      "count": 50
+    },
+    {
+      "category": "Other",
+      "subtopic": "舞蹈与舞台表演",
+      "count": 36
+    },
+    {
+      "category": "Other",
+      "subtopic": "漫画与动画",
+      "count": 33
+    },
+    {
+      "category": "Other",
+      "subtopic": "商业、品牌与生活知识",
+      "count": 25
+    },
+    {
+      "category": "Other",
+      "subtopic": "地球科学",
+      "count": 18
+    },
+    {
+      "category": "Other",
+      "subtopic": "数理与空间谜题",
+      "count": 13
+    },
+    {
+      "category": "Other",
+      "subtopic": "体育与运动",
+      "count": 11
+    },
+    {
+      "category": "Humanities/SS",
+      "subtopic": "语言学",
+      "count": 163
+    },
+    {
+      "category": "Humanities/SS",
+      "subtopic": "历史与考古",
+      "count": 125
+    },
+    {
+      "category": "Humanities/SS",
+      "subtopic": "文学",
+      "count": 71
+    },
+    {
+      "category": "Humanities/SS",
+      "subtopic": "宗教、民俗与文化",
+      "count": 44
+    },
+    {
+      "category": "Humanities/SS",
+      "subtopic": "法学",
+      "count": 43
+    },
+    {
+      "category": "Humanities/SS",
+      "subtopic": "教育与心理学",
+      "count": 15
+    },
+    {
+      "category": "Humanities/SS",
+      "subtopic": "地理学",
+      "count": 14
+    },
+    {
+      "category": "Humanities/SS",
+      "subtopic": "哲学与逻辑",
+      "count": 8
+    },
+    {
+      "category": "Humanities/SS",
+      "subtopic": "政治学与社会学",
+      "count": 7
+    },
+    {
+      "category": "Bio/Med",
+      "subtopic": "生态、进化与生物分类",
+      "count": 82
+    },
+    {
+      "category": "Bio/Med",
+      "subtopic": "神经科学",
+      "count": 59
+    },
+    {
+      "category": "Bio/Med",
+      "subtopic": "生物化学",
+      "count": 45
+    },
+    {
+      "category": "Bio/Med",
+      "subtopic": "生物技术与实验方法",
+      "count": 25
+    },
+    {
+      "category": "Bio/Med",
+      "subtopic": "遗传学与基因组学",
+      "count": 21
+    },
+    {
+      "category": "Bio/Med",
+      "subtopic": "生物与医学信息学",
+      "count": 15
+    },
+    {
+      "category": "Bio/Med",
+      "subtopic": "药理学与药物化学",
+      "count": 12
+    },
+    {
+      "category": "Bio/Med",
+      "subtopic": "免疫学",
+      "count": 6
+    },
+    {
+      "category": "Bio/Med",
+      "subtopic": "流行病学与公共卫生",
+      "count": 6
+    },
+    {
+      "category": "CS/AI",
+      "subtopic": "人工智能与机器学习",
+      "count": 45
+    },
+    {
+      "category": "CS/AI",
+      "subtopic": "算法与组合优化",
+      "count": 30
+    },
+    {
+      "category": "CS/AI",
+      "subtopic": "自然语言处理",
+      "count": 22
+    },
+    {
+      "category": "CS/AI",
+      "subtopic": "形式化方法与类型论",
+      "count": 20
+    },
+    {
+      "category": "CS/AI",
+      "subtopic": "可计算性与复杂性",
+      "count": 17
+    },
+    {
+      "category": "CS/AI",
+      "subtopic": "编程语言与软件工程",
+      "count": 17
+    },
+    {
+      "category": "CS/AI",
+      "subtopic": "博弈论与搜索",
+      "count": 15
+    },
+    {
+      "category": "CS/AI",
+      "subtopic": "信息论",
+      "count": 10
+    },
+    {
+      "category": "CS/AI",
+      "subtopic": "密码学与信息安全",
+      "count": 5
+    },
+    {
+      "category": "Chemistry",
+      "subtopic": "有机反应与合成",
+      "count": 36
+    },
+    {
+      "category": "Chemistry",
+      "subtopic": "有机结构与立体化学",
+      "count": 35
+    },
+    {
+      "category": "Chemistry",
+      "subtopic": "化学信息学",
+      "count": 27
+    },
+    {
+      "category": "Chemistry",
+      "subtopic": "分析化学与结构表征",
+      "count": 18
+    },
+    {
+      "category": "Chemistry",
+      "subtopic": "材料化学",
+      "count": 6
+    },
+    {
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "count": 31
+    },
+    {
+      "category": "Math",
+      "subtopic": "代数",
+      "count": 27
+    },
+    {
+      "category": "Math",
+      "subtopic": "分析",
+      "count": 15
+    },
+    {
+      "category": "Math",
+      "subtopic": "概率与统计",
+      "count": 2
+    },
+    {
+      "category": "Math",
+      "subtopic": "数理逻辑与集合论",
+      "count": 1
+    },
+    {
+      "category": "Engineering",
+      "subtopic": "通信、信号与控制",
+      "count": 20
+    },
+    {
+      "category": "Engineering",
+      "subtopic": "机械、能源与热流体工程",
+      "count": 15
+    },
+    {
+      "category": "Engineering",
+      "subtopic": "化学与环境工程",
+      "count": 10
+    },
+    {
+      "category": "Engineering",
+      "subtopic": "计算机硬件工程",
+      "count": 10
+    },
+    {
+      "category": "Engineering",
+      "subtopic": "材料工程与制造",
+      "count": 6
+    },
+    {
+      "category": "Engineering",
+      "subtopic": "电路、电子与测量",
+      "count": 5
+    },
+    {
+      "category": "Engineering",
+      "subtopic": "光学工程与照明",
+      "count": 3
+    },
+    {
+      "category": "Engineering",
+      "subtopic": "土木、交通与结构工程",
+      "count": 2
+    },
+    {
+      "category": "Physics",
+      "subtopic": "天文学、天体物理与宇宙学",
+      "count": 25
+    },
+    {
+      "category": "Physics",
+      "subtopic": "量子场论与粒子物理",
+      "count": 15
+    },
+    {
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "count": 6
+    }
+  ]
+}

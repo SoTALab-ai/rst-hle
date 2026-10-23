@@ -1,0 +1,37 @@
+samples = 16
+correct_min = 1
+correct_max = 8
+max_requests = 500
+max_rounds = 4
+attempts_per_round = 3
+max_repairs = 2
+concurrency = 8
+source_max_candidates = 5
+max_per_root = 1
+# User explicitly deferred old-train/official-eval dedup on 2026-10-23.
+external_dedup_required = false
+dedup_corpora = []
+
+[generator]
+model = "gpt-5.6-luna"
+accepted_response_models = ["gpt-5.6-luna", "gpt-5.6-luna-2026-07-09"]
+reasoning_effort = "medium"
+max_tokens = 12000
+
+[auditor]
+model = "gpt-5.6-luna"
+accepted_response_models = ["gpt-5.6-luna", "gpt-5.6-luna-2026-07-09"]
+reasoning_effort = "medium"
+max_tokens = 10000
+
+[solver]
+model = "glm-5.2"
+accepted_response_models = ["glm-5.2", "z-ai/glm-5.2"]
+temperature = 1.0
+max_tokens = 16000
+
+[judge]
+model = "gpt-5.6-luna"
+accepted_response_models = ["gpt-5.6-luna", "gpt-5.6-luna-2026-07-09"]
+reasoning_effort = "medium"
+max_tokens = 4000

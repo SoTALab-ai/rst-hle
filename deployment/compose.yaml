@@ -1,0 +1,20 @@
+name: rst-hle
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rst_hle
+      POSTGRES_USER: rst_hle
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Generate a unique password in deployment/.env first}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-55439}:5432"
+    volumes:
+      - rst_hle_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rst_hle -d rst_hle"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+volumes:
+  rst_hle_postgres:

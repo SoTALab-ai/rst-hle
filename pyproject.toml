@@ -1,0 +1,25 @@
+[project]
+name = "rst-hle"
+version = "0.1.0"
+description = "Evidence-grounded recursive question synthesis with auditable procurement gates"
+requires-python = ">=3.11"
+dependencies = ["pydantic>=2.10,<3", "httpx>=0.28,<1", "pypdf>=6,<7", "psycopg[binary]>=3.2,<4"]
+
+[project.scripts]
+diamond = "diamond_factory.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/diamond_factory"]
+
+[dependency-groups]
+dev = ["pytest>=8,<9", "ruff>=0.11,<1"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 110

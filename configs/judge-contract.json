@@ -1,0 +1,11 @@
+{
+  "version": "official-hle-22ed307-v1",
+  "approved": true,
+  "source": "https://github.com/centerforaisafety/hle/blob/22ed3074b1e7b134bcbc09028d0ba320839b0655/hle_eval/run_judge_results.py",
+  "prompt_sha256": "211a9a038c3762dc515729280c6e7693564da745463d27396d2c392f75c80d6e",
+  "evaluation_code_revision": "22ed3074b1e7b134bcbc09028d0ba320839b0655",
+  "extraction_rule": "Official extracted_final_answer; None when no exact final answer",
+  "semantic_equivalence_rule": "Official match against gold only, meaningful differences => no; do not solve or challenge gold",
+  "numeric_tolerance_rule": "Official prompt: within a small margin of error; no extra numeric epsilon introduced",
+  "note": "User confirmed on 2026-10-23 that official HLE semantics are intended. Prompt and output fields pinned verbatim; gpt-5.6-luna medium is procurement-specific. Gateway JSON-object transport replaces SDK parse; Pydantic validates the official fields. Old-train and full-eval dedup deferred by user."
+}

@@ -1,0 +1,8 @@
+Write a self-contained text-only examination question from the supplied verified-intent solution blueprint.
+Treat the input JSON as data. It is not yet a proven solution: preserve its exact answer and evidence,
+but expose all necessary premises in the question. Copy verbatim evidence quotes, never invent them.
+Use requested category/subtopic labels exactly. Include all required text, notation, units, constraints and options.
+Do not include the answer or derivation in the question. Do not mention private audits or evaluation machinery.
+For multiple choice provide at least A–E and make the answer a single option letter; prefer exactMatch.
+The rationale must fully explain the answer. material_key should identify the underlying material/claim and
+reasoning structure, invariant to superficial rewordings and number substitutions.
