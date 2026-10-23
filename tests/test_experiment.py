@@ -182,6 +182,40 @@ def test_catalog_requires_full_text_and_verifies_metadata_hash(tmp_path):
         p.model_copy(update={'doi':'10.1000/changed'}).sealed()
 
 
+def test_assessment_defect_found_after_sampling_prevents_retention_and_descendants(tmp_path,settings,source,candidate):
+    settings.early_screen_samples=4
+    store=Store(tmp_path/'s.sqlite');store.add_source(source)
+    root=RootPlan(name='claim',source_id=source.id,category='Math',subtopic='组合与图论',
+                  focus='A controlled assessment whose post-audit discovers an ambiguous convention')
+    plan=ExperimentPlan(roots=[root],max_revisions=2)
+
+    class DefectGateway(PatternGateway):
+        async def call(self,role,prompt,salt,schema=None,**kwargs):
+            if ':post-evaluation-audit-v2' in salt:
+                self.calls.append((role,prompt,salt))
+                payload=json.loads(prompt[prompt.index('\n')+1:])
+                examples=payload['allegedly_incorrect_responses']
+                assert len(examples)==4 and all(x['response']=='Final Answer: 37' for x in examples)
+                audit=candidate.audit.model_copy(update={'valid':False,
+                    'reason':'Controlled counterexample: the question leaves the ratio convention undefined.'})
+                return audit,digest(salt),'fixture-model'
+            return await super().call(role,prompt,salt,schema,**kwargs)
+
+    gateway=DefectGateway(candidate,{0,2,4,6})
+    experiment=QuestionExperiment(settings,store,'r','pilot',tmp_path/'r',gateway,plan=plan,pricing=pricing())
+
+    async def author(src,parent,target,generation,attempt,brief=None):
+        c=candidate.model_copy(deep=True);c.id=experiment.root_identity(root,{source.id:source})
+        c.root_id=c.id;c.run_id='r';store.save(c);return c
+
+    experiment.generate=author
+    result=asyncio.run(experiment.run_experiment())
+    assert result['roots_with_retained_question']==0 and result['generated_versions']==1
+    version=result['roots'][0]['versions'][0]
+    assert version['samples']==16 and version['observed_correct']==4
+    assert version['decision']=='quality_rejected' and not result['transitions']
+
+
 def test_author_repair_resumes_after_a_saved_rejection_without_repeating_first_draft(tmp_path,settings,source,candidate):
     from diamond_factory.models import Audit, Question, Solution
     pipe,store,_=setup_pipeline(tmp_path,settings,source,candidate)

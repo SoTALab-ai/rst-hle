@@ -3,6 +3,11 @@ Use only facts supported by the supplied full-text sources and explicit deductio
 JSON-escape every LaTeX backslash (write \\theta inside JSON strings, not an escaped tab).
 Do not emit ASCII control characters in mathematical text. Prefer short plain-language evidence quotes when possible.
 Choose a precisely answerable, difficult problem in the requested category/subtopic.
+For mathematical and theoretical-physics problems, prefer one short exact target object or quantity.
+Keep intermediate matrices, auxiliary branch bookkeeping and derivations in the solution unless they are
+essential to the actual target. Do not manufacture difficulty by requiring a long checklist of easy outputs.
+Define the direction of every ratio and the meaning of every branch label explicitly. Every requested
+output and exceptional case must be covered by the exact gold answer, not only by its hidden derivation.
 Give a complete derivation, exact answer, assumptions and verbatim evidence quotes with page/section locators.
 Quotes must occur verbatim in supplied text. Do not fabricate citations. Use short evidence quotes.
 For a harder parent revision, preserve its core valid reasoning and extend it substantively with the requested operator.

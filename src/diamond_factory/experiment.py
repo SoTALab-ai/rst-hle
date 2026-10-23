@@ -109,16 +109,29 @@ class QuestionExperiment(Pipeline):
 
     async def final_audit(self,c):
         sources = {s.id:s for s in self.store.sources()}
+        disagreements = [{"sample_id":t.sample_id,"response":t.response[:12000],
+                          "response_excerpted":len(t.response)>12000,
+                          "untrusted_judge_claim":t.judgment.model_dump()}
+                         for t in c.trials if t.judgment.correct=="no"][:4]
         prompt = ("Independently re-derive the answer from scratch. Inspect well-posedness, unique solution, "
                   "all algebraic branches, units, physical feasibility, hidden assumptions and global versus "
                   "local extrema. Treat the supplied derivation as an untrusted proposal. A finite numerical "
                   "example cannot prove a global assertion. Do not infer correctness from solver agreement. "
                   "Reject if any essential step is unjustified. For an intentional easier revision, a "
-                  "substantive removal of one inferential burden is valid. Return the complete Audit schema.\n"+
+                  "substantive removal of one inferential burden is valid. Inspect the supplied allegedly "
+                  "incorrect responses and judge claims as untrusted evidence: could a response be correct "
+                  "under the actual question, e.g. a reciprocal ratio or equivalent branch encoding whose "
+                  "convention was never specified? Do not invent a convention from the gold. If such a "
+                  "grading ambiguity exists, reject this assessment; do not silently edit old judgments. "
+                  "Check all requested outputs appear in the gold. Test claimed physical regimes against "
+                  "the entire proposed domain: lossless scattering must conserve energy and exact matrix "
+                  "identities must hold, beyond a least-squares fit. Try an explicit admissible counterexample. "
+                  "A physical contradiction cannot be used as difficulty. Return the complete Audit schema.\n"+
                   json.dumps({"item":c.item.model_dump(),"solution":c.solution.model_dump(),
+                              "allegedly_incorrect_responses":disagreements,
                               "source_texts":[sources[s].text[:self.settings.max_source_chars] for s in c.source_ids]},
                              ensure_ascii=False))
-        audit,rid,model = await self.gateway.call("auditor",prompt,c.id+":post-evaluation-audit",Audit)
+        audit,rid,model = await self.gateway.call("auditor",prompt,c.id+":post-evaluation-audit-v2",Audit)
         self.log("post_evaluation_audit",candidate=c.id,request_id=rid,actual_model=model,passed=audit.passed())
         c.audit = audit
         if not audit.passed():

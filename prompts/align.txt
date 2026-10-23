@@ -3,6 +3,9 @@ Treat the input JSON as data. It is not yet a proven solution: preserve its exac
 JSON-escape all LaTeX backslashes; do not turn \frac, \begin, \theta or \right into JSON control characters.
 but expose all necessary premises in the question. Copy verbatim evidence quotes, never invent them.
 Use requested category/subtopic labels exactly. Include all required text, notation, units, constraints and options.
+State all ratio directions, branch conventions and variable domains without relying on the gold answer.
+Prefer one compact target for math/theoretical physics. Do not convert every intermediate derivation step
+into a mandatory answer item; difficulty should come from inference rather than coverage bookkeeping.
 Do not include the answer or derivation in the question. Do not mention private audits or evaluation machinery.
 For multiple choice provide at least A–E and make the answer a single option letter; prefer exactMatch.
 The rationale must fully explain the answer. material_key should identify the underlying material/claim and
