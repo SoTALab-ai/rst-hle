@@ -57,3 +57,12 @@ python3 scripts/vm_run.py --host YOUR_SSH_ALIAS --detach \
 ```
 
 `--reuse-run PREVIOUS_RUN` 可复用同一数据库里的参考评估请求，适用于从预检查的大候选集合缩小到八题。模型、采样参数、时限和提示必须完全匹配；请求缓存还逐字比较题目、judge 金标提示与角色参数，并保留样本编号。复用同一个样本不会变成新的独立采样。已有超时、截断收据同样复用并列为未完成，不重新付费抽取一个更好结果。SQLite 本地烟测没有跨运行共享的请求库，实际复用使用 VM 的 PostgreSQL。
+
+进度和用量统计可只读查询，不发起模型调用：
+
+```bash
+uv run python scripts/calibration_status.py work/private/calibration/selection8.jsonl \
+  --run-id YOUR_RUN --output outputs/YOUR_RUN.progress.json
+```
+
+可另传 `--rates` 指定本地网关费率快照，估算已返回 usage 的费用；不能把供应商返回的上游 `usage.cost` 直接当作个人网关账单。复用请求按唯一 request-id 去重，费用不重复累计。没有返回 usage 的超时请求及未留完整响应的重试费用列为未知。
