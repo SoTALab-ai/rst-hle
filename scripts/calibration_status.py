@@ -25,6 +25,19 @@ result = summarize(questions, trials, errors)
 result.update(run_id=args.run_id, status=meta["status"], settings=meta["settings"],
               completed_samples=len(trials), expected_samples=len(questions) * 16,
               failed_samples=len(errors), reuse_run=meta.get("reuse_run"), fingerprint=meta["fingerprint"])
+outcomes = []
+for row in result["items"]:
+    failed = [e for e in errors if e["question_id"] == row["id"]]
+    finished = row["samples"] + len(failed)
+    outcomes.append({"id": row["id"], "category": row["category"], "attempts_finished": finished,
+                     "valid_judgments": row["samples"], "observed_correct": row["observed_correct"],
+                     "timeouts": sum("deadline_exceeded" in e["message"] for e in failed),
+                     "provider_truncations": sum("response: length;" in e["message"] for e in failed),
+                     "other_failures": sum("deadline_exceeded" not in e["message"] and
+                                           "response: length;" not in e["message"] for e in failed),
+                     "all_16_attempts_finished": finished == 16,
+                     "strict_difficulty_band": row["band"]})
+result["operational_outcomes"] = outcomes
 if isinstance(store, PostgresStore):
     ids = {t[role + "_request"] for t in trials for role in ("solver", "judge")}
     ids.update(e["request_id"] for e in errors if e.get("request_id"))

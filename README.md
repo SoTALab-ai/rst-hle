@@ -96,3 +96,5 @@ python3 scripts/vm_run.py --host YOUR_SSH_ALIAS --directory ~/Developer/rst-hle 
 试验设计与 RST 的有效性边界见 [docs/rst-assessment.md](docs/rst-assessment.md)，验收条目见 [docs/acceptance.md](docs/acceptance.md)，真实 VM 试跑结果见 [docs/validation.md](docs/validation.md)。来源原文、密钥、题库、完整回答轨迹和运行数据库默认均被 Git 忽略；仅代码/配置与脱敏统计进入公开仓库。
 
 原始 HLE 参考题的并发难度校准入口见 [docs/calibration.md](docs/calibration.md)。用户已将判分模型更新为 gpt-6-luna medium。
+
+2026-10-23 的八领域限时校准结果见 [docs/calibration-results-2026-10-23.md](docs/calibration-results-2026-10-23.md)。
