@@ -82,3 +82,28 @@ def test_cancellation_records_interruption(tmp_path, settings):
     with pytest.raises(asyncio.CancelledError):
         asyncio.run(run.run([question()]))
     assert store.runs()["cancel"]["status"] == "interrupted"
+
+
+def test_reuse_namespace_retains_independent_samples_and_checks_settings(tmp_path, settings):
+    class CachedGateway(Gateway):
+        def __init__(self):
+            super().__init__()
+            self.cache = {}
+
+        async def call(self, role, prompt, salt, schema=None, **kwargs):
+            key = (role, prompt, salt)
+            if key not in self.cache:
+                self.cache[key] = await super().call(role, prompt, salt, schema, **kwargs)
+            return self.cache[key]
+
+    store = Store(tmp_path / "db.sqlite")
+    gateway = CachedGateway()
+    first = Calibration(settings, store, "source", tmp_path / "source", gateway)
+    asyncio.run(first.run([question()], max_new_samples=4))
+    second = Calibration(settings, store, "subset", tmp_path / "subset", gateway, reuse_run="source")
+    assert asyncio.run(second.run([question()]))["totals"] == {"in_band": 1}
+    assert gateway.calls == 32
+    settings.request_deadline_seconds = 123
+    with pytest.raises(ValueError, match="identical"):
+        asyncio.run(Calibration(settings, store, "bad", tmp_path / "bad", gateway,
+                               reuse_run="source").run([question()]))

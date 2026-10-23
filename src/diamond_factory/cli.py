@@ -38,6 +38,7 @@ def main():
     calibrate = sub.add_parser("calibrate", help="Evaluate reference HLE questions without delivery admission")
     calibrate.add_argument("input")
     calibrate.add_argument("--run-id", required=True)
+    calibrate.add_argument("--reuse-run", help="Reuse identical requests from a prior reference run; settings must match")
     calibrate.add_argument("--max-new-samples", type=int,
                            help="Checkpoint after this many new question/sample pairs; classification still requires 16")
     schema = sub.add_parser("schema")
@@ -78,7 +79,8 @@ def main():
             questions = [BenchmarkQuestion.model_validate_json(line) for line in
                          Path(args.input).read_text().splitlines() if line.strip()]
             result = asyncio.run(Calibration(settings, store, args.run_id,
-                                            Path("work/runs") / args.run_id).run(questions, args.max_new_samples))
+                                            Path("work/runs") / args.run_id,
+                                            reuse_run=args.reuse_run).run(questions, args.max_new_samples))
             Path("outputs").mkdir(exist_ok=True)
             Path("outputs", args.run_id + ".json").write_text(json.dumps(result, ensure_ascii=False, indent=2))
             print(json.dumps({"by_category": result["by_category"], "totals": result["totals"]},

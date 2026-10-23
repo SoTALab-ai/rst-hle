@@ -4,7 +4,7 @@
 
 用户于 2026-10-23 将判分模型改为 **gpt-6-luna medium**，优先于原需求中的 gpt-5.6-luna；官方 HLE 判分模板与字段不变。生产 QC 和参考校准的 solver 均使用同一官方 HLE 系统提示，按 GLM5.2 公开采样设置采用 `temperature=1.0`、`top_p=0.95`。用户随后指定每次解题以 600 秒为限，移除客户端输出 token 上限；这属于本项目的重复采样协议，不能称为官方排行榜的完全复现。
 
-首批从需求文档的 120 道原始 Diamond 示例中分层抽样：8 个大类各 3 题，各类优先选不同子类，随机种子 `20261023`。这个样本受原文示例选择与采购子类限制，**不是全部 728 道 Diamond 文本题的随机样本**，不能据此估计全量题数。每类只有三题，只用于早期方向判断。
+可从需求文档的 120 道原始 Diamond 示例中分层抽样：默认 8 个大类各 3 题，各类优先选不同子类，随机种子 `20261023`。当前先以 `--per-category 1` 选八题完成 16 次采样，控制试跑费用。这个样本受原文示例选择与采购子类限制，**不是全部 728 道 Diamond 文本题的随机样本**，不能据此估计全量题数。每类仅一至三题，只用于早期方向判断。
 
 ```bash
 python3 scripts/select_reference_examples.py work/private/requirements/source.md
@@ -44,3 +44,16 @@ uv run diamond --config configs/calibration.toml calibrate \
 - [HLE-Diamond 官方工具评估规则](https://github.com/centerforaisafety/hle/blob/22ed3074b1e7b134bcbc09028d0ba320839b0655/docs/evaluation-with-tools.md) 另允许受控 `web_search` / `web_fetch` 加离线 Python 环境；代码沙箱不得直接联网或下载安装包，网页访问必须执行官方 blocklist、题目原文搜索和缓存检查。**不能笼统说 HLE 禁止一切联网，也不能让解题模型任意上网。**该模式尚未在本项目实现，当前结果只能标为无工具结果。
 
 超时、供应商截断、空回答、实际模型不匹配或判分格式错误均保留失败记录，不算作答错。只有完整得到 16 次有效判分才判断题目是否满足 1–8/16；未完成项单独列出。截断响应保留已返回 usage，超时收据明确标记 usage 未知。
+
+## VM 长任务与小样本复用
+
+为避免 SSH 中断终止长任务，可脱离连接运行；凭据只经加密连接进入进程环境，不写入日志、命令参数或新建密钥文件：
+
+```bash
+python3 scripts/vm_run.py --host YOUR_SSH_ALIAS --detach \
+  --log work/runs/YOUR_RUN/runner.log -- \
+  diamond --config configs/calibration.toml calibrate \
+  work/private/calibration/selection8.jsonl --run-id YOUR_RUN
+```
+
+`--reuse-run PREVIOUS_RUN` 可复用同一数据库里的参考评估请求，适用于从预检查的大候选集合缩小到八题。模型、采样参数、时限和提示必须完全匹配；请求缓存还逐字比较题目、judge 金标提示与角色参数，并保留样本编号。复用同一个样本不会变成新的独立采样。已有超时、截断收据同样复用并列为未完成，不重新付费抽取一个更好结果。SQLite 本地烟测没有跨运行共享的请求库，实际复用使用 VM 的 PostgreSQL。

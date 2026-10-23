@@ -51,12 +51,13 @@ def summarize(questions, trials, errors):
 
 
 class Calibration:
-    def __init__(self, settings, store, run_id, directory, gateway=None):
+    def __init__(self, settings, store, run_id, directory, gateway=None, reuse_run=None):
         self.settings, self.store = settings, store
         self.run_id, self.directory = run_id, Path(directory)
         self.gateway = gateway or Gateway(settings, self.directory / "requests", store=store, run_id=run_id)
         self.solver_system = Path(settings.prompts_dir, "solver_hle_system.txt").read_text().strip()
         self.judge_prompt = Path(settings.prompts_dir, "judge.txt").read_text()
+        self.reuse_run = reuse_run
 
     async def run(self, questions, max_new_samples=None):
         if self.settings.samples != 16:
@@ -67,11 +68,23 @@ class Calibration:
             raise ValueError("Benchmark data must remain reference_only")
         if max_new_samples is not None and max_new_samples < 1:
             raise ValueError("max_new_samples must be positive")
+        previous = self.store.runs().get(self.run_id)
+        reuse_run = self.reuse_run or (previous.get("reuse_run") if previous else None)
+        namespace = self.run_id
+        if reuse_run:
+            source = self.store.runs().get(reuse_run)
+            if reuse_run == self.run_id or not source or source.get("mode") != "reference_calibration":
+                raise ValueError("Reuse requires a different existing reference calibration run")
+            if (source["settings"] != self.settings.model_dump() or
+                    source["solver_system_sha256"] != digest(self.solver_system) or
+                    source["judge_prompt_sha256"] != digest(self.judge_prompt)):
+                raise ValueError("Reuse requires identical model, time, sampling and prompt settings")
+            namespace = source.get("request_namespace", reuse_run)
         fingerprint = digest({"questions": [q.model_dump() for q in questions],
                               "settings": self.settings.model_dump(), "solver_system": self.solver_system,
+                              "request_namespace": namespace,
                               "judge_prompt": self.judge_prompt, "calibration_code": Path(__file__).read_text(),
                               "gateway_code": Path(__file__).with_name("llm.py").read_text()})
-        previous = self.store.runs().get(self.run_id)
         if previous and previous["fingerprint"] != fingerprint:
             raise ValueError("Calibration inputs/config/code changed; use a new run-id")
         trial_rows = list(previous.get("trial_records", [])) if previous else []
@@ -81,6 +94,7 @@ class Calibration:
                 "source_origins": sorted({q.origin for q in questions}),
                 "question_manifest_sha256": digest([q.model_dump() for q in questions]),
                 "solver_system_sha256": digest(self.solver_system), "judge_prompt_sha256": digest(self.judge_prompt),
+                "reuse_run": reuse_run, "request_namespace": namespace,
                 "reference_only": True, "trial_records": trial_rows}
         self.store.run(self.run_id, meta)
         done = {(x["question_id"], x["sample_id"]) for x in trial_rows}
@@ -98,12 +112,12 @@ class Calibration:
                 q, sample_id = queue.get_nowait()
                 try:
                     response, sid, smodel = await self.gateway.call(
-                        "solver", q.question, f"{self.run_id}:{q.id}:solver:{sample_id}",
+                        "solver", q.question, f"{namespace}:{q.id}:solver:{sample_id}",
                         system_prompt=self.solver_system)
                     judgment, jid, jmodel = await self.gateway.call(
                         "judge", self.judge_prompt.format(question=q.question, correct_answer=q.answer,
                                                          response=response),
-                        f"{self.run_id}:{q.id}:judge:{sample_id}", Judgment)
+                        f"{namespace}:{q.id}:judge:{sample_id}", Judgment)
                     record = {"question_id": q.id, "sample_id": sample_id, "correct": judgment.correct == "yes",
                               "solver_request": sid, "judge_request": jid,
                               "solver_actual_model": smodel, "judge_actual_model": jmodel,
