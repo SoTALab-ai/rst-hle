@@ -12,6 +12,8 @@
 
 运行冻结代码、提示、配置、价格、输入清单及独立PostgreSQL数据库；不覆盖20条历史快照。统计首轮与有限迭代留存、蓝图拒绝、题面/金标拒绝、公式翻译问题、反代失败/未覆盖、接口故障、完整难度分布、去重后留存和全费用。预算/运行未完成不称验收通过。
 
+已启动run-id为theory100-verified-inverse-20261024，冻结代码87a212b，个人VM独立数据库rst_hle_theory100_20261024。当前是运行记录，不是100道完成题。前置门禁的真实回放及误拒边界见[回放结果](consistency-replay-results-2026-10-24.md)。
+
 ```bash
 uv run python scripts/run_question_experiment.py \
   --config configs/theory100.toml --plan configs/papers/theory100.plan.json \

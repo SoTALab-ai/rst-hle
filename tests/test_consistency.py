@@ -208,6 +208,8 @@ def test_unfaithful_translation_cannot_be_a_valid_counterexample(tmp_path, setti
     gateway.call = call
     assert not asyncio.run(pipe.preflight(candidate))
     assert any("translation_unverified" in r for r in candidate.reasons) and not candidate.trials
+    assert candidate.consistency.substitution.verdict == "unsupported"
+    assert not candidate.consistency.substitution.results
 
 
 def test_blueprint_failure_stops_question_construction_before_alignment(tmp_path, settings, source, candidate):

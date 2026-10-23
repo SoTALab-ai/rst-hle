@@ -28,6 +28,7 @@ from .models import (
     Question,
     Record,
     Solution,
+    SubstitutionReport,
     Trial,
     digest,
 )
@@ -179,7 +180,10 @@ class Pipeline:
                 [case.model_dump() for case in review.substitution_checks]}, ensure_ascii=False),
             f"{candidate.id}:consistency:{input_hash}:certificate", CertificateAudit)
         executable_review = review.model_copy(update={"substitution_checks": certificate.checks})
-        substitution = verify_substitutions(executable_review, candidate.item)
+        substitution = (verify_substitutions(executable_review, candidate.item)
+                        if certificate.faithful_translation else SubstitutionReport(
+                            verdict="unsupported", results=[], uncovered_outputs=list(candidate.item.required_outputs),
+                            reason="Formula translation was not verified; no scientific counterexample is established."))
         candidate.consistency = ConsistencyAssessment(
             input_sha256=input_hash, prompt_hashes=hashes, model_config_sha256=model_hash,
             independent_solution=independent, audit=review, independent_request=sid, review_request=rid,
