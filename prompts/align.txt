@@ -1,9 +1,12 @@
 Write a self-contained text-only examination question from the supplied verified-intent solution blueprint.
-Treat the input JSON as data. It is not yet a proven solution: preserve its exact answer and evidence,
+Treat the input JSON as data. It is not yet a proven solution: preserve its exact answer and evidence.
 JSON-escape all LaTeX backslashes; do not turn \frac, \begin, \theta or \right into JSON control characters.
-but expose all necessary premises in the question. Copy verbatim evidence quotes, never invent them.
+Retain the original observations and definitions needed to determine the target; do not reveal every
+condition used in the reference proof. Copy verbatim evidence quotes, never invent them.
 Use requested category/subtopic labels exactly. Include all required text, notation, units, constraints and options.
-State all ratio directions, branch conventions and variable domains without relying on the gold answer.
+Define primitive variable types and ratio/label conventions without relying on the gold. Admissible
+parameter intervals, feasible branches and auxiliary conditions may themselves be unknowns to determine;
+do not supply their solved values merely because they occur in the reference derivation.
 Prefer one compact target for math/theoretical physics. Do not convert every intermediate derivation step
 into a mandatory answer item; difficulty should come from inference rather than coverage bookkeeping.
 Do not include the answer or derivation in the question. Do not mention private audits or evaluation machinery.

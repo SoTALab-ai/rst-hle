@@ -10,6 +10,11 @@ reference_answer: every requested gold output and essential derivation step is c
 physical_regime: physical feasibility, units, conservation and exact model identities. not_applicable
 is allowed ONLY for physical_regime when the question makes no physical claim. The four core checks
 always apply, including when the domain is fixed or there are no free parameters.
+Necessary conditions may be inferable or requested outputs rather than explicit premises. Do not
+reject an omitted reference assumption until you have checked whether retained constraints entail it.
+Hidden lemmas, feasible intervals and branch selection are intended reasoning burdens. A missing-input
+rejection must identify a concrete ambiguity or unresolved entailment, preferably different admissible
+realizations yielding different targets; do not treat inability to derive a condition as a proved defect.
 For no-absorption/lossless scattering, verify unitarity/energy conservation over the claimed real-frequency
 domain. A least-squares fit is not proof of exact reconstruction. Try admissible counterexamples when
 complex parameters or assumptions were broadened. Substitute dark/null/eigenvectors into the defining
