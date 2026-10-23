@@ -92,6 +92,8 @@ class MeteredGateway(Gateway):
             rows = self.store.db.execute("SELECT role,usage FROM diamond.model_requests WHERE run_id=%s",
                                          (self.run_id,)).fetchall()
             known = sum(price_usage(getattr(self.settings,r).model,u,self.pricing) or 0 for r,u in rows)
-            if known >= self.visible_cost_limit_usd:
-                raise BudgetExceeded("Visible returned-usage budget reached; unknown/in-flight fees remain separate")
+        else:
+            known = measure_cost(None,self.run_id,self.directory,self.settings,self.pricing)["known_cost_usd"]
+        if known >= self.visible_cost_limit_usd:
+            raise BudgetExceeded("Visible returned-usage budget reached; unknown/in-flight fees remain separate")
         return await super()._fetch(role,config,payload,request_id,base,key)

@@ -148,3 +148,24 @@ def test_long_solver_queue_leaves_capacity_for_judging_and_persistence(tmp_path,
     assert peak==2 and started==3
     with pytest.raises(ValueError,match='global concurrency'):
         type(settings).model_validate(dict(settings.model_dump(),solver_concurrency=4))
+
+
+def test_returned_usage_budget_also_blocks_new_purchases_without_postgres(tmp_path,settings,monkeypatch):
+    from diamond_factory.costs import MeteredGateway
+    calls=[]
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(200,json={'model':'glm-5.2','usage':{'prompt_tokens':1000,'completion_tokens':1000},
+            'choices':[{'message':{'content':'complete'},'finish_reason':'stop'}]})
+
+    install_mock(monkeypatch,handler)
+    prices={'currency':'USD','observed_at':'2026-10-23','rmb_reference_exchange_rate':7,
+        'rates_per_million':{getattr(settings,role).model:{'input':1,'output':2,'cache_read':.1,'cache_write':.5}
+                             for role in ('generator','auditor','solver','judge')}}
+    def gateway():return MeteredGateway(settings,tmp_path,run_id='r',pricing=prices,visible_cost_limit_usd=.002)
+    first=asyncio.run(gateway().call('solver','Q','sample:0'))
+    assert first==asyncio.run(gateway().call('solver','Q','sample:0'))
+    with pytest.raises(BudgetExceeded,match='usage budget'):
+        asyncio.run(gateway().call('solver','Q','sample:1'))
+    assert len(calls)==1
