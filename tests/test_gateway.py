@@ -112,3 +112,39 @@ def test_deadline_includes_retry_backoff(tmp_path, settings, monkeypatch):
     with pytest.raises(RuntimeError, match="deadline_exceeded"):
         asyncio.run(Gateway(settings, tmp_path).call("solver", "Q", "retry:0"))
     assert len(calls) == 1
+
+
+def test_long_solver_queue_leaves_capacity_for_judging_and_persistence(tmp_path,settings,monkeypatch):
+    settings.concurrency=3;settings.solver_concurrency=2
+    active=0;peak=0;started=0
+
+    async def exercise():
+        nonlocal active,peak,started
+        two_running=asyncio.Event();release=asyncio.Event()
+
+        async def handler(request):
+            nonlocal active,peak,started
+            model=json.loads(request.content)['model']
+            if model==settings.solver.model:
+                active+=1;started+=1;peak=max(peak,active)
+                if started==2:two_running.set()
+                try:await release.wait()
+                finally:active-=1
+            return httpx.Response(200,json={'model':model,'choices':[
+                {'message':{'content':'complete'},'finish_reason':'stop'}]})
+
+        install_mock(monkeypatch,handler)
+        gateway=Gateway(settings,tmp_path)
+        tasks=[asyncio.create_task(gateway.call('solver','Q','sample:'+str(i))) for i in range(3)]
+        try:
+            await asyncio.wait_for(two_running.wait(),1)
+            judged=await asyncio.wait_for(gateway.call('judge','fixed response','judge:0'),1)
+            assert judged[0]=='complete' and started==2 and active==2
+        finally:
+            release.set()
+            await asyncio.gather(*tasks)
+
+    asyncio.run(exercise())
+    assert peak==2 and started==3
+    with pytest.raises(ValueError,match='global concurrency'):
+        type(settings).model_validate(dict(settings.model_dump(),solver_concurrency=4))

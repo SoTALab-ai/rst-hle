@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import time
+from contextlib import nullcontext
 from pathlib import Path
 
 import httpx
@@ -39,6 +40,7 @@ class Gateway:
         self.budget_path = self.directory / "budget.json"
         self.attempts = json.loads(self.budget_path.read_text())["attempts"] if self.budget_path.exists() else 0
         self.sem = asyncio.Semaphore(settings.concurrency)
+        self.solver_sem = asyncio.Semaphore(settings.solver_concurrency) if settings.solver_concurrency else None
         self.request_locks = {}
         self.store = store if hasattr(store, "get_request") else None
         self.run_id = run_id
@@ -80,7 +82,8 @@ class Gateway:
         request_id = digest({"payload": payload, "salt": salt, "endpoint_hash": digest(base),
                              "deadline_seconds": self.settings.request_deadline_seconds})
         path = self.directory / (request_id + ".json")
-        async with self.request_locks.setdefault(request_id, asyncio.Lock()), self.sem:
+        role_permit = self.solver_sem if role=="solver" and self.solver_sem is not None else nullcontext()
+        async with self.request_locks.setdefault(request_id, asyncio.Lock()), role_permit, self.sem:
             trace = self.store.get_request(request_id) if self.store else None
             if trace is not None:
                 self._check(trace, request_id, payload, salt)

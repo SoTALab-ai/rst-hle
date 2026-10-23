@@ -9,6 +9,7 @@ max_rounds = 3
 attempts_per_round = 1
 max_repairs = 1
 concurrency = 16
+solver_concurrency = 14
 request_timeout = 600.0
 request_deadline_seconds = 600.0
 max_source_chars = 65000

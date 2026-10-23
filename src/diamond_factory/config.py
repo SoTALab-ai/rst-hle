@@ -2,7 +2,7 @@ import tomllib
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from .models import StrictModel
 
@@ -38,6 +38,7 @@ class Settings(StrictModel):
     request_deadline_seconds: float | None = Field(default=None, gt=0)
     evaluation_mode: Literal["no_tools"] = "no_tools"
     concurrency: int = Field(default=4, ge=1)
+    solver_concurrency: int | None = Field(default=None, ge=1)
     max_source_chars: int = 45000
     max_rounds: int = 3
     attempts_per_round: int = 2
@@ -50,6 +51,12 @@ class Settings(StrictModel):
     judge_contract: str = "configs/judge-contract.json"
     dedup_corpora: list[str] = Field(default_factory=list)
     external_dedup_required: bool = False
+
+    @model_validator(mode="after")
+    def validate_role_capacity(self):
+        if self.solver_concurrency is not None and self.solver_concurrency>self.concurrency:
+            raise ValueError("solver_concurrency must not exceed global concurrency")
+        return self
 
 
 def load(path: str | Path) -> Settings:
