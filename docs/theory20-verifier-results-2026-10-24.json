@@ -1,0 +1,127 @@
+{
+  "run_id": "theory20-verifier-20261024",
+  "status": "completed_with_errors",
+  "counts": {
+    "planned_roots": 20,
+    "planned_math": 10,
+    "planned_physics": 10,
+    "papers": 10,
+    "roots_with_accepted_source_lock": 15,
+    "roots_with_full_proof_draft": 15,
+    "proof_drafts": 41,
+    "blueprint_reviews": {
+      "reject": 16,
+      "pass": 25
+    },
+    "roots_with_formed_question": 13,
+    "question_packet_variants": 23,
+    "question_patch_drafts": 1,
+    "unique_question_stems": 20,
+    "stored_generation_versions": 13,
+    "roots_with_current_consistency_pass": 1,
+    "roots_with_ever_baseline_preflight_pass": 3,
+    "verifier_assessments_started": 2,
+    "completed_verifier_rounds": 2,
+    "verifier_review_actions": {
+      "repair_question": 1,
+      "reject": 1
+    },
+    "roots_with_verifier_pass": 0,
+    "roots_sampled": 0,
+    "answered_samples": 0,
+    "deadline_incorrect_samples": 0,
+    "full_16_versions": 0,
+    "valid_full_16_versions": 0,
+    "preliminary_4_of_4_versions": 0,
+    "retained_roots": 0,
+    "primary_outcomes": {
+      "蓝图/作者失败": 7,
+      "验证未完成/协议输出不合格": 6,
+      "来源证据失败": 5,
+      "前置质量拒绝": 2
+    },
+    "logical_response_errors": {},
+    "typed_schema_validation_errors": 1,
+    "terminal_boundary_failures": {
+      "Rejected generator response: invalid_verifier_coverage_or_anchor; no grade was assigned": 5,
+      "Rejected generator response: invalid_schema; no grade was assigned": 1
+    },
+    "http_attempt_errors": {},
+    "roles": {
+      "generator": 120,
+      "consistency": 85,
+      "auditor": 19,
+      "judge": 16
+    },
+    "actual_models": {
+      "gpt-6-luna-2026-09-22": 240
+    }
+  },
+  "cost": {
+    "known_cost_usd": 2.05501705,
+    "rmb_reference": 13.768614235000001,
+    "http_attempts": 240,
+    "logical_request_receipts": 240,
+    "unknown_usage_attempts": 0,
+    "by_role": {
+      "generator": {
+        "http_attempts": 120,
+        "known_cost_usd": 1.233587625,
+        "unknown_usage_attempts": 0
+      },
+      "consistency": {
+        "http_attempts": 85,
+        "known_cost_usd": 0.653566025,
+        "unknown_usage_attempts": 0
+      },
+      "judge": {
+        "http_attempts": 16,
+        "known_cost_usd": 0.005631574999999999,
+        "unknown_usage_attempts": 0
+      },
+      "auditor": {
+        "http_attempts": 19,
+        "known_cost_usd": 0.16223182500000002,
+        "unknown_usage_attempts": 0
+      }
+    },
+    "by_candidate_usd": {
+      "944aa70996bbf68233049921": 0.214455125,
+      "0d8f3fa18ad2e057a412b23e": 0.1946199,
+      "7227a56eae65822d851ef005": 0.1421887,
+      "93ca8c2fab020254039b9634": 0.024171400000000003,
+      "a211380504bda32e7f534c2d": 0.15602439999999998,
+      "4cb928702e53f50218fe63fd": 0.066483725,
+      "ee803e32f3edf3913cf38078": 0.085743375,
+      "3102f49f2418b27a5bf3a0e5": 0.011220025000000002,
+      "341dabb0447b269368db6970": 0.0220714,
+      "a617291143b6cfe6253e62c0": 0.11561967499999998,
+      "1242ab61971927fd57459fe5": 0.06792489999999998,
+      "d5c79344fae5d16b29e766de": 0.05212035,
+      "01d2d6e2e2124b5e16c02b27": 0.0536591,
+      "be70f6d7f0ce0586aa79cc80": 0.089525125,
+      "e799cdd5c25ee8fc996f8d98": 0.013434275000000002,
+      "3344d6a07423cd151916077c": 0.01101115,
+      "2ab87f963189d73ac3383aca": 0.246203325,
+      "5df86a48a5b0de608d74a048": 0.144282175,
+      "529b6484789ba43524fa7c7a": 0.2710201,
+      "3a29d9a8e10ade59c851f3c3": 0.07323882500000001
+    },
+    "pricing_snapshot_date": "2026-10-23",
+    "note": "Returned usage only; unknown/cancelled usage is not zero. Excludes VM and human labor."
+  },
+  "code_commit": "fb3ab06bea41bc834ac71e7272e311ee8590fcb6",
+  "known_api_cost_per_planned_root_usd": 0.1027508525,
+  "known_api_cost_per_retained_root_usd": null,
+  "manifest_sha256": "228d13b6871e12a5d9f0bf86b06b2ab59251a365009a05991a6ad172a823356d",
+  "started_at": "2026-10-24T10:11:58.824452+00:00",
+  "observed_at": "2026-10-24T10:50:39.105988+00:00",
+  "runtime": "个人VM liaojunteng-vm；独立PostgreSQL与文件库",
+  "source": "10篇固定版本理论论文，每篇2条计划；同论文样本相关",
+  "limitations": [
+    "有限方便样本，不能估计论文总体成功率或证明RST的因果收益",
+    "作者与多类质检实际均为6-luna的隔离上下文，不能以一致意见证明科学真值",
+    "有限算术反代只用于证伪，不证明全域、唯一性或连续全局最优",
+    "已知API成本按冻结价格与返回usage计算，不含VM和人工；未知用量不记零"
+  ]
+}
