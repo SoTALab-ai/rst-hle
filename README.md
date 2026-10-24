@@ -47,6 +47,8 @@ flowchart LR
 
 逐题verifier对抗使用 `configs/theory10-verifier-adversary.toml`：完整题面、golden和挖空证明共同构造/攻击验收约定，独立核定合法与非法对照，最多两次修改，题面修改重做全部正确性检查；详见[对抗机制](docs/verifier-adversary.md)及[单题真实结果](docs/verifier-probe-2026-10-24.md)。已有答卷的抽取误杀与上界目标歧义分开处理，真实只重判、不重跑GLM的结果见[判分复核](docs/judge-context-recheck.md)。
 
+新版verifier的[20条真实试产](docs/theory20-verifier-2026-10-24.md)已结束：13条形成候选题，0条通过全部前置质检、0条进入GLM测量，已知参考费用约¥13.77。来源引文、作者/蓝图、题面与golden合同、verifier锚点和反代覆盖分别记录；这轮尚不能评价新题难度。
+
 需要 Python 3.11+ 和 [uv](https://docs.astral.sh/uv/)。从仓库根目录执行：
 
 ```bash
