@@ -23,6 +23,12 @@ def verifier_fingerprint():
 
 def has_valid_consistency(candidate, sources):
     assessment = candidate.consistency
+    if candidate.verifier_assessment:
+        from .verifier import has_valid_verifier
+        if not candidate.source_ids or not set(candidate.source_ids) <= sources.keys():
+            return False
+        if not has_valid_verifier(candidate, sources):
+            return False
     evidence_ids = {e.source_id for e in candidate.item.evidence + candidate.solution.evidence}
     if candidate.known_result and known_result_errors(candidate.known_result, sources, candidate.solution):
         return False

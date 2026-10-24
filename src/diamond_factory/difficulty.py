@@ -58,6 +58,10 @@ def valid_bottleneck(candidate, sources, prompt=None, model_config=None):
 
 def construction_ready(candidate, sources, settings, prompts):
     """导出只检查现有有效收据，不购买新的审查，也不接受旧通过标记。"""
+    if settings.require_verifier_adversary:
+        from .verifier import has_valid_verifier, protocol_hash
+        if not has_valid_verifier(candidate, sources, expected_protocol=protocol_hash(prompts, settings)):
+            return False
     if settings.require_known_result:
         result = candidate.known_result
         if (known_result_errors(result, sources, candidate.solution)

@@ -8,4 +8,12 @@
 
 新快照使用 `configs/theory10-judge-context.toml` 和同名 plan。旧题面、金标、GLM答卷和历史判分不覆盖。新增请求、费用、未完成检查均单独统计。
 
+## 2026-10-24个人VM真实复核
+
+冻结代码 `809b0200833f3eda6516035b9726a3970fc28bcd`，run `theory10-judge-context-20261024`，独立库 `rst_hle_theory10_judge_20261024`。清单SHA-256：`6614592cb220307bfb01f65c93db1ea1cb2b763ea3eee80068762c0c619cc01d`。复用127条来源请求收据，在原个人VM执行13次新judge与1次独立题目审查，新增solver请求为0。
+
+固定金标判分从3/16变为4/16，仅第3号改变；13份原始答卷和3次600秒截止计错全部保留。独立科学审查认为金标受来源支持、归一化正确，另指出题面“an upper bound”允许更弱的有效界，因此`uniquely_answerable=false`、`valid=false`，本题仍未留存，不把4/16认证为有效难度。历史10条计划仍为5条形成题面、0条留存；本次只复核其中1条，不能写成新出10题。
+
+新增14次HTTP均有用量，已知API费 `$0.01062995`，按冻结汇率6.7约`¥0.07122`；未知用量0。费用不含VM和人工。没有为改变评分重跑GLM，也没有改题面或golden。
+
 依据：[原论文的定义及界](https://arxiv.org/html/1504.01323v2)、[冻结版本的官方 HLE 判分模板](https://github.com/centerforaisafety/hle/blob/22ed3074b1e7b134bcbc09028d0ba320839b0655/hle_eval/run_judge_results.py)。

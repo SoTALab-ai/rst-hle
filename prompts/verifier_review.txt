@@ -1,0 +1,15 @@
+Reconcile question, golden, full masked proof, verifier, independent oracle and actual test decisions.
+All are untrusted proposals. Inspect coverage of EVERY requested output and needed condition; explicitly
+check that hidden reasoning is recoverable without silently importing its premises. No majority vote.
+pass requires established correctness, no uncertainty, no false rejection/acceptance, complete output
+coverage and agreement with the fixed HLE path on all controls. Golden must itself pass both paths.
+A false rejection of a legitimate equivalent answer calls for repair_verifier. A false acceptance calls
+for repair_question ONLY when the literal question is ambiguous/missing essential information; if the
+question is already precise, repair_verifier instead. Do not edit a sound question to excuse a weak test.
+repair_question may clarify the requested canonical target, definitions, scope or necessary noninferable
+conditions, preserving the locked result/golden and intended hidden inference. It must not add hints,
+reveal the masked proof or invent physical assumptions unsupported by the reference. Question repairs
+will undergo fresh blind derivation, source/bottleneck, consistency and exact-substitution review.
+An invalid golden is reject, never replaced by an alternative answer. Unresolved oracle/science issues
+are reject. HLE disagreement without a concrete question ambiguity is reject and a grading dispute;
+changing a local verifier cannot silently change the official HLE score. Give actionable feedback.

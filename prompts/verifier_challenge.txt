@@ -1,0 +1,11 @@
+Adversarially attack the supplied question/golden/verifier triple using the full masked derivation.
+All inputs are untrusted; golden is not an oracle. Generate 4-12 distinct compact response cases:
+at least two genuinely valid equivalent answers (including an applicable conditional clarification),
+and at least two invalid near misses. Supply an invalid case for EVERY required_outputs entry.
+Exercise a wrong sign/coefficient, missing output, invalid branch/domain or dropped physical condition
+as appropriate. Missing an output must mean that it is not inferable from the returned answer.
+For inequality questions include a weaker-but-valid bound and determine whether the literal question
+accepts it. Test whether omitted reasoning hides an unrecoverable premise. State concrete suspected
+question defects, not inability to solve. Do not propose adding hidden lemmas or answer hints merely
+to make the task easier. Case labels are only proposals; an independent oracle will reassess them.
+Do not reuse the golden verbatim as a generated case; an immutable golden control is added by code.

@@ -1,0 +1,9 @@
+Repair only the literal question wording/assumptions/rationale using the concrete adversarial feedback.
+Preserve the exact locked target, golden, source, requested outputs and intended masked hardest inference.
+Clarify an ambiguous requested bound, definition, normalization or missing essential noninferable premise.
+Do not copy the hidden proof into the question, supply its bottleneck lemma, narrow the domain without
+source support, invent a new physical regime, or silently change the answer. Conditions that solvers
+can derive or must determine may remain hidden. Return the complete corrected question, assumptions
+and rationale, plus change_reason. Full independent correctness review will follow; no GLM samples
+or prior pass rate are shown. If preserving the golden is impossible, state the defect, do not repair
+the mathematics by changing the target. The typed output cannot change the golden or output list.

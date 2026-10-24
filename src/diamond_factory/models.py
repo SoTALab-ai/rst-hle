@@ -399,6 +399,121 @@ class DeadlineOutcome(StrictModel):
         return self
 
 
+class VerifierRequirement(StrictModel):
+    target_output: str
+    question_anchor: str = Field(min_length=5)
+    acceptance_rule: str = Field(min_length=15)
+    equivalent_forms: list[str] = Field(min_length=1)
+
+
+class VerifierCondition(StrictModel):
+    condition: str = Field(min_length=5)
+    kind: Literal["explicit", "inferable", "requested"]
+    question_anchor: str = Field(min_length=5)
+    justification: str = Field(min_length=15)
+
+
+class VerifierSpec(StrictModel):
+    requirements: list[VerifierRequirement] = Field(min_length=1, max_length=20)
+    conditions: list[VerifierCondition] = Field(min_length=1, max_length=40)
+    interpretation: str = Field(min_length=20)
+
+
+class VerifierCase(StrictModel):
+    id: str = Field(pattern=r"^[A-Za-z][A-Za-z0-9_]{0,39}$")
+    kind: Literal["equivalent", "invalid"]
+    response: str = Field(min_length=1, max_length=12000)
+    target_output: str
+    rationale: str = Field(min_length=15)
+
+
+class VerifierChallenges(StrictModel):
+    cases: list[VerifierCase] = Field(min_length=4, max_length=12)
+    suspected_question_issues: list[str]
+
+    @model_validator(mode="after")
+    def distinct_cases(self):
+        if len({c.id for c in self.cases}) != len(self.cases) or any(c.id == "golden" for c in self.cases):
+            raise ValueError("Challenge ids must be distinct; golden is reserved")
+        if len({c.response for c in self.cases}) != len(self.cases):
+            raise ValueError("Duplicate challenge answers do not add adversarial coverage")
+        return self
+
+
+class VerifierOracleCase(StrictModel):
+    id: str
+    verdict: Literal["yes", "no", "uncertain"]
+    reasoning: str = Field(min_length=15)
+
+
+class VerifierOracle(StrictModel):
+    cases: list[VerifierOracleCase]
+    question_complete: ConsistencyCheck
+    golden_valid: ConsistencyCheck
+    hidden_steps_recoverable: ConsistencyCheck
+
+
+class VerifierDecision(StrictModel):
+    correct: Literal["yes", "no", "uncertain"]
+    reasoning: str = Field(min_length=15)
+
+
+class VerifierObservation(StrictModel):
+    case_id: str
+    oracle: VerifierOracleCase
+    verifier: VerifierDecision
+    verifier_request: str
+    verifier_actual_model: str
+    hle: Judgment
+    hle_request: str
+    hle_actual_model: str
+
+
+class VerifierReview(StrictModel):
+    action: Literal["pass", "repair_verifier", "repair_question", "reject"]
+    question_verifier_consistent: ConsistencyCheck
+    requested_outputs_covered: ConsistencyCheck
+    no_hidden_extra_conditions: ConsistencyCheck
+    feedback: str = Field(min_length=20)
+
+
+class VerifierRound(StrictModel):
+    challenges: VerifierChallenges
+    oracle: VerifierOracle
+    observations: list[VerifierObservation]
+    review: VerifierReview
+    requests: dict[str, str]
+    actual_models: dict[str, str]
+
+
+class VerifierVersion(StrictModel):
+    item: Question
+    spec: VerifierSpec
+    spec_request: str
+    spec_actual_model: str
+    # 题面修复后先存检查点；恢复时必须完成全部前置复核，不能跳过。
+    revalidation_pending: bool = False
+    question_repair_request: str = ""
+    question_repair_actual_model: str = ""
+    result: VerifierRound | None = None
+
+
+class VerifierAssessment(StrictModel):
+    protocol: Literal["adversarial-verifier-v1"] = "adversarial-verifier-v1"
+    context_sha256: str
+    protocol_sha256: str
+    versions: list[VerifierVersion] = Field(min_length=1, max_length=3)
+    status: Literal["pending", "passed", "rejected"] = "pending"
+    reason: str = ""
+
+
+class VerifierQuestionRepair(StrictModel):
+    question: str = Field(min_length=50)
+    assumptions: list[str] = Field(min_length=1)
+    rationale: str = Field(min_length=50)
+    change_reason: str = Field(min_length=20)
+
+
 class Candidate(StrictModel):
     id: str
     parent_id: str | None
@@ -410,6 +525,8 @@ class Candidate(StrictModel):
     item: Question
     audit: Audit
     consistency: ConsistencyAssessment | None = None
+    verifier_assessment: VerifierAssessment | None = None
+    verifier_history: list[VerifierAssessment] = Field(default_factory=list)
     blueprint_audit: BlueprintAudit | None = None
     blueprint_request: str = ""
     blueprint_actual_model: str = ""
