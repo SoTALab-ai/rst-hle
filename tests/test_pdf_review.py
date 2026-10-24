@@ -92,7 +92,7 @@ def test_failed_audit_and_missing_dependencies_cannot_be_admitted():
 
 
 def test_corrupt_or_failed_real_receipt_cannot_certify_review(tmp_path):
-    trace = {"actual_model": "gpt-6-luna", "content": "review", "response_error": None}
+    trace = {"request_id": "request", "actual_model": "gpt-6-luna", "content": "review", "response_error": None}
     trace["integrity_sha256"] = digest(trace)
     p = tmp_path / "request.json"
     p.write_text(json.dumps(trace))

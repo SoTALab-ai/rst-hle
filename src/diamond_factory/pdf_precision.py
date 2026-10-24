@@ -19,8 +19,8 @@ from .pdf_ocr import OCRFailure, _read, _save
 
 
 class ContentBlock(StrictModel):
-    type: Literal["text", "equation", "table", "image", "list", "header", "footer", "page_number",
-                  "page_footnote", "code", "reference"]
+    type: Literal["text", "aside_text", "equation", "table", "image", "chart", "list", "header", "footer", "page_number",
+                  "page_footnote", "code", "reference", "ref_text"]
     page_idx: int = Field(ge=0)
     text: str = ""
     table_body: str = ""
@@ -44,7 +44,7 @@ def decode_blocks(raw, pages):
 def page_text(blocks, page):
     pieces = []
     for b in blocks:
-        if b.page_idx != page - 1 or b.type in ("image", "header", "footer", "page_number"):
+        if b.page_idx != page - 1 or b.type in ("image", "chart", "header", "footer", "page_number"):
             continue
         if b.type == "equation":
             if not b.text.strip():
@@ -142,6 +142,16 @@ class MinerUPrecision:
             if not output.exists() or hashlib.sha256(output.read_bytes()).hexdigest() != receipt["content_sha256"]:
                 raise OCRFailure("Corrupt structured OCR cache")
             return decode_blocks(output.read_bytes(), pages)
+        # 已下载但未通过结构适配的原始产物先留存；改解析器后可离线恢复，不重买OCR。
+        if receipt.get("zip_sha256"):
+            zipped = (folder / "result.zip").read_bytes()
+            if hashlib.sha256(zipped).hexdigest() != receipt["zip_sha256"]:
+                raise OCRFailure("Corrupt raw precision result ZIP")
+            content, blocks, metadata = content_from_zip(zipped, pages)
+            output.write_bytes(content)
+            receipt.update(content_sha256=hashlib.sha256(content).hexdigest(), metadata=metadata)
+            _save(path, receipt)
+            return blocks
         if receipt.get("submission_uncertain"):
             raise OCRFailure("Precision task submission is uncertain; recover before resubmitting")
         headers = {"Authorization": "Bearer " + self.token}
@@ -209,8 +219,10 @@ class MinerUPrecision:
                             raise OCRFailure("Precision result ZIP exceeds download limit")
                         chunks.append(chunk)
                 zipped = b"".join(chunks)
-                content, blocks, metadata = content_from_zip(zipped, pages)
                 (folder / "result.zip").write_bytes(zipped)
+                receipt["zip_sha256"] = hashlib.sha256(zipped).hexdigest()
+                _save(path, receipt)
+                content, blocks, metadata = content_from_zip(zipped, pages)
                 output.write_bytes(content)
                 receipt.update(content_sha256=hashlib.sha256(content).hexdigest(),
                     zip_sha256=hashlib.sha256(zipped).hexdigest(), metadata=metadata,

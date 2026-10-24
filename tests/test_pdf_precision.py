@@ -8,7 +8,7 @@ import httpx
 import pytest
 from pypdf import PdfWriter
 
-from diamond_factory.pdf_ocr import OCRFailure
+from diamond_factory.pdf_ocr import OCRFailure, _read, _save
 from diamond_factory.pdf_precision import MinerUPrecision, content_from_zip, decode_blocks, page_text
 
 
@@ -25,6 +25,8 @@ def blocks():
     return [{"type": "text", "page_idx": 0, "text": "A complete synthetic mathematical definition of the target."},
             {"type": "equation", "page_idx": 0, "text": "x^2+1=2\\tag{1}"},
             {"type": "image", "page_idx": 0, "image_caption": ["SECRET_FIGURE_CAPTION"]},
+            {"type": "chart", "page_idx": 0, "text": "DO_NOT_READ_CHART"},
+            {"type": "aside_text", "page_idx": 0, "text": "A necessary side condition: x is positive."},
             {"type": "text", "page_idx": 1, "text": "Second physical page with a separately defined exact quantity."}]
 
 
@@ -33,6 +35,7 @@ def test_only_body_formulas_and_tables_enter_original_page_mapping():
     first = page_text(b, 1)
     assert "x^2+1" in first and "Second physical page" not in first
     assert "SECRET_FIGURE_CAPTION" not in first and "DO_NOT_READ_FIGURE" not in body.decode()
+    assert "DO_NOT_READ_CHART" not in first and "x is positive" in first
     assert "separately defined" in page_text(b, 2)
     assert metadata["cloud_output_contract"] == "legacy_content_list_v1"
 
@@ -86,5 +89,44 @@ def test_precision_upload_once_for_multiple_pages_and_no_token_in_journal(tmp_pa
             with pytest.raises(OCRFailure, match="Corrupt structured OCR"):
                 await MinerUPrecision(tmp_path / "ocr", token=token, client=c).parse(pdf, 1)
         assert token not in "".join(p.read_text() for p in (tmp_path / "ocr").rglob("*.json"))
+
+    asyncio.run(exercise())
+
+
+def test_completed_raw_zip_recovered_without_network_and_corruption_refused(tmp_path):
+    pdf = tmp_path / "main.pdf"
+    writer = PdfWriter()
+    writer.add_blank_page(width=100, height=100)
+    writer.add_blank_page(width=100, height=100)
+    writer.write(pdf)
+    raw = pdf.read_bytes()
+    sha = hashlib.sha256(raw).hexdigest()
+    folder = tmp_path / "ocr" / sha
+    folder.mkdir(parents=True)
+    # 模拟已完成服务任务，但旧适配器尚未解码的原始ZIP检查点。
+    receipt = {"identity": {"pdf_sha256": sha, "pages": 2,
+        "params": {"files": [{"name": "paper.pdf", "data_id": sha}], "model_version": "vlm",
+                   "enable_formula": True, "enable_table": True, "language": "en"},
+        "endpoint": "https://mineru.net/api/v4/file-urls/batch", "exclude_figures": True},
+        "submitted": True, "attempts": [{"stage": "submit", "http_status": 200}],
+        "zip_sha256": hashlib.sha256(zip_content(blocks())).hexdigest()}
+    (folder / "result.zip").write_bytes(zip_content(blocks()))
+    _save(folder / "receipt.json", receipt)
+
+    def no_network(request):
+        pytest.fail("A completed OCR artifact must not be resubmitted or downloaded")
+
+    async def exercise():
+        async with httpx.AsyncClient(transport=httpx.MockTransport(no_network)) as client:
+            parser = MinerUPrecision(tmp_path / "ocr", token="TEST_SECRET", client=client)
+            assert "x is positive" in (await parser.parse(pdf, 1))[0]
+            updated = _read(folder / "receipt.json")
+            assert updated["attempts"] == receipt["attempts"]
+            assert updated["content_sha256"]
+            updated.pop("content_sha256")
+            _save(folder / "receipt.json", updated)
+            (folder / "result.zip").write_bytes(b"damaged")
+            with pytest.raises(OCRFailure, match="Corrupt raw precision"):
+                await MinerUPrecision(tmp_path / "ocr", token="TEST_SECRET", client=client).parse(pdf, 1)
 
     asyncio.run(exercise())

@@ -13,7 +13,7 @@
   当前中文管理页列出每文件200MB、200页，每账号每天1000页最高优先级，超出部分降低优先级；本地文件上传单批说明列出50个。
   英文静态文档曾出现不同页数上限，配置按当前中文管理页的保守限制执行。20篇均低于单文件限制，总计1060页。
 - 飞桨官方API仍未接通。已知PDF文件、Token、原始解析结果及ZIP仍保存于独立私有文件库，不放入Git。
-- 用户已指定不解读论文插图/曲线。精准JSON中的image块和图注不进入作者输入；保留正文、公式、数学表格与表注。
+- 用户已指定不解读论文插图/曲线。精准JSON中的image/chart块和图注不进入作者输入；保留正文、边注中的条件、公式、数学表格与表注。
   图像型公式/表格若没有可用结构化内容，明确拒绝，不猜测其内容。公式字形核验不用于推测科学插图或读取曲线数据。
 
 ## 前置流程
@@ -35,6 +35,16 @@ uv run python scripts/review_pdf_materials.py \
 精准解析需要通过进程环境提供`MINERU_TOKEN`；本机私有配置为`work/private/ocr.env`，权限0600。
 `uv run --env-file work/private/ocr.env python scripts/vm_run.py ...`通过SSH标准输入转发，Token不进入命令参数或日志。
 同一目录只运行一个进程；代码、配置、解析器或材料变化必须另建run-id。复用完整性有效的原收据，不重新购买已成功的模型回答。
+云服务实际返回3.4.4的`legacy_content_list_v1`，包含`aside_text`、`chart`、`ref_text`等块，不能直接套用开源新版输出结构。
+下载ZIP先保存哈希检查点，再解码；结构适配失败后可在新快照中复用原ZIP，不重新上传或创建解析任务。损坏缓存明确拒绝恢复。
+
+进入出题数据库前，`prepare_pdf_question_plan.py`重放原PDF哈希、页码、转录内容、模型响应、审查图像和原OCR收据，不能只相信`ready`字段。
+`configs/papers/pdf20-targets.json`冻结20条计划及数学/物理各10条的出题方向；材料未通过的条目仍保存在`cohort.json`总分母中，不能计为成功题。
+
+```sh
+uv run python scripts/prepare_pdf_question_plan.py \
+  --directory work/materials --output work/private/pdf20-prepared
+```
 
 ## 真实预检范围
 

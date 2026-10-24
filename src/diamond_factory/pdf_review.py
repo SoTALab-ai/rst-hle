@@ -1,4 +1,5 @@
 """以原PDF页面图像复核指定结果的转录；不把普通抽字或模型一致当作证明。"""
+import base64
 import hashlib
 import json
 import re
@@ -142,6 +143,8 @@ def verify_request(directory, request_id):
     seal = trace.get("integrity_sha256")
     if not seal or seal != digest({k: v for k, v in trace.items() if k != "integrity_sha256"}):
         raise ValueError("Corrupt material review request receipt")
+    if trace.get("request_id") != request_id:
+        raise ValueError("Material review request filename/identity mismatch")
     if trace.get("response_error") or not trace.get("actual_model") or not trace.get("content"):
         raise ValueError("Failed model request cannot certify a PDF transcription")
     return trace
@@ -209,3 +212,82 @@ async def transcribe_batch(gateway, directory, receipt, pages, *, salt, executab
         context["previous_transcript"] = transcript.model_dump()
         context["feedback"] = audit.model_dump()
     raise ValueError("PDF formula review failed after two revisions")
+
+
+def admit_material(directory, row, supplement):
+    """入正式数据库前重放文件/页码/模型收据合同，不相信外部ready标志。"""
+    from .pdf_library import PdfReceipt
+    from .pdf_ocr import _read
+    from .pdf_precision import decode_blocks, page_text
+
+    directory = Path(directory)
+    key = row["plan_sha256"]
+    receipt = PdfReceipt.model_validate_json((directory / "input" / key / "receipt.json").read_text()).model_dump()
+    selection = MaterialSelection.model_validate(row["selection"])
+    by_name = {d["pdf_path"]: d for d in receipt["documents"]}
+    for d in receipt["documents"]:
+        if hashlib.sha256((directory / "input" / key / d["pdf_path"]).read_bytes()).hexdigest() != d["pdf_sha256"]:
+            raise ValueError("Original PDF changed after review")
+    selection_trace = verify_request(directory / "requests", row["selection_request"])
+    if MaterialSelection.model_validate_json(selection_trace["content"]) != selection:
+        raise ValueError("Selection differs from its model receipt")
+    transcripts, audits = [], []
+    for i in range(0, len(selection.pages), 2):
+        salt = f"{key}:pages:{i//2}"
+        batch = json.loads((directory / "batches" / (digest(salt) + ".json")).read_text())
+        refs = selection.pages[i:i+2]
+        if batch["salt"] != salt or batch["pages"] != [p.model_dump() for p in refs]:
+            raise ValueError("Reviewed page batch mapping changed")
+        transcript = Transcription.model_validate(batch["transcript"])
+        if [p.page for p in transcript.pages] != refs:
+            raise ValueError("Transcribed physical page mapping changed")
+        last = batch["attempts"][-1]
+        audit_trace = verify_request(directory / "requests", last["audit_request"])
+        audit = FormulaAudit.model_validate_json(audit_trace["content"])
+        if audit.model_dump() != last["audit"]:
+            raise ValueError("Formula audit differs from its verified response")
+        blocks = audit_trace["request"]["messages"][1]["content"]
+        if not isinstance(blocks, list) or len(blocks) != len(refs) + 1:
+            raise ValueError("Formula audit has no matching original page images")
+        body = blocks[0]["text"].rsplit("\nReturn ONLY valid JSON satisfying this schema:\n", 1)[0]
+        if not body.endswith(transcript.model_dump_json()):
+            raise ValueError("Formula audit belongs to different transcribed content")
+        image_hashes = [hashlib.sha256(base64.b64decode(b["image_url"]["url"].split(",", 1)[1],
+                                                       validate=True)).hexdigest() for b in blocks[1:]]
+        if image_hashes != batch["image_sha256"]:
+            raise ValueError("Formula audit page images changed")
+        for ref, expected in zip(refs, image_hashes, strict=True):
+            rendered = directory / "renders" / key / f"{ref.document}-{ref.page}.png"
+            if hashlib.sha256(rendered.read_bytes()).hexdigest() != expected:
+                raise ValueError("Rendered page cache changed")
+        if last["transcription_request"]:
+            trace = verify_request(directory / "requests", last["transcription_request"])
+            if Transcription.model_validate_json(trace["content"]) != transcript:
+                raise ValueError("Corrected transcription differs from its model response")
+        else:
+            if len(last["ocr_receipts"]) != len(refs):
+                raise ValueError("Missing native OCR page receipts")
+            for page, ocr_key in zip(transcript.pages, last["ocr_receipts"], strict=True):
+                folder = directory / "ocr" / ocr_key
+                native = _read(folder / "receipt.json")
+                if native["identity"]["pdf_sha256"] != by_name[page.page.document]["pdf_sha256"]:
+                    raise ValueError("Native OCR belongs to a different PDF version")
+                if native.get("content_sha256"):
+                    raw = (folder / "content.json").read_bytes()
+                    if hashlib.sha256(raw).hexdigest() != native["content_sha256"]:
+                        raise ValueError("Structured OCR changed after review")
+                    text = page_text(decode_blocks(raw, native["identity"]["pages"]), page.page.page)
+                else:
+                    raw = (folder / "page.md").read_bytes()
+                    if (hashlib.sha256(raw).hexdigest() != native.get("markdown_sha256") or
+                            native["identity"]["params"]["page_range"] != f"{page.page.page}-{page.page.page}"):
+                        raise ValueError("Native OCR page changed after review")
+                    text = raw.decode()
+                if text != page.text:
+                    raise ValueError("Accepted native OCR differs from the reviewed transcription")
+        transcripts.extend(transcript.pages)
+        audits.append((transcript.pages, audit))
+    source = checked_source(receipt, supplement, selection, transcripts, audits)
+    if source != Source.model_validate(row["source"]):
+        raise ValueError("Source differs from the recomputed admitted material")
+    return source
