@@ -88,7 +88,8 @@ def selection_errors(selection, receipt):
 def render_page(pdf, page, output, *, executable="pdftoppm"):
     """只执行固定的渲染器参数，不执行论文内容或模型生成的代码。"""
     output = Path(output)
-    target = output.with_suffix(".png")
+    # pdftoppm追加扩展名；输入前缀含“.pdf-页码”时不能用with_suffix替换。
+    target = Path(str(output) + ".png")
     if not target.exists():
         output.parent.mkdir(parents=True, exist_ok=True)
         result = subprocess.run([executable, "-f", str(page), "-l", str(page), "-scale-to", "2200",

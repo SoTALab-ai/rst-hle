@@ -1,6 +1,8 @@
 import json
+import shutil
 
 import pytest
+from pypdf import PdfWriter
 
 from diamond_factory.models import digest
 from diamond_factory.pdf_review import (
@@ -10,9 +12,24 @@ from diamond_factory.pdf_review import (
     PageTranscript,
     SupplementCheck,
     checked_source,
+    render_page,
     selection_errors,
     verify_request,
 )
+
+
+@pytest.mark.skipif(not shutil.which("pdftoppm"), reason="Real Poppler renderer not installed")
+def test_real_renderer_preserves_dotted_page_prefix_and_reuses_output(tmp_path):
+    writer = PdfWriter()
+    writer.add_blank_page(width=100, height=100)
+    pdf = tmp_path / "00-main.pdf"
+    writer.write(pdf)
+    prefix = tmp_path / "renders" / "00-main.pdf-1"
+    png = render_page(pdf, 1, prefix)
+    assert png.startswith(b"\x89PNG\r\n\x1a\n")
+    assert (prefix.parent / "00-main.pdf-1.png").read_bytes() == png
+    # 已渲染的固定页面复用，不再执行外部渲染器。
+    assert render_page(pdf, 1, prefix, executable="must-not-be-run") == png
 
 
 def material():
