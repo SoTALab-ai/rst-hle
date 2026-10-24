@@ -1,0 +1,148 @@
+{
+  "roots": [
+    {
+      "name": "M05VA",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Select an existing compact zero-energy Weyl expansion or trace identity from the full manuscript, including its coefficient/endpoint assumptions. Reconstruct the relation between spectral data and coefficient-side integrals, hiding the essential inverse/expansion step. Do not invent a finite Stieltjes model absent from the source."
+    },
+    {
+      "name": "P02VA",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Select the source coefficient-exact susceptibility-product bound from the FDT/passivity/reciprocity chain, with its original spectral normalization and geometry integral. Hide the reciprocal-emitter reduction. State a target matching the source canonical bound without claiming unproved global attainability."
+    },
+    {
+      "name": "M04VA",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Use an ACTUAL nonlinear pump/amplifier/rotor gate relation proved in the Tao construction, preferably a quantitative transfer or transition-time result with a nontrivial parameter regime. Reconstruct the invariant and dynamical argument; do not invent a new finite ODE, use only a routine scaling substitution, or pose Navier-Stokes regularity."
+    },
+    {
+      "name": "P03VA",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Select the exact source expansion/normalization coefficient expressed through the nonorthogonal modal overlap matrix and radiation amplitudes. Reconstruct the compatibility relation rather than quoting a pole sum; preserve background, approximation, reciprocity and absorption conventions."
+    },
+    {
+      "name": "M01VA",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Use ksbarriers.tex: the one-coordinate barrier update under (1-partial_j), combining monotonicity and convexity to derive the admissible shift condition and controlled updated barrier. Select the source lemma with its full inequalities, not merely the main Kadison-Singer bound."
+    },
+    {
+      "name": "P01VA",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Use the exact reciprocal dielectric slab CPA zero condition with the original complex-index and phase conventions. Recover the zero branch and coherent incidence condition from transfer/scattering structure, keeping absorption sign and approximations correct."
+    },
+    {
+      "name": "M01VB",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Use ksmixed.tex: the expectation/differential-operator identity for independent rank-one updates and the resulting real-rooted mixed characteristic polynomial. Select a compact exact identity whose proof needs both rank-one determinant calculus and independence; distinct from the barrier update root."
+    },
+    {
+      "name": "P01VB",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Select the separately derived weak-absorption/material-thickness or pole-to-zero quantitative CPA relation, with the source approximation and branch domain. It must use a distinct derivational mechanism from the exact slab zero condition, not just changing the slab thickness or the input parity."
+    },
+    {
+      "name": "M02VA",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Select the source plus-Fourier-eigenfunction construction, e.g. the modular/contour transformation yielding its precise Fourier relation and a compact normalization or special-value identity. Reconstruct contour changes and cancellations; do not ask for the famous E8 density or invent a Gaussian-polynomial toy."
+    },
+    {
+      "name": "M02VB",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Select a distinct minus-Fourier-eigenfunction or root-order/derivative identity from the supplied modular-integral proof. Its exact expression must require a different contour or zero-cancellation mechanism from the plus-eigenfunction root, with a locatable proof and all normalizations."
+    },
+    {
+      "name": "P02VB",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Use the supplementary material for a separately derived quantitative response/bandwidth, frequency-integral or material-resonance relation. Prefer a compact exact integral/asymptotic coefficient with its explicit regime, distinct from the fixed-frequency half-space bound. Do not invent coupled Lorentz oscillators or causal constraints absent from the source."
+    },
+    {
+      "name": "M03VA",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Select the source principal-submatrix/interlacing implication for an induced cube subgraph, with its signed adjacency and degree comparison. Hide the essential spectral-to-combinatorial inference; do not simply ask to recall the headline theorem, and do not supply the square-matrix cancellation as a hint."
+    },
+    {
+      "name": "M03VB",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Find a distinct source-supported spectral or equality-case quantitative consequence involving the recursively signed cube and a strict principal-submatrix threshold. It must require a different inference from the degree comparison root; the bare full-matrix spectrum and multiplicities were previously too easy, so avoid restating those alone. If no distinct supported claim exists, return unavailable."
+    },
+    {
+      "name": "P03VB",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Select the separately proved invariance under arbitrary nonzero rescaling of quasinormal mode amplitudes and its exact effect on overlap/normalization/expansion coefficients. Hide the coupled cancellation. Do not reinterpret a truncated expansion as an exact lossless realization or add unsupported pole degeneracy assumptions."
+    },
+    {
+      "name": "P04VA",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Select the source coupled-mode transfer/scattering relation away from the exceptional limit, including complex phase and both boundary conditions. Recover the exact source expression under its approximation. Distinguish amplitude from intensity and reflectionlessness from invisibility."
+    },
+    {
+      "name": "M04VB",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Select a distinct source cascade/clock compatibility estimate whose compact conclusion depends on the interaction of two gate time scales or an energy-transfer invariant. Use a complete proved source relation and its hypotheses; it must be more than changing scales in the first gate, and not a newly guessed closed-form blowup law."
+    },
+    {
+      "name": "P04VB",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Select the quantitative Jordan/exceptional-point limit of the source grating: remove the apparent singularity and derive its directional reflection growth or phase-delay identity with all limits specified. Keep the coupled-mode regime; use a different limiting/cancellation mechanism from the general transfer relation root."
+    },
+    {
+      "name": "P05VA",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Select an explicit source point-group/representation constraint on polarization winding charge, with its actual symmetry assumptions and admissible integer classes. Reconstruct the angular transformation and winding argument, rather than recall charge conservation or invent a polynomial far field."
+    },
+    {
+      "name": "M05VB",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Select a different existing relative trace formula or second-order spectral expansion identity for a model perturbation. Prefer a compact exact integral/coefficient requiring logarithmic expansion and spectral normalization, distinct from the first zero-energy coefficient identity. Keep every source endpoint and integrability hypothesis recoverable."
+    },
+    {
+      "name": "P05VB",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Lock an ALREADY ESTABLISHED compact source result and its exact answer, then reconstruct its complete proof. Use the actual canonical manuscript and published derivations, not commented-out drafts or scratch files. Mask the hardest NECESSARY inference and equivalent hints; retain data making the target recoverable. Keep the original result/golden fixed through question construction and verifier adversarial review. Clarify a canonical bound target operationally instead of asking for any upper bound while requiring one gold. If no supported result fits this focus, report unavailable, never invent a finite toy or new physical regime. Select the separately derived C2zT and vertical-mirror symmetry constraints on the real far-field polarization amplitudes and up/down radiation channels. Reconstruct the antiunitary phase/gauge and cancellation condition; keep the original slab symmetry and do not invent symmetry-broken BIC multiplicities."
+    }
+  ],
+  "max_revisions": 2,
+  "root_workers": 4,
+  "visible_cost_limit_usd": null,
+  "resume_request_run_id": null
+}
