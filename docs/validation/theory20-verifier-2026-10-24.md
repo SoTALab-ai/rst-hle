@@ -78,7 +78,7 @@
 
 ## 冻结实验协议
 
-配置为[theory20-verifier.toml](../configs/theory20-verifier.toml)，计划为[20条焦点](../configs/papers/theory20-verifier.plan.json)，材料版本与哈希为[来源清单](../configs/papers/theory20-verifier.sources.json)。每篇两条不同结论/机制；同论文样本相关，不能视为20篇独立论文的总体抽样。没有可支持的结果时记录失败，不靠换数字或虚构有限模型凑数。
+配置为[theory20-verifier.toml](../../configs/theory20-verifier.toml)，计划为[20条焦点](../../configs/papers/theory20-verifier.plan.json)，材料版本与哈希为[来源清单](../../configs/papers/theory20-verifier.sources.json)。每篇两条不同结论/机制；同论文样本相关，不能视为20篇独立论文的总体抽样。没有可支持的结果时记录失败，不靠换数字或虚构有限模型凑数。
 
 作者先锁定来源结论/golden，给出完整推导与最难必要步骤的挖空设计；逐步蓝图审查后反向形成题面。题面、golden、完整推导与挖空设计作为一包进入前置质检及verifier对抗。作者、综合审查、正确性为6-luna high，HLE匹配为6-luna medium；隔离上下文不能消除同模型相关错误。
 

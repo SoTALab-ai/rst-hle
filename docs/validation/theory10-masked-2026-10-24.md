@@ -4,7 +4,7 @@
 
 2026-10-24按用户要求实际试跑10条出题线，数学与物理各5条。每篇固定论文一条线，复用已核实的10篇顶刊理论材料，避免同篇重复凑量；物理仍集中于理论电磁学，不能代表全部物理方向。试产开始前不将10条计划称为10道合格题。
 
-入口为[theory10-masked.toml](../configs/theory10-masked.toml)，计划为[theory10-masked.plan.json](../configs/papers/theory10-masked.plan.json)。先抽取来源已有结果并锁定目标、答案及原始前提，再重建完整证明和逐步judge修复，针对最难且必要的推理挖空。题面经综合审查、独立挖空审查、盲解、自洽、公式翻译及受限精确反代后才测GLM。来源不足、不支持的验算、模型不确定和接口失败分别记录，不当答错或通过。
+入口为[theory10-masked.toml](../../configs/theory10-masked.toml)，计划为[theory10-masked.plan.json](../../configs/papers/theory10-masked.plan.json)。先抽取来源已有结果并锁定目标、答案及原始前提，再重建完整证明和逐步judge修复，针对最难且必要的推理挖空。题面经综合审查、独立挖空审查、盲解、自洽、公式翻译及受限精确反代后才测GLM。来源不足、不支持的验算、模型不确定和接口失败分别记录，不当答错或通过。
 
 每条最多两次难度改写，每份证明/题面的质量尝试为初稿加最多两次修订。改难度保留锁定结果，优先改变揭示的信息。GLM5.2仅看题面、无工具、600秒墙钟包含重试，不发客户端输出token上限。先4次，4/4只触发加难；有有效错答补足16，1–8/16再经后置复核与去重，0/16先查正确性再降难，9–16/16加难。
 
@@ -19,7 +19,7 @@
 
 用户随后明确要求：不设费用/请求停机阈值、不加难、简单直接拒绝。当前规则为首4次全对立即拒绝；出现有效错答才补足16次；完整1–8/16进入后置复核与去重；9–16/16拒绝；0/16先复核正确性，通过才降难。每个新版本重新通过全部前置质检。接口失败及样本不全不当作错答或降难依据。
 
-新入口为[theory10-ease-only.toml](../configs/theory10-ease-only.toml)，新计划为[theory10-ease-only.plan.json](../configs/papers/theory10-ease-only.plan.json)。run-id为 `theory10-ease-only-20261024`，个人VM独立数据库 `rst_hle_theory10_ease_20261024`。费用软阈值为null、HTTP上限关闭，逐尝试收据、实际用量和未知费用继续记录；10条原始计划、每条最多两次降难、每份参考解最多两次修复保持有限。
+新入口为[theory10-ease-only.toml](../../configs/theory10-ease-only.toml)，新计划为[theory10-ease-only.plan.json](../../configs/papers/theory10-ease-only.plan.json)。run-id为 `theory10-ease-only-20261024`，个人VM独立数据库 `rst_hle_theory10_ease_20261024`。费用软阈值为null、HTTP上限关闭，逐尝试收据、实际用量和未知费用继续记录；10条原始计划、每条最多两次降难、每份参考解最多两次修复保持有限。
 
 旧run `theory10-masked-20261024` 因策略切换中断，不改其代码、配置或判分。中断前只进入第0代，没有执行加难；形成5份题面，其中1份数学题通过前置质检并完成4次GLM回答，全部正确。新run按输入及完整性校验复用96份已完成请求收据和4份GLM答卷；首代沿用原请求命名空间，降难子代使用新run身份。终止时另有1次质检请求被取消且未返回用量，费用未知，不能算零；后续仅对缺失检查重新调用。
 
@@ -29,4 +29,4 @@
 
 ## 600秒解题截止计错
 
-用户再次明确规定600秒解题超时计错。新入口为[theory10-timeout-incorrect.toml](../configs/theory10-timeout-incorrect.toml)和[计划](../configs/papers/theory10-timeout-incorrect.plan.json)，run-id为 `theory10-timeout-incorrect-20261024`，个人VM独立数据库 `rst_hle_theory10_timeout_20261024`。保留旧run的13份物理答卷、3份截止收据及数学4份答卷；超时确定性计错，不发judge，不重新购买GLM。物理原判分3/16进入后置复核，因判分争议退回，最终去重未执行；原先的incomplete快照保留。结果见[10条结果](theory10-results-2026-10-24.md)。解题截止不是数学反例，其他接口错误及判分/质检超时仍不计错。
+用户再次明确规定600秒解题超时计错。新入口为[theory10-timeout-incorrect.toml](../../configs/theory10-timeout-incorrect.toml)和[计划](../../configs/papers/theory10-timeout-incorrect.plan.json)，run-id为 `theory10-timeout-incorrect-20261024`，个人VM独立数据库 `rst_hle_theory10_timeout_20261024`。保留旧run的13份物理答卷、3份截止收据及数学4份答卷；超时确定性计错，不发judge，不重新购买GLM。物理原判分3/16进入后置复核，因判分争议退回，最终去重未执行；原先的incomplete快照保留。结果见[10条结果](theory10-results-2026-10-24.md)。解题截止不是数学反例，其他接口错误及判分/质检超时仍不计错。

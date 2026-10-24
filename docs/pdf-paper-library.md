@@ -2,13 +2,13 @@
 
 新材料按“正式论文正文PDF＋明确关联的补充PDF”组织。正文自带的附录/补充章节随原PDF保留；单独发布的补充PDF单独保存。一个材料包含一份正文与零至多份补充材料，不物理合成大PDF，也不把源码包中的TeX、草稿、注释和重复PDF转录拼成正文。
 
-旧试产的代码、全文和结果保持原冻结身份。本文提供新的独立采集入口，不覆盖历史Source，也不在本轮启动付费出题。
+旧试产的代码、全文和结果保持原冻结身份。本文介绍原件采集入口；全文模型转录与PG登记使用[直接读取入库](paper-library-ingestion.md)，不覆盖历史Source。
 
 ## PDF与TeX的取舍
 
 PDF适合作为正式版面和阅读范围的依据：保留作者实际发表的顺序、公式、图表和页码。问题在于PDF没有可靠的语义层，普通抽字对分式、上下标、双栏和扫描页可能失真；不能把“能抽出1000个字”当成公式正确。参见[pypdf的说明](https://pypdf.readthedocs.io/en/stable/user/extract-text.html#why-text-extraction-is-hard)。
 
-新入口保留原PDF，按文件和页输出辅助转录。`identity_review=pending`、`formula_review=pending`、`ready_for_authoring=false`固定保留；普通抽字不自动放行。后续需要验证公式读取和模型输入接口，才能将材料导入正式出题源。当前没有宣称已实现或验收数学公式OCR。
+新入口保留原PDF，按文件和页输出辅助转录。`identity_review=pending`、`formula_review=pending`、`ready_for_authoring=false`固定保留；普通抽字不自动放行。新论文库可单独完成模型转录和PG登记；这不改变采集收据的待审语义，也不宣称公式或科学准确率已验收。
 
 补充材料状态显式区分`not_checked`、`embedded`、`separate`、`none_confirmed`。没有发现补充链接，只能记未检查，不能推断不存在。声明已内嵌或不存在时需要可定位依据；声明单独补充时必须有对应文件。多PDF附件不自动推断角色，同一PDF也不能同时充当正文与补充。
 
@@ -87,4 +87,4 @@ CLI对同一目录加排他写锁，并冻结清单、采集代码和pypdf版本
 - pypdf版本：6.21.2。正文原PDF与逐页辅助转录均保留，不将转录当成公式校验结果。
 - 本地ruff和doctor通过，pytest 213通过、14项PG因本地未配置专用库跳过；[CI](https://github.com/SoTALab-ai/rst-hle/actions/runs/40090854270)共227项通过，包含14项独立真实PG。数据库实现没有变动。
 
-逐篇DOI、来源、页数、PDF哈希和待审状态见[脱敏采集结果](pdf-paper-library-results-2026-10-24.json)。PDF原文件、转录和原始请求记录不进入Git。
+逐篇DOI、来源、页数、PDF哈希和待审状态见[脱敏采集结果](validation/pdf-paper-library-results-2026-10-24.json)。PDF原文件、转录和原始请求记录不进入Git。

@@ -1,0 +1,122 @@
+[
+  {
+    "name": "PDF01",
+    "doi": "10.4007/annals.2026.204.2.3",
+    "category": "Math",
+    "subtopic": "代数"
+  },
+  {
+    "name": "PDF02",
+    "doi": "10.4007/annals.2026.204.2.4",
+    "category": "Math",
+    "subtopic": "分析"
+  },
+  {
+    "name": "PDF03",
+    "doi": "10.1007/s00222-026-01455-z",
+    "category": "Math",
+    "subtopic": "概率与统计"
+  },
+  {
+    "name": "PDF04",
+    "doi": "10.5802/pmihes.30",
+    "category": "Math",
+    "subtopic": "代数"
+  },
+  {
+    "name": "PDF05",
+    "doi": "10.5802/pmihes.28",
+    "category": "Math",
+    "subtopic": "概率与统计"
+  },
+  {
+    "name": "PDF06",
+    "doi": "10.24033/asens.2650",
+    "category": "Math",
+    "subtopic": "分析"
+  },
+  {
+    "name": "PDF07",
+    "doi": "10.1215/00127094-2025-0078",
+    "category": "Math",
+    "subtopic": "分析"
+  },
+  {
+    "name": "PDF08",
+    "doi": "10.1007/s00220-026-05748-5",
+    "category": "Math",
+    "subtopic": "概率与统计"
+  },
+  {
+    "name": "PDF09",
+    "doi": "10.1007/s00220-026-05712-3",
+    "category": "Math",
+    "subtopic": "概率与统计"
+  },
+  {
+    "name": "PDF10",
+    "doi": "10.1007/s10240-024-00151-z",
+    "category": "Physics",
+    "subtopic": "天文学、天体物理与宇宙学"
+  },
+  {
+    "name": "PDF11",
+    "doi": "10.1007/s10240-024-00152-y",
+    "category": "Math",
+    "subtopic": "代数"
+  },
+  {
+    "name": "PDF12",
+    "doi": "10.1103/5lcd-6ml6",
+    "category": "Physics",
+    "subtopic": "量子场论与粒子物理"
+  },
+  {
+    "name": "PDF13",
+    "doi": "10.1103/l88d-nfqp",
+    "category": "Physics",
+    "subtopic": "量子场论与粒子物理"
+  },
+  {
+    "name": "PDF14",
+    "doi": "10.1103/l3fr-9qlz",
+    "category": "Physics",
+    "subtopic": "量子场论与粒子物理"
+  },
+  {
+    "name": "PDF15",
+    "doi": "10.1103/854z-dc2g",
+    "category": "Physics",
+    "subtopic": "量子场论与粒子物理"
+  },
+  {
+    "name": "PDF16",
+    "doi": "10.1007/JHEP10(2026)237",
+    "category": "Physics",
+    "subtopic": "量子场论与粒子物理"
+  },
+  {
+    "name": "PDF17",
+    "doi": "10.1007/JHEP10(2026)244",
+    "category": "Physics",
+    "subtopic": "量子场论与粒子物理"
+  },
+  {
+    "name": "PDF18",
+    "doi": "10.1103/PhysRevLett.115.204302",
+    "category": "Physics",
+    "subtopic": "电磁学"
+  },
+  {
+    "name": "PDF19",
+    "doi": "10.1103/PhysRevX.7.021035",
+    "category": "Physics",
+    "subtopic": "电磁学"
+  },
+  {
+    "name": "PDF20",
+    "doi": "10.1103/physrevlett.113.257401",
+    "category": "Physics",
+    "subtopic": "电磁学"
+  }
+]

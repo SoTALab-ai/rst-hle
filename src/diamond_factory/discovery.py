@@ -9,6 +9,7 @@ import httpx
 from pydantic import Field
 
 from .models import StrictModel, digest
+from .paper_metadata import canonical_doi
 
 
 class Journal(StrictModel):
@@ -29,7 +30,7 @@ def discover(journals, *, since, until, per_journal=20, client=None, pause=time.
     owned=client is None
     client=client or httpx.Client(timeout=30,headers={
         'User-Agent':'rst-hle/0.1 (https://github.com/SoTALab-ai/rst-hle)'})
-    rows={};failures=[];skipped=0
+    rows={};failures=[];skipped=0;duplicates=[]
     try:
         for index,journal in enumerate(journals):
             if index:pause(1.1)
@@ -51,7 +52,7 @@ def discover(journals, *, since, until, per_journal=20, client=None, pause=time.
                 for raw in payload['message']['items']:
                     if not isinstance(raw,dict):
                         skipped+=1;continue
-                    doi=str(raw.get('DOI','')).lower();titles=raw.get('title',[])
+                    doi=str(raw.get('DOI','')).strip().casefold();titles=raw.get('title',[])
                     if (raw.get('type')!='journal-article' or not isinstance(raw.get('ISSN'),list) or
                         journal.issn not in raw['ISSN'] or
                         not re.fullmatch(r'10\.\d{4,9}/\S+',doi) or not isinstance(titles,list) or
@@ -66,6 +67,8 @@ def discover(journals, *, since, until, per_journal=20, client=None, pause=time.
                          'updates':raw.get('update-to',[]),'abstract':raw.get('abstract'),
                          'license_metadata':raw.get('license',[]),
                          'admitted_to_paper_catalog':False}
+                    doi=canonical_doi(doi)
+                    if doi in rows:duplicates.append({'doi':doi,'metadata_sha256':row['metadata_sha256']})
                     rows.setdefault(doi,row)
             except (httpx.HTTPError,ValueError,TypeError,KeyError) as error:
                 retryable=isinstance(error,httpx.TransportError) or (isinstance(error,httpx.HTTPStatusError) and
@@ -74,5 +77,5 @@ def discover(journals, *, since, until, per_journal=20, client=None, pause=time.
     finally:
         if owned:client.close()
     return {'window':{'since':since,'until':until},'per_journal':per_journal,'records':list(rows.values()),
-            'failures':failures,'skipped_unverified_records':skipped,
+            'failures':failures,'skipped_unverified_records':skipped,'duplicate_metadata_records':duplicates,
             'note':'Metadata discovery queue only. Verify theory suitability, exact arXiv version, full text and rights before catalog admission.'}

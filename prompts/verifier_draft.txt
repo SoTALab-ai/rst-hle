@@ -12,3 +12,6 @@ Check branch/domain, all outputs, units, conservation and equivalents. Explicit 
 after a boxed formula count; typography alone is not a rule. The fixed HLE template stays unchanged.
 On repair return the COMPLETE corrected verifier. Never change question, golden or hidden proof.
 Use feedback to remove false rejections and close missed checks without adding unasked requirements.
+Copy target_output character-for-character from the exact required_outputs list. Each question_anchor
+must be an exact substring of at least five characters from the CURRENT literal question, preserving
+punctuation and LaTeX escapes. After any question repair, discard all previous anchors and copy anew.

@@ -50,7 +50,18 @@ def measure_cost(store, run_id, directory, settings, pricing):
     for trace in traces:
         request_candidates[trace["request_id"]] = trace.get("salt", "").split(":")[0]
         for attempt in trace.get("attempts", []):
-            receipts[(attempt["request_id"], attempt["ordinal"])] = attempt
+            if attempt.get("run_id", run_id) == run_id:
+                receipts[(attempt["request_id"], attempt["ordinal"])] = attempt
+    # PG已保存而逻辑响应未完成的尝试也计费，不能依赖可清除的本地镜像。
+    if hasattr(store, "get_request"):
+        rows = store.db.execute("SELECT data FROM diamond.stage_events WHERE run_id=%s "
+                                "AND event='model_http_attempt'", (run_id,)).fetchall()
+        for (ref,) in rows:
+            attempt = store.objects.get(ref["object_key"], ref["object_sha256"], ref["object_size"])
+            key = (attempt["request_id"], attempt["ordinal"])
+            if key in receipts and receipts[key] != attempt:
+                raise ValueError("Conflicting cost receipt identity")
+            receipts[key] = attempt
     # Cancellation may leave a durable HTTP receipt without a final logical response/DB index.
     for path in (Path(directory)/"attempts").rglob("*.json"):
         attempt = json.loads(path.read_text())
@@ -72,7 +83,11 @@ def measure_cost(store, run_id, directory, settings, pricing):
             known += cost
             row["known_cost_usd"] += cost
             candidates[request_candidates.get(attempt["request_id"],"unattributed")] += cost
-    return {"known_cost_usd":known, "rmb_reference":known*pricing["rmb_reference_exchange_rate"],
+    unsettled = 0
+    if hasattr(store, "get_request"):
+        row = store.db.execute("SELECT http_attempts FROM diamond.runs WHERE id=%s", (run_id,)).fetchone()
+        unsettled = max(0, (row[0] if row else 0)-len(receipts))
+    return {"unsettled_reserved_attempts":unsettled, "known_cost_usd":known, "rmb_reference":known*pricing["rmb_reference_exchange_rate"],
             "http_attempts":len(receipts), "logical_request_receipts":len(traces),
             "unknown_usage_attempts":unknown, "by_role":dict(roles), "by_candidate_usd":dict(candidates),
             "pricing_snapshot_date":pricing["observed_at"],

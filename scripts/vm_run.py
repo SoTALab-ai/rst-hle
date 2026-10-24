@@ -18,7 +18,7 @@ if command and command[0] == "--":
     command = command[1:]
 if not command:
     parser.error("A command is required")
-forwarded = {key: os.environ[key] for key in ("NEW_API_BASE_URL", "NEW_API_KEY") if key in os.environ}
+forwarded = {key: os.environ[key] for key in ("NEW_API_BASE_URL", "NEW_API_KEY", "MINERU_TOKEN") if key in os.environ}
 remote = """import os,sys,json,pathlib,subprocess
 p=json.load(sys.stdin)
 os.chdir(os.path.expanduser(p['directory']))
