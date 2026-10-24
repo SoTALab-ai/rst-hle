@@ -8,7 +8,7 @@ from pydantic import Field
 
 from .consistency import QualityRejected, has_valid_consistency
 from .costs import measure_cost
-from .gates import correct_count
+from .gates import correct_count, sample_outcomes
 from .llm import BudgetExceeded, ModelResponseError
 from .models import Audit, StrictModel, digest
 from .pipeline import AuthoringRejected, Pipeline, SampleIncomplete
@@ -39,11 +39,11 @@ def branch(candidate):
                for r in candidate.reasons):
             return "too_easy_rejected"
         return "quality_rejected"
-    if len(candidate.trials) == 4 and correct_count(candidate.trials,4) == 4:
+    if len(sample_outcomes(candidate)) == 4 and correct_count(sample_outcomes(candidate),4) == 4:
         return "preliminary_harden"
-    if len(candidate.trials) != 16:
+    if len(sample_outcomes(candidate)) != 16:
         return "incomplete"
-    n = correct_count(candidate.trials)
+    n = correct_count(sample_outcomes(candidate))
     return "ease" if n == 0 else "harden" if n > 8 else "in_band_unfinalized"
 
 
@@ -79,10 +79,11 @@ class QuestionExperiment(Pipeline):
             retained += bool(passed)
             initial += bool(passed and passed[0].generation == 0)
             versions = [{"id":c.id,"generation":c.generation,"parent_id":c.parent_id,
-                         "decision":branch(c),"samples":len(c.trials),
+                         "decision":branch(c),"samples":len(sample_outcomes(c)),
+                         "answered_samples":len(c.trials), "deadline_incorrect_samples":len(c.deadline_outcomes),
                          "consistency_passed":has_valid_consistency(c, sources),
                          "difficulty_measurement_valid":(c.audit.passed()
-                             and has_valid_consistency(c, sources) and len(c.trials)==16),
+                             and has_valid_consistency(c, sources) and len(sample_outcomes(c))==16),
                          "observed_correct":sum(t.judgment.correct=="yes" for t in c.trials),
                          "status":c.status,"reasons":c.reasons} for c in lineage]
             for a,b in pairwise(versions):
@@ -144,6 +145,8 @@ class QuestionExperiment(Pipeline):
                   "A physical contradiction cannot be used as difficulty. Return the complete Audit schema.\n"+
                   json.dumps({"item":c.item.model_dump(),"solution":c.solution.model_dump(),
                               "allegedly_incorrect_responses":disagreements,
+                              "solver_deadline_outcomes":[d.model_dump() for d in c.deadline_outcomes],
+                              "timeout_policy":"A solver deadline counts as incorrect by user protocol, but is no mathematical counterexample.",
                               "source_texts":[sources[s].text[:self.settings.max_source_chars] for s in c.source_ids]},
                              ensure_ascii=False))
         audit,rid,model = await self.gateway.call("auditor",prompt,c.id+":post-evaluation-audit-v2",Audit)
@@ -185,7 +188,7 @@ class QuestionExperiment(Pipeline):
                                             brief=self.brief(root,parent))
                     if c.status == "rejected":
                         return c
-                    if len(c.trials) < 16:
+                    if len(sample_outcomes(c)) < 16:
                         n = await self.sample(c,4)
                         if n == 4:
                             await self.evaluate(c)

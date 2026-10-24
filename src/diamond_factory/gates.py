@@ -4,7 +4,7 @@ import unicodedata
 from collections import Counter
 from pathlib import Path
 
-from .models import Candidate, Record, Source, digest
+from .models import Candidate, DeadlineOutcome, Record, Source, digest
 
 
 def normalize(text: str) -> str:
@@ -59,14 +59,19 @@ def static_errors(candidate: Candidate, sources: dict, quotas: dict) -> list[str
     return sorted(set(errors))
 
 
+def sample_outcomes(candidate):
+    return list(candidate.trials) + list(candidate.deadline_outcomes)
+
+
 def correct_count(trials, samples=16) -> int:
     if len(trials) != samples or {x.sample_id for x in trials} != set(range(samples)):
-        raise ValueError("Incomplete or duplicate samples; infrastructure failures are not wrong answers")
+        raise ValueError("Incomplete or duplicate samples; an answer or verified solver deadline is required")
     if len({x.solver_request for x in trials}) != samples:
         raise ValueError("Solver samples were reused")
-    if len({x.judge_request for x in trials}) != samples:
+    answered = [x for x in trials if not isinstance(x, DeadlineOutcome)]
+    if len({x.judge_request for x in answered}) != len(answered):
         raise ValueError("Judge samples were reused")
-    return sum(x.judgment.correct == "yes" for x in trials)
+    return sum(x.judgment.correct == "yes" for x in answered)
 
 
 def read_corpus(path: str):

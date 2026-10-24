@@ -119,6 +119,10 @@ class PostgresStore:
         return {r[0]: r[1] for r in self.db.execute("SELECT id,body FROM diamond.runs ORDER BY created_at")}
 
     def save(self, candidate):
+        if ({t.sample_id for t in candidate.trials} & {d.sample_id for d in candidate.deadline_outcomes}
+                or {t.solver_request for t in candidate.trials}
+                & {d.solver_request for d in candidate.deadline_outcomes}):
+            raise ValueError("An answered sample cannot also be a scored solver deadline")
         key, sha, size = self.objects.put(candidate.model_dump())
         with self.db.transaction():
             self.db.execute("""INSERT INTO diamond.candidates
@@ -139,6 +143,11 @@ class PostgresStore:
                     extracted_answer=excluded.extracted_answer""",
                                 (candidate.id, trial.sample_id, trial.solver_request, trial.judge_request,
                                  trial.judgment.correct == "yes", trial.judgment.extracted_final_answer))
+            for outcome in candidate.deadline_outcomes:
+                self.db.execute("""INSERT INTO diamond.qc_deadlines VALUES(%s,%s,%s,%s,%s,%s,%s)
+                    ON CONFLICT(candidate_id,sample_id) DO NOTHING""",
+                    (candidate.id, outcome.sample_id, outcome.solver_request, outcome.requested_model,
+                     outcome.deadline_seconds, outcome.elapsed_seconds, outcome.reason))
 
     def candidates(self):
         return [Candidate.model_validate(self.objects.get(*r)) for r in self.db.execute(

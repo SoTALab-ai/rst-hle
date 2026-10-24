@@ -44,6 +44,7 @@ class Settings(StrictModel):
     max_requests: int = Field(default=150, ge=1)
     request_cap_enabled: bool = True
     difficulty_policy: Literal["ease_only", "bidirectional"] = "ease_only"
+    solver_deadline_counts_as_incorrect: bool = True
     max_retries: int = Field(default=1, ge=0)
     request_timeout: float = Field(default=180.0, gt=0)
     request_deadline_seconds: float | None = Field(default=None, gt=0)

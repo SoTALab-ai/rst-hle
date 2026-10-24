@@ -12,6 +12,7 @@ difficulty_profile_path = "configs/difficulty-archetypes.json"
 max_requests = 1500
 request_cap_enabled = false
 difficulty_policy = "ease_only"
+solver_deadline_counts_as_incorrect = false
 max_retries = 1
 max_rounds = 3
 attempts_per_round = 1
