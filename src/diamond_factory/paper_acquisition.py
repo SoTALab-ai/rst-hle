@@ -18,6 +18,7 @@ from .llm import CacheIntegrityError, GatewayConfigurationError
 from .models import StrictModel, digest
 from .open_access import openalex_locations, scoap_locations
 from .paper_ingest import inventory_receipts
+from .paper_metadata import canonical_doi, deduplicate_metadata, register_metadata
 from .pdf_library import PaperPdfPlan, PdfInput, PdfReceipt, collect_paper
 from .runtime import atomic_json
 
@@ -75,11 +76,73 @@ def download_one(row, location, directory):
     return receipt
 
 
+def import_reused_collections(accepted, roots, target_per_domain):
+    """优先已策展的种子版本；DOI大小写/不同PDF版本不增加独立论文数。"""
+    accepted = Path(accepted)
+    accepted.mkdir(parents=True, exist_ok=True)
+    counts, dois, hashes = Counter(), set(), set()
+    imported, skipped = [], []
+    with httpx.Client(timeout=120) as client:
+        for root in roots:
+            for path in sorted(Path(root).glob("*/receipt.json")):
+                receipt = PdfReceipt.model_validate_json(path.read_text())
+                # 先按原采集合同验收缓存，不能用损坏缓存冒充成功复用。
+                collect_paper(receipt.paper, path.parent.parent, client=client)
+                doi = canonical_doi(receipt.paper.doi)
+                sha = receipt.documents[0].pdf_sha256
+                if doi in dois or sha in hashes or counts[receipt.paper.domain] >= target_per_domain:
+                    skipped.append({"doi": receipt.paper.doi, "plan_sha256": receipt.plan_sha256,
+                        "reason": "duplicate_doi" if doi in dois else "duplicate_pdf" if sha in hashes else "domain_target_full"})
+                    continue
+                target = accepted/receipt.plan_sha256
+                if not target.exists():
+                    shutil.copytree(path.parent, target)
+                collect_paper(receipt.paper, accepted, client=client)
+                counts[receipt.paper.domain] += 1
+                dois.add(doi)
+                hashes.add(sha)
+                imported.append(receipt.plan_sha256)
+    return {"imported": imported, "skipped": skipped}
+
+
+def reuse_acquisition_cache(directory, root):
+    """只借用已终态采集器的可校验文件/解析位置；模型决策仍按原请求指纹复用。"""
+    root, directory = Path(root), Path(directory)
+    report = json.loads((root/'report.json').read_text())
+    if report['status'] not in ('downloaded', 'incomplete'):
+        raise ValueError('Only a terminal acquisition cache may be reused')
+    for path in sorted((root/'resolutions').glob('*.json')):
+        body = json.loads(path.read_text())
+        if body['seal'] != digest(body['body']):
+            raise ValueError('Corrupt resolution checkpoint')
+        target = directory/'resolutions'/path.name
+        if target.exists() and target.read_bytes() != path.read_bytes():
+            raise ValueError('Conflicting resolution checkpoint')
+        if not target.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(path, target)
+    with httpx.Client() as client:
+        for path in sorted((root/'downloads').glob('*/receipt.json')):
+            receipt = PdfReceipt.model_validate_json(path.read_text())
+            collect_paper(receipt.paper, path.parent.parent, client=client)
+            target = directory/'downloads'/receipt.plan_sha256
+            if not target.exists():
+                # 复制保证新run不会修改历史原件；成功模型响应仍复用PG/CAS，不复制请求JSON。
+                shutil.copytree(path.parent, target)
+            collect_paper(receipt.paper, directory/'downloads', client=client)
+
+
 async def acquire_library(store, discovery, settings, pricing, directory, run_id, *, reuse_root=None,
-                          target_per_domain=100):
+                          target_per_domain=100, preferred_reuse_root=None, cache_root=None):
     directory = Path(directory)
-    manifest = {"run_id": run_id, "discovery_sha256": digest(discovery), "target_per_domain": target_per_domain,
-        "reuse_root": str(reuse_root), "config": settings.model_dump(), "pricing": pricing,
+    roots = [Path(p) for p in (preferred_reuse_root, reuse_root) if p]
+    reuse_versions = [{"root": str(root), "receipts": [
+        PdfReceipt.model_validate_json(p.read_text()).integrity_sha256 for p in sorted(root.glob("*/receipt.json"))]}
+        for root in roots]
+    manifest = {"run_id": run_id, "reused_input_versions": reuse_versions, "discovery_sha256": digest(discovery), "target_per_domain": target_per_domain,
+        "reuse_root": str(reuse_root), "cache_root": str(cache_root),
+        "cache_manifest_sha256": digest(json.loads((Path(cache_root)/"manifest.json").read_text())) if cache_root else None,
+        "config": settings.model_dump(), "pricing": pricing,
         "code_sha256": {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in
             sorted(Path("src/diamond_factory").rglob("*")) if p.is_file() and p.suffix in (".py", ".sql")}}
     fingerprint = digest(manifest)
@@ -93,28 +156,31 @@ async def acquire_library(store, discovery, settings, pricing, directory, run_id
     store.run(run_id, {"mode": "pdf_acquisition", "status": "running", "fingerprint": fingerprint})
     gateway = MeteredGateway(settings, directory/"requests", store, run_id, pricing=pricing,
                              visible_cost_limit_usd=None)
+    if cache_root:
+        reuse_acquisition_cache(directory, cache_root)
     accepted = directory/"accepted"
     accepted.mkdir(exist_ok=True)
-    if reuse_root:
-        for p in sorted(Path(reuse_root).glob("*/receipt.json")):
-            receipt = PdfReceipt.model_validate_json(p.read_text())
-            target = accepted/receipt.plan_sha256
-            if not target.exists():
-                shutil.copytree(p.parent, target)
+    reuse_report = import_reused_collections(accepted, roots, target_per_domain)
+    atomic_json(directory/"reuse-admission.json", reuse_report)
     counts, dois, hashes = Counter(), set(), set()
     for p in sorted(accepted.glob("*/receipt.json")):
         receipt = PdfReceipt.model_validate_json(p.read_text())
-        if receipt.paper.doi in dois or receipt.documents[0].pdf_sha256 in hashes:
+        if canonical_doi(receipt.paper.doi) in dois or receipt.documents[0].pdf_sha256 in hashes:
             raise ValueError("Duplicate accepted PDF/DOI")
         counts[receipt.paper.domain] += 1
-        dois.add(receipt.paper.doi)
+        dois.add(canonical_doi(receipt.paper.doi))
         hashes.add(receipt.documents[0].pdf_sha256)
-    reused = len(list(Path(reuse_root).glob("*/receipt.json"))) if reuse_root else 0
+    reused_metadata = [PdfReceipt.model_validate_json(p.read_text()).paper.model_dump()
+        for root in roots for p in sorted(root.glob("*/receipt.json"))]
+    _registered, metadata_report = register_metadata(store, discovery["records"]+reused_metadata, run_id)
+    metadata_rows, _observations, _duplicates = deduplicate_metadata(discovery["records"])
+    atomic_json(directory/"metadata-admission.json", metadata_report)
+    reused = len(reuse_report["imported"])
     # 下载串行，遵守原采集器逐跳3.1秒间隔；独立模型筛选不重复识别PDF。
-    for row in balanced_candidates(discovery["records"]):
+    for row in balanced_candidates(metadata_rows):
         if all(counts[d] >= target_per_domain for d in ("Math", "Physics")):
             break
-        if row["doi"] in dois or counts[row["domain"]] >= target_per_domain:
+        if canonical_doi(row["doi"]) in dois or counts[row["domain"]] >= target_per_domain:
             continue
         key = digest(row["doi"])
         decision_path = directory/"decisions"/(key+".json")
@@ -151,7 +217,7 @@ async def acquire_library(store, discovery, settings, pricing, directory, run_id
                 if not target.exists():
                     shutil.copytree(folder, target)
                 counts[row["domain"]] += 1
-                dois.add(row["doi"])
+                dois.add(canonical_doi(row["doi"]))
                 hashes.add(receipt["documents"][0]["pdf_sha256"])
                 decision["accepted"] = True
                 break
@@ -167,7 +233,7 @@ async def acquire_library(store, discovery, settings, pricing, directory, run_id
     atomic_json(directory/"library-plan.json", plan.model_dump())
     decisions = [json.loads(p.read_text()) for p in (directory/"decisions").glob("*.json")]
     report = {"run_id": run_id, "target_papers": target_per_domain*2, "downloaded_papers": sum(counts.values()),
-        "reused_papers": reused, "counts": dict(counts), "attempted_new_dois": len(decisions),
+        "metadata": metadata_report, "reused_papers": reused, "reused_versions_skipped": reuse_report["skipped"], "counts": dict(counts), "attempted_new_dois": len(decisions),
         "newly_accepted": sum(d["accepted"] for d in decisions),
         "pdf_pages": sum(d.pages for p in plan.papers for d in p.documents),
         "supplement_status": dict(Counter(p.supplement_status for p in plan.papers)),

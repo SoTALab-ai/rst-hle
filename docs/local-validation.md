@@ -14,7 +14,8 @@ uv run diamond doctor
 没有`DIAMOND_TEST_DATABASE_URL`时PG测试会跳过，不能据此宣称真实数据库已验证。真实测试库名必须以`_test`结尾；不要把试产连接字符串当测试连接。
 
 ```bash
-uv run pytest -q tests/test_postgres.py tests/test_paper_ingest.py
+uv run pytest -q tests/test_postgres.py tests/test_paper_ingest.py \
+  tests/test_library_questions.py tests/test_library_metadata_costs.py
 ```
 
 数据库初始化/升级先在所选独立库明确执行`uv run diamond db-init`。应用启动只核对结构和迁移校验和；禁止修改旧SQL文件。部署方法见[数据库](database.md)。
@@ -24,7 +25,9 @@ uv run pytest -q tests/test_postgres.py tests/test_paper_ingest.py
 | 改动 | 验证 |
 |---|---|
 | 文档组织 | 链接、命令、历史路径引用及`git diff --check` |
-| 论文下载 | 真实开放仓储下载、DOI/哈希、失败与候选不足、缓存恢复 |
+| 论文下载 | 元数据阶段DOI规范化/登记去重、真实开放下载、PDF哈希、版本重复、候选不足、缓存恢复 |
+| 材料触发出题 | 真实PG完整页覆盖、首50份冻结与恢复、不同结构规划/来源锚点、失败不触发评测；实际模型链路另记 |
+| 累计费用 | 原支付run去重、孤立HTTP收据、失败/未知与在途、缓存不重复计费 |
 | 直接PDF读取 | 真实PDF与真实模型、物理页覆盖、公式/正文抽样对照、PG和对象写回；抽样不是全量正确性认证 |
 | 入库恢复 | 已付费回答不重购、损坏缓存拒绝、配置/代码变化换版本、缺页与未读清不冒充完整 |
 | 科学质检 | 原有反代与verifier对抗测试、代表性真实模型链路 |

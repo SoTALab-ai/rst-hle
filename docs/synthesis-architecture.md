@@ -4,10 +4,12 @@
 
 ```mermaid
 flowchart LR
-    A[期刊DOI队列与开放仓储] --> B[下载原PDF和补充材料]
+    A[期刊DOI队列与开放仓储] --> M[元数据规范化 / DOI去重登记]
+    M --> B[下载原PDF和补充材料 / 哈希去重]
     B --> C[论文库: 6Luna逐页读取一次]
     C --> D[PG版本与页索引 / 内容寻址原件和转录]
-    D --> E[定位来源已有结果]
+    D --> K[50份完整独立材料 / 每篇规划1–5题]
+    K --> E[定位来源已有结果]
     E --> F[锁定答案、完整推导、逐步审查]
     F --> G[隐藏最难步骤并生成题面]
     G --> H[独立解答、自洽反代、verifier对抗]
@@ -21,13 +23,14 @@ flowchart LR
 
 | 模块 | 职责 |
 |---|---|
-| `discovery.py`、`open_access.py` | DOI/期刊依据、开放位置；不宣称全文或理论适用性已通过 |
+| `discovery.py`、`open_access.py`、`paper_metadata.py` | DOI/期刊依据、元数据身份与观察版本、下载前去重、开放位置；不宣称全文或理论适用性已通过 |
 | `paper_acquisition.py`、`pdf_library.py` | 冻结候选队列、下载原件、研究类型筛选、正文/补充分存 |
 | `paper_ingest.py` | 严格入库清单、直接模型转录、页码覆盖、PG论文/文档/解析/页面索引、显式导出 |
 | `pdf_review.py`、`pdf_precision.py`、`pdf_ocr.py` | 旧冻结批次的MinerU与独立图像复核；新直接读取入口不调用旧逐页验收 |
 | `artifacts.py`、`postgres.py`、`sql/` | 对象完整性、短事务、显式迁移、写锁、请求收据和预算 |
 | `experiment.py`、`pipeline.py`及出题/质检模块 | 来源结果锁定、推导修复、题面、科学审查、难度评测与谱系 |
-| `llm.py`、`costs.py` | 实际模型校验、原始请求/响应、逐HTTP尝试、缓存和实际用量核算 |
+| `library_questions.py` | 50份完整材料冻结、不同推理结构规划、来源锚点及选页核对、原出题管线分片试产 |
+| `llm.py`、`costs.py`、`campaign_costs.py` | 实际模型校验、原始请求/响应、逐HTTP尝试、缓存、失败/未知/在途与跨阶段实际用量核算 |
 
 ## 材料阶段合同
 

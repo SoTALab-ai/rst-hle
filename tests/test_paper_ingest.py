@@ -36,7 +36,7 @@ def pg(tmp_path):
     store = PostgresStore(url, tmp_path/"objects", check=False)
     store.migrate()
     store.db.execute("TRUNCATE diamond.runs, diamond.sources, diamond.jobs, diamond.quotas, "
-                     "diamond.library_papers, diamond.library_documents CASCADE")
+                     "diamond.library_papers, diamond.library_documents, diamond.library_metadata CASCADE")
     yield store
     store.db.close()
 

@@ -112,7 +112,7 @@ def test_pg_catalog_upgrade_preserves_existing_sources_and_run_budget(pg, source
     pg.migrate();pg.migrate()
     assert pg.sources()[0].sha256==source.sha256
     assert pg.db.execute("SELECT http_attempts FROM diamond.runs WHERE id='test'").fetchone()[0]==1
-    assert pg.db.execute("SELECT count(*) FROM diamond.schema_migrations").fetchone()[0]==4
+    assert pg.db.execute("SELECT count(*) FROM diamond.schema_migrations").fetchone()[0]==5
 
 
 def test_pg_paper_metadata_history_and_domain_query(pg):
