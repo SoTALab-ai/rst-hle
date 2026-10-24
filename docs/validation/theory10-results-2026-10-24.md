@@ -16,7 +16,7 @@
 | theory10-masked-20261024 | 45ec52bbe709a22118bcdaa5ae0a21a319a0e839 | rst_hle_theory10_masked_20261024 | 策略切换中断，只执行第0代，未执行加难 |
 | theory10-ease-only-20261024 | 3a16beadeee6fc21c6c92ca0a4b53b967223c32d | rst_hle_theory10_ease_20261024 | completed_with_errors，0留存 |
 
-续跑按[仅降难计划](../configs/papers/theory10-ease-only.plan.json)和[配置](../configs/theory10-ease-only.toml)执行，费用软阈值为null、HTTP次数上限关闭。仍保留10条固定计划、每份蓝图最多两次修复及每条最多两次降难。导入96份已完成收据和5份候选，复用已有4份GLM答卷，不重新购买成功响应；待完成题面先续质检。首代沿用父run请求命名空间，降难子代使用新run。每次缓存使用仍校验请求、端点、时限和内容完整性。
+续跑按[仅降难计划](../../configs/papers/theory10-ease-only.plan.json)和[配置](../../configs/theory10-ease-only.toml)执行，费用软阈值为null、HTTP次数上限关闭。仍保留10条固定计划、每份蓝图最多两次修复及每条最多两次降难。导入96份已完成收据和5份候选，复用已有4份GLM答卷，不重新购买成功响应；待完成题面先续质检。首代沿用父run请求命名空间，降难子代使用新run。每次缓存使用仍校验请求、端点、时限和内容完整性。
 
 旧run冻结清单哈希为 `0d68c82cf70599ef760dc47c17f53047a59a591b568b42086a5746bca5ede326`；新run为 `bcc10d6b8b1d387cc7df0b15d5bbd26000edc976ba02b0baa639e08017f58125`。清单包含代码、提示、配置、计划、全文及内容哈希、价格与私有排除库哈希；不将私有内容提交Git。
 
@@ -77,7 +77,7 @@
 
 ## 600秒解题截止计错：最新冻结结果
 
-用户明确要求600秒解题超时计错，新的冻结run为 `theory10-timeout-incorrect-20261024`，代码提交 `985f460e306ef228c97060448a5993ec73f58a63`，独立数据库 `rst_hle_theory10_timeout_20261024`。冻结清单哈希为 `2719f30cd4ac252a51fa2167841bf153d35b761109f1bf7356b0fe61edbc39ee`。配置与计划见[超时计错配置](../configs/theory10-timeout-incorrect.toml)和[计划](../configs/papers/theory10-timeout-incorrect.plan.json)。
+用户明确要求600秒解题超时计错，新的冻结run为 `theory10-timeout-incorrect-20261024`，代码提交 `985f460e306ef228c97060448a5993ec73f58a63`，独立数据库 `rst_hle_theory10_timeout_20261024`。冻结清单哈希为 `2719f30cd4ac252a51fa2167841bf153d35b761109f1bf7356b0fe61edbc39ee`。配置与计划见[超时计错配置](../../configs/theory10-timeout-incorrect.toml)和[计划](../../configs/papers/theory10-timeout-incorrect.plan.json)。
 
 导入前两次run的126份逻辑收据及17份已有GLM答卷，没有新增solver或judge HTTP调用。对P02MASK的原样本8、10、12分别核对同题、同采样盐、同端点/配置、完整性哈希及实际600.05–600.07秒截止收据，保存3条独立DeadlineOutcome；不制造答卷、实际响应模型或judge。新run只新增1次后置审查调用。
 

@@ -1,16 +1,49 @@
 # RST → HLE-style Question Factory
 
-从论文/预备材料库构造可追溯题目，按需求进行质检，再逐步接通递归演化。**当前优先交付质检模块，递归生成器为实验实现。** 本项目并非官方 HLE 项目，也不宣称产物已达到 HLE Diamond 质量。
+从数学/理论物理论文构造可追溯题目：预建论文库，锁定来源已有答案与完整推导，挖空最难推理，通过独立科学检查后测量难度。目前仍是实验管线，尚未证明能稳定生产HLE Diamond题目。
 
-已实现：来源导入和 arXiv 全文抓取、来源到子类的路由、题目数据契约、来源引文校验、独立复核调用、GLM5.2 的 16 次盲答、官方 HLE judge 模板、1–8/16 筛选、批次语义去重、分类配额、谱系、请求预算、缓存续跑、报告和导出。
+当前模型：作者和审查为gpt-6-luna，解题为GLM5.2无工具、600秒墙钟；官方HLE模板由gpt-6-luna medium判分。首4次全对直接拒绝，出现错答或解题墙钟超时才补至16次；1–8/16进入后置复核，0/16先排错再降难，不执行加难。
 
-需求原文通过 `feishu-cli wiki export` 保存于本地 `outputs/requirements-feishu.md`，未提交到公开仓库。配置包含文档中的 61 个采购子类，合计 2,000 道；沿用原分类，不重算已注明待修正的跨大类归属。原文 120 道示例仅进入本地排除库，不进入生成提示或交付。
+新材料流程为“下载原PDF和补充材料 → 6Luna直接逐页读取一次 → PG索引与内容寻址库 → 出题时读取冻结论文版本”。不再对全文追加第二个模型逐页验收；来源疑点保留原页核对，科学审查仍在出题阶段执行。下载、转录完成与可用于出题分别统计。
 
-用户在 2026-10-23 明确：先跳过旧训练集和完整官方评测集查重；判分口径采用官方 HLE。批次内去重仍执行，报告如实标明外部查重范围。
+## 入口
 
-数学/物理的新一轮试产支持顶刊理论论文目录、同论文多条独立出题线，以及“先测4次、出现答错或600秒解题超时再补至16次”的分阶段评测。20题历史计划、当前仅降难策略、成本与统计口径见 [theory-experiment.md](docs/theory-experiment.md)。
+- [文档导航](docs/README.md)：按ClawGym的文档职责划分组织。
+- [架构与模块归属](docs/synthesis-architecture.md)、[验证方法与个人VM](docs/local-validation.md)。
+- [论文下载](docs/pdf-paper-library.md)、[直接读取入库](docs/paper-library-ingestion.md)、[数据库](docs/database.md)。
+- [出题设计](docs/question-design.md)、[科学检查](docs/consistency.md)、[verifier对抗](docs/verifier-adversary.md)。
+- [实验协议](docs/theory-experiment.md)、[历史结果](docs/validation/README.md)、[验收](docs/acceptance.md)。
 
-2026-10-23的首次理论试产已结束：20条出题线形成49个版本，严格留存0/20，含补充复核已知费用约¥200.07，另4次请求费用未知。完整失败归因与逐题审阅入口见 [试产结果](docs/theory-pilot-results-2026-10-23.md)。工程框架跑通不代表已实现目标难度的稳定生产。
+## 本地开始
+
+需要Python3.11+和uv；PDF读取需要Poppler。真实密钥不提交Git。
+
+```bash
+uv sync --frozen --python 3.12
+uv run ruff check src tests scripts
+uv run pytest -q
+uv run diamond doctor
+
+# 自备题目质检；样例很简单，预期因太易拒绝。
+uv run diamond qc examples/paper-qc.jsonl --run-id qc-first --mode pilot
+uv run diamond report
+```
+
+个人VM正式运行使用独立PostgreSQL及对象目录；首次或升级显式运行`diamond db-init`，当前新增004论文库迁移。离线测试可以用SQLite，理论无工具题无需Harbor。论文批量下载和读取命令见[论文库](docs/paper-library-ingestion.md)。
+
+## 模型与判分
+
+- Solver：`glm-5.2`，16 个独立请求，默认 temperature=1.0、top_p=0.95；只看题面，以 600 秒墙钟时间为限，重试包含在内，不发送输出 token 上限。
+- Judge：`gpt-6-luna`，`reasoning_effort=medium`；使用官方 HLE 模板和输出字段，包含最终答案抽取、语义比较与数值小误差口径。
+- Consistency：单独的 `gpt-6-luna high` 角色，先只看题面独立推导，再核对题面/金标，另一次隔离调用检查验算公式的翻译；程序执行精确反代、合法参数点和输出覆盖检查。三次独立请求，不读取历史通过率；失败、不确定或计算检查未覆盖都阻止采样。100条新理论实验另启用题面生成前的参考蓝图复核。详见 [出题设计](docs/question-design.md)与[前置自洽审查](docs/consistency.md)。
+- 模板固定于官方仓库提交 `22ed3074b1e7b134bcbc09028d0ba320839b0655`，来源和哈希见 [configs/judge-contract.json](configs/judge-contract.json)。官方没有给出统一数值 epsilon，本项目也没有另加固定容差。
+- 当前只支持无工具评估；HLE-Diamond 另有受控搜索与离线代码模式，规则、官方 600 秒客户端设置与用户选择的硬限时之间的区别见 [docs/calibration.md](docs/calibration.md)。
+- 保存模型请求名、响应实际模型名、参数、模板哈希、16 个回答与判分、usage。解题达到600秒按用户规则计错且单列；其他调用失败、截断、JSON错误或超预算不当作答错。
+- 网关需支持兼容的 `/v1/chat/completions`、JSON object 输出和 reasoning_effort。实际模型名不符会失败；如网关使用有证据的别名，可显式配置 `accepted_response_models`。
+
+各角色配置分别冻结。理论试产的作者、综合复核和consistency使用gpt-6-luna的独立调用；历史配置保留自己的模型。分工与盲推导能减少金标锚定，不能消除同模型相关性错误；模型审查通过不等价于数学证明或专家确认。
+
+## 出题和项目边界
 
 ```mermaid
 flowchart LR
@@ -41,93 +74,9 @@ flowchart LR
     J --> C
 ```
 
-## 先跑质检
 
-2026-10-24起新配置的作者统一为gpt-6-luna。后续理论入口强制先抽取并锁定来源已有结果，针对最难且必要的推理挖空，并单独审查实际题面；详见[挖空合同](docs/bottleneck-masking.md)。理论出题新增“完整答案与推理链 → 逐步独立judge → 初版加最多两次修订 → 反向生成题面”，并加入模式卡和父题实际答卷反馈。论文依据、构造方法与效果验证边界见[固定模型下的难题构造](docs/harder-question-design-2026-10-24.md)。这不追溯修改原100条冻结试产，结构设计也不等于已实测达到目标难度。
+生产规则与参数见[实验协议](docs/theory-experiment.md)，恢复与请求收据见[恢复合同](docs/resilience.md)。同论文多题必须有不同推理结构；通过全部前置检查才购买GLM难度样本。
 
-逐题verifier对抗使用 `configs/theory10-verifier-adversary.toml`：完整题面、golden和挖空证明共同构造/攻击验收约定，独立核定合法与非法对照，最多两次修改，题面修改重做全部正确性检查；详见[对抗机制](docs/verifier-adversary.md)及[单题真实结果](docs/verifier-probe-2026-10-24.md)。已有答卷的抽取误杀与上界目标歧义分开处理，真实只重判、不重跑GLM的结果见[判分复核](docs/judge-context-recheck.md)。
+`pilot`通过只记screened；`production`还要求后置复核、批次去重与配额。飞书私有需求保存于本地，不提交公开仓库；61子类共2000道是需求目标，当前没有完成交付。按用户要求暂不做旧训练集和完整官方评测集去重，批次内去重保留。
 
-新版verifier的[20条真实试产](docs/theory20-verifier-2026-10-24.md)已结束：13条形成候选题，0条通过全部前置质检、0条进入GLM测量，已知参考费用约¥13.77。来源引文、作者/蓝图、题面与golden合同、verifier锚点和反代覆盖分别记录；这轮尚不能评价新题难度。
-
-新论文采集使用[PDF正文与补充材料库](docs/pdf-paper-library.md)，按[12刊优先队列](configs/papers/library-journals.json)查DOI，再从开放仓储寻找版本。正文/补充PDF分别保存，不拼TeX；身份、补充完整性与公式尚未核验的材料保持待审，不直接进入出题。历史采集入口保留原协议。
-
-需要 Python 3.11+ 和 [uv](https://docs.astral.sh/uv/)。从仓库根目录执行：
-
-```bash
-uv sync --frozen --python 3.12
-uv run pytest -q
-uv run diamond doctor
-
-# 使用你自己的网关；不得把真实密钥写进 Git
-export NEW_API_BASE_URL=https://your-gateway.example/v1
-export NEW_API_KEY=...
-
-# 抓一篇实际论文；也可用 ingest 导入预备材料库
-uv run diamond crawl --ids 1706.03762v7 --limit 1
-
-# 公开样例为新编的简单参数计数题，仅测试链路，预期会因太易被过滤
-uv run diamond qc examples/paper-qc.jsonl --run-id qc-first --mode pilot
-uv run diamond report
-```
-
-`pilot` 通过筛选也只记作 `screened`，不计入采购交付量。`production` 通过所有机器质检和独立题/配额门槛后记作 `accepted`：
-
-```bash
-uv run diamond --config configs/production.toml qc work/my-submissions.jsonl \
-  --run-id batch-001 --mode production
-uv run diamond export --output outputs/batch-001.jsonl
-# 只有每个子类分别补足配额，整批导出才会通过此项检查
-uv run diamond export --require-complete --output outputs/all-2000.jsonl
-```
-
-自备题目格式见 [examples/paper-qc.jsonl](examples/paper-qc.jsonl)。每行包含 `id`、`item`、`solution`，不接受外部提供的分数/审计通过标志。用 `uv run diamond schema` 生成完整 JSON Schema。材料库格式见 [docs/data-contract.md](docs/data-contract.md)。
-
-## 模型与判分
-
-- Solver：`glm-5.2`，16 个独立请求，默认 temperature=1.0、top_p=0.95；只看题面，以 600 秒墙钟时间为限，重试包含在内，不发送输出 token 上限。
-- Judge：`gpt-6-luna`，`reasoning_effort=medium`；使用官方 HLE 模板和输出字段，包含最终答案抽取、语义比较与数值小误差口径。
-- Consistency：单独的 `gpt-6-luna high` 角色，先只看题面独立推导，再核对题面/金标，另一次隔离调用检查验算公式的翻译；程序执行精确反代、合法参数点和输出覆盖检查。三次独立请求，不读取历史通过率；失败、不确定或计算检查未覆盖都阻止采样。100条新理论实验另启用题面生成前的参考蓝图复核。详见 [出题设计](docs/question-design.md)与[前置自洽审查](docs/consistency.md)。
-- 模板固定于官方仓库提交 `22ed3074b1e7b134bcbc09028d0ba320839b0655`，来源和哈希见 [configs/judge-contract.json](configs/judge-contract.json)。官方没有给出统一数值 epsilon，本项目也没有另加固定容差。
-- 当前只支持无工具评估；HLE-Diamond 另有受控搜索与离线代码模式，规则、官方 600 秒客户端设置与用户选择的硬限时之间的区别见 [docs/calibration.md](docs/calibration.md)。
-- 保存模型请求名、响应实际模型名、参数、模板哈希、16 个回答与判分、usage。不会把调用失败、截断、JSON 错误或超预算当作答错。
-- 网关需支持兼容的 `/v1/chat/completions`、JSON object 输出和 reasoning_effort。实际模型名不符会失败；如网关使用有证据的别名，可显式配置 `accepted_response_models`。
-
-pilot/production 的 generator/auditor 仍默认使用同一模型的分离调用；新增的 consistency 使用另一配置角色和独立上下文，理论试产中与综合复核同为 gpt-6-luna。分工与盲推导能减少金标锚定，不能消除同模型相关性错误；模型审查通过不等价于数学证明或专家确认。
-
-## 递归与个人 VM
-
-先归类来源，再运行实验递归流程：
-
-```bash
-uv run diamond route-sources --run-id route-first
-uv run diamond run --run-id evolve-first --mode pilot
-# 或明确指定人工试跑目标
-# uv run diamond run --subtopic 人工智能与机器学习 --run-id targeted-first --mode pilot
-```
-
-顺序为解答蓝图 → 题面 → 综合复核 → 独立盲推导与自洽审查 → 难度测量 → 去重/保留。质量失败先修正确性，不进入难度演化；每个改写版本都重新审查。`max_rounds`、修复次数、每来源候选数和请求预算均可配置。只有质量合格的题能成为父题；首4次全对或完整16次超过8对直接拒绝；0/16经正确性复核后才尝试降难，不执行加难。默认每条根谱系最多计 1 道，防止同材料近似变体凑量。
-
-在已有 SSH VM 上部署仓库、执行 `uv sync --frozen`，可从本机用下面的入口转发已有 API 环境变量（通过加密 SSH 标准输入，不写到命令参数或磁盘）：
-
-```bash
-python3 scripts/vm_run.py --host YOUR_SSH_ALIAS --directory ~/Developer/rst-hle \
-  -- diamond qc examples/paper-qc.jsonl --run-id vm-smoke --mode pilot
-```
-
-同一个数据库只允许一个写入进程；16 次模型请求内部并发。复用原 run-id 可续跑，配置/提示/材料/代码变更需新 run-id。预算按**实际 HTTP 尝试**计数，含失败和重试；不是费用上限。本轮解题不设客户端 token 限额；其他阶段按配置执行。未配置价格时不虚构美元成本。
-
-数据库已提供 **PostgreSQL + 独立文件产物库**，参考既有 ClawGym 的状态/产物分工。个人 VM 使用独立实例；离线测试保留 SQLite。详见 [数据库部署与 ClawGym 对照](docs/database.md)。首次及升级时显式运行 `diamond db-init`（本版003新增独立解题截止记录），普通启动只校验结构；GitHub CI 使用独立 PostgreSQL 覆盖真实读写、预算原子性与租约隔离。
-
-## 项目边界
-
-这是 QC 优先的 MVP：已实现数据库队列 repository，尚未接管理 API 和多 worker 调度；未提供任意学科的可执行证明器、未证明递归能提升跨学科独立合格率、未完成 2,000 道生产。自动抓取目前实现 arXiv；音乐、棋类、影视、历史等可先导入规则、谱文、原始文献和其他文本材料。源码不执行模型生成的代码。
-
-试验设计与 RST 的有效性边界见 [docs/rst-assessment.md](docs/rst-assessment.md)，验收条目见 [docs/acceptance.md](docs/acceptance.md)，真实 VM 试跑结果见 [docs/validation.md](docs/validation.md)。来源原文、密钥、题库、完整回答轨迹和运行数据库默认均被 Git 忽略；仅代码/配置与脱敏统计进入公开仓库。
-
-新版逆向出题与前置反代管线的[100条真实试产结果](docs/theory100-results-2026-10-24.md)：93条计划形成题面、共127个版本，37个版本首4次全对，1个版本3次正确后有1次超时；暂无1–8/16目标难度留存。当前结果不能证明RST已有效，质量门禁也仍有误拒和计算覆盖边界。
-
-原始 HLE 参考题的并发难度校准入口见 [docs/calibration.md](docs/calibration.md)。用户已将判分模型更新为 gpt-6-luna medium。
-
-2026-10-23 的八领域限时校准结果见 [docs/calibration-results-2026-10-23.md](docs/calibration-results-2026-10-23.md)。
-
-来源路由、逐样本恢复、请求审计和故障注入覆盖见 [docs/resilience.md](docs/resilience.md)。
+当前为单写者内部并发的实验实现，未接多worker管理服务，不执行模型生成代码，不提供任意数学命题的形式化证明器。原PDF、私有需求、密钥、原始题库与完整轨迹不提交Git；公开内容为代码、脱敏配置、文档和统计。[RST有效性评估](docs/rst-assessment.md)及[历史批次](docs/validation/README.md)保留真实失败与未覆盖范围。

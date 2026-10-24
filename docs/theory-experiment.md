@@ -71,6 +71,6 @@ uv run python scripts/run_question_experiment.py \
 
 输出位于 `work/runs/RUN/experiment-report.json` 与 `candidates.json`，保留完整题面、参考解、谱系和每次判分。`pilot` 的采购交付数始终为0。报告是这批策展材料上的机器质检留存率，不是整个HLE题库的通过率，也不是人工确认的科学真值率。首4次决定后续选样，因此不能拿补测子集估计无条件模型准确率。同论文题目存在相关性，未校正聚类的区间只作描述，不能当作总体置信区间。
 
-2026-10-24用户明确要求10条新试产不设费用/请求停机阈值，配置见[仅降难续跑](theory10-masked-2026-10-24.md)。计划的 `visible_cost_limit_usd: null` 关闭费用软阈值，配置的 `request_cap_enabled = false` 关闭HTTP次数上限；仍按逐HTTP尝试持久化计数和成本，不增加作者修复或降难轮数。输入或策略变化使用新run，不热改旧快照。
+2026-10-24用户明确要求10条新试产不设费用/请求停机阈值，配置见[仅降难续跑](validation/theory10-masked-2026-10-24.md)。计划的 `visible_cost_limit_usd: null` 关闭费用软阈值，配置的 `request_cap_enabled = false` 关闭HTTP次数上限；仍按逐HTTP尝试持久化计数和成本，不增加作者修复或降难轮数。输入或策略变化使用新run，不热改旧快照。
 
-用户随后明确要求本批600秒解题超时计错，当前默认 `solver_deadline_counts_as_incorrect = true`，完整计分允许13份有效答卷加3次已验证解题截止事件构成16次。历史 `incomplete` 结果不原地改写；按新run重用收据，重新执行后置复核与去重，见[10条结果与新口径](theory10-results-2026-10-24.md)。
+用户随后明确要求本批600秒解题超时计错，当前默认 `solver_deadline_counts_as_incorrect = true`，完整计分允许13份有效答卷加3次已验证解题截止事件构成16次。历史 `incomplete` 结果不原地改写；按新run重用收据，重新执行后置复核与去重，见[10条结果与新口径](validation/theory10-results-2026-10-24.md)。

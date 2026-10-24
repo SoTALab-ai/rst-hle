@@ -16,7 +16,8 @@ def pg(tmp_path):
     assert conninfo_to_dict(URL)["dbname"].endswith("_test")
     store = PostgresStore(URL, tmp_path / "objects", check=False)
     store.migrate()
-    store.db.execute("TRUNCATE diamond.runs, diamond.sources, diamond.jobs, diamond.quotas CASCADE")
+    store.db.execute("TRUNCATE diamond.runs, diamond.sources, diamond.jobs, diamond.quotas, "
+                     "diamond.library_papers, diamond.library_documents CASCADE")
     yield store
     store.db.close()
 
@@ -111,7 +112,7 @@ def test_pg_catalog_upgrade_preserves_existing_sources_and_run_budget(pg, source
     pg.migrate();pg.migrate()
     assert pg.sources()[0].sha256==source.sha256
     assert pg.db.execute("SELECT http_attempts FROM diamond.runs WHERE id='test'").fetchone()[0]==1
-    assert pg.db.execute("SELECT count(*) FROM diamond.schema_migrations").fetchone()[0]==3
+    assert pg.db.execute("SELECT count(*) FROM diamond.schema_migrations").fetchone()[0]==4
 
 
 def test_pg_paper_metadata_history_and_domain_query(pg):

@@ -23,6 +23,6 @@ verifier逐项列出题面要求的输出、原句锚点、接纳规则与等价
 
 开启配置：`configs/theory10-verifier-adversary.toml`，其中 `require_verifier_adversary=true`、`verifier_max_revisions=2`。旧运行配置保留历史协议，不热修改正在运行的快照。`sample`、完整QC与导出均检查此合同；内容、提示、模型或协议变化使旧对抗记录不能直接复用。
 
-单题真实VM诊断的全过程、失败与成本见[2026-10-24结果](verifier-probe-2026-10-24.md)。
+单题真实VM诊断的全过程、失败与成本见[2026-10-24结果](validation/verifier-probe-2026-10-24.md)。
 
 当前逐题verifier是前置质量审查合同，不替代最终HLE答案匹配。对抗中的HLE控制使用相同的冻结user模板和已版本化的system抽取指引。通过有限对抗或反代不能证明全域正确性；独立调用默认仍使用同一6-luna模型，可能存在相关漏检。

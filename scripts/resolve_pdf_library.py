@@ -16,8 +16,8 @@ parser.add_argument("--discovery", required=True)
 parser.add_argument("--output", required=True)
 parser.add_argument("--per-journal", type=int, default=2)
 args = parser.parse_args()
-if not 1 <= args.per_journal <= 20:
-    raise ValueError("Choose 1..20 candidates per journal")
+if not 1 <= args.per_journal <= 100:
+    raise ValueError("Choose 1..100 candidates per journal")
 rows = json.loads(Path(args.discovery).read_text())["records"]
 selected, counts = [], {}
 for row in rows:

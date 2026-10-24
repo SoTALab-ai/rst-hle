@@ -1,0 +1,19 @@
+# 只调用generator角色读取PDF，不调用第二个模型逐页验收。
+concurrency = 8
+request_cap_enabled = false
+max_retries = 1
+request_timeout = 600.0
+request_deadline_seconds = 600.0
+
+[generator]
+model = "gpt-6-luna"
+accepted_response_models = ["gpt-6-luna", "gpt-6-luna-2026-09-22"]
+reasoning_effort = "medium"
+
+# Gateway共用配置结构；以下角色在论文入库阶段不调用。
+[auditor]
+model = "gpt-6-luna"
+[solver]
+model = "glm-5.2"
+[judge]
+model = "gpt-6-luna"
