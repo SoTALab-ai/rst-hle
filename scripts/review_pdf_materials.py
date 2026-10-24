@@ -13,6 +13,7 @@ from diamond_factory.costs import MeteredGateway, measure_cost
 from diamond_factory.models import digest
 from diamond_factory.pdf_library import PdfReceipt
 from diamond_factory.pdf_ocr import MinerUAgent
+from diamond_factory.pdf_precision import MinerUPrecision
 from diamond_factory.pdf_review import (
     MaterialSelection,
     SupplementCheck,
@@ -40,6 +41,7 @@ async def run(args):
                 "parser": args.parser,
                 "code_sha256": {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in
                     [Path(__file__), Path("src/diamond_factory/pdf_review.py"), Path("src/diamond_factory/pdf_ocr.py"),
+                     Path("src/diamond_factory/pdf_precision.py"),
                      Path("src/diamond_factory/llm.py")]},
                 "receipts": [r["integrity_sha256"] for r in receipts],
                 "supplements": [c.model_dump() for c in checks]}
@@ -50,7 +52,8 @@ async def run(args):
     gateway = MeteredGateway(settings, directory / "requests", run_id=args.run_id,
                              pricing=pricing, visible_cost_limit_usd=None)
     sem = asyncio.Semaphore(args.workers)
-    ocr = MinerUAgent(directory / "ocr") if args.parser == "mineru" else None
+    ocr = (MinerUPrecision(directory / "ocr") if args.parser == "mineru_precision" else
+           MinerUAgent(directory / "ocr") if args.parser == "mineru" else None)
 
     async def one(receipt):
         async with sem:
@@ -122,9 +125,9 @@ async def run(args):
               "papers": [{k: v for k, v in r.items() if k != "source"} for r in rows]}
     tasks = [json.loads(p.read_text()) for p in (directory / "ocr").glob("*/receipt.json")]
     report["external_ocr"] = {"provider": args.parser, "tasks_submitted": sum(t["submitted"] for t in tasks),
-        "tasks_completed": sum(bool(t.get("markdown_sha256")) for t in tasks),
-        "known_cost_usd": None, "billing_identity_supplied": False,
-        "note": "No billing credentials used; no returned fee receipt. Do not record unknown external fees as zero."}
+        "tasks_completed": sum(bool(t.get("markdown_sha256") or t.get("content_sha256")) for t in tasks),
+        "known_cost_usd": None, "account_token_used": args.parser == "mineru_precision",
+        "note": "No returned fee receipt. Do not record unknown external fees as zero."}
     atomic_json(directory / "review-report.json", report)
     (directory / "sources.jsonl").write_text("\n".join(json.dumps(r["source"], ensure_ascii=False)
                                                       for r in rows if r["ready"]) + "\n")
@@ -140,5 +143,5 @@ if __name__ == "__main__":
     p.add_argument("--run-id", required=True)
     p.add_argument("--workers", type=int, default=4, choices=range(1, 9))
     p.add_argument("--renderer", default="pdftoppm")
-    p.add_argument("--parser", choices=("mineru", "model_vision"), default="mineru")
+    p.add_argument("--parser", choices=("mineru", "mineru_precision", "model_vision"), default="mineru")
     asyncio.run(run(p.parse_args()))
