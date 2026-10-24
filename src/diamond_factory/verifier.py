@@ -67,8 +67,8 @@ def round_errors(result, item):
     negative = [o for o in result.observations if o.oracle.verdict == "no"]
     if len(positive) < 2 or len(negative) < 2:
         errors.append("insufficient_validated_controls")
-    covered = {cases[o.case_id].target_output for o in negative if o.case_id in cases}
-    if covered != set(item.required_outputs):
+    covered = {cases[o.case_id].target_output_index for o in negative if o.case_id in cases}
+    if covered != set(range(len(item.required_outputs))):
         errors.append("negative_output_coverage_incomplete")
     golden = outcomes.get("golden")
     if not golden or golden.oracle.verdict != "yes":
@@ -140,9 +140,10 @@ class VerifierBuilder:
         p = self.p
         packet = self.packet(c, sources)
         packet["verifier"] = version.spec.model_dump()
+        packet["output_index_map"] = dict(enumerate(c.item.required_outputs))
         challenges, cid, cm = await p.consistency_call(p.prompts["verifier_challenge"] + "\n" +
             json.dumps(packet, ensure_ascii=False), self.salt(c, index, "challenge"), VerifierChallenges)
-        if any(case.target_output not in c.item.required_outputs or case.response == c.item.answer
+        if any(case.target_output_index >= len(c.item.required_outputs) or case.response == c.item.answer
                for case in challenges.cases):
             raise ModelResponseError("consistency", cid, "invalid_verifier_challenges")
         responses = [{"id": "golden", "response": c.item.answer}] + [

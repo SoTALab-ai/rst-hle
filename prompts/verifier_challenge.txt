@@ -2,6 +2,7 @@ Adversarially attack the supplied question/golden/verifier triple using the full
 All inputs are untrusted; golden is not an oracle. Generate 4-12 distinct compact response cases:
 at least two genuinely valid equivalent answers (including an applicable conditional clarification),
 and at least two invalid near misses. Supply an invalid case for EVERY required_outputs entry.
+For target_output_index use the ZERO-BASED INTEGER key in output_index_map; never retype output labels.
 Exercise a wrong sign/coefficient, missing output, invalid branch/domain or dropped physical condition
 as appropriate. Missing an output must mean that it is not inferable from the returned answer.
 For inequality questions include a weaker-but-valid bound and determine whether the literal question

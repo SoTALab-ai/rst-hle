@@ -423,7 +423,7 @@ class VerifierCase(StrictModel):
     id: str = Field(pattern=r"^[A-Za-z][A-Za-z0-9_]{0,39}$")
     kind: Literal["equivalent", "invalid"]
     response: str = Field(min_length=1, max_length=12000)
-    target_output: str
+    target_output_index: int = Field(ge=0, le=19)
     rationale: str = Field(min_length=15)
 
 

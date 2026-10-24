@@ -25,6 +25,7 @@ parser.add_argument("--rates", required=True)
 parser.add_argument("--run-id", required=True)
 parser.add_argument("--source-candidate", required=True)
 parser.add_argument("--source-sha256", required=True)
+parser.add_argument("--reuse-diagnostic-identity", action="store_true")
 args = parser.parse_args()
 if not args.run_id or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for c in args.run_id):
     raise ValueError("Invalid run-id")
@@ -42,9 +43,15 @@ gateway = QualityOnlyGateway(settings, directory / "requests", store, args.run_i
                              pricing=pricing, visible_cost_limit_usd=None)
 pipe = Pipeline(settings, store, args.run_id, "pilot", directory, gateway)
 identity = digest({"diagnostic_run": args.run_id, "source_candidate_sha256": args.source_sha256})[:24]
+if args.reuse_diagnostic_identity:
+    if (original.operator != "verifier_quality_diagnostic" or original.trials or original.deadline_outcomes
+            or original.id != original.root_id or original.run_id == args.run_id):
+        raise ValueError("Only a frozen unmeasured diagnostic may retain its request identity in a new run")
+    identity = original.id
 with store.lock():
     pipe.start({"command": "verifier-adversary-diagnostic", "source_candidate_sha256": args.source_sha256,
-                "pricing_sha256": digest(pricing), "difficulty_sampling_allowed": False})
+                "pricing_sha256": digest(pricing), "difficulty_sampling_allowed": False,
+                "reuse_diagnostic_identity": args.reuse_diagnostic_identity})
     candidate = next((c for c in store.candidates() if c.id == identity), None)
     if candidate is None:
         # 明确创建新ID的质量诊断副本；原题、样本和难度记录保留在冻结来源中。

@@ -53,7 +53,7 @@ class Adversary(FakeGateway):
                 "interpretation": "Reject spelled out numbers incorrectly" if bad else "Accept all exact integer equivalents."})
         elif schema is VerifierChallenges:
             value = VerifierChallenges.model_validate({"cases": [{"id": name, "kind": kind,
-                "response": response, "target_output": "edge count", "rationale": "Independent control of the exact tree count."}
+                "response": response, "target_output_index": 0, "rationale": "Independent control of the exact tree count."}
                 for name, kind, response in (("word", "equivalent", "thirty-six"), ("number", "equivalent", "Final: 36"),
                                             ("wrong", "invalid", "37"), ("missing", "invalid", "No answer"))],
                 "suspected_question_issues": ["Target convention needs clarification."] if question_issue else []})
