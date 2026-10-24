@@ -17,6 +17,7 @@ from pypdf.errors import PyPdfError
 from .costs import MeteredGateway, measure_cost
 from .llm import CacheIntegrityError
 from .models import StrictModel, digest
+from .paper_metadata import canonical_doi
 from .pdf_library import PdfReceipt
 from .pdf_review import render_page
 from .runtime import atomic_json, gather_cancel_on_error
@@ -64,6 +65,9 @@ class LibraryPlan(StrictModel):
             raise ValueError("Inventory exceeds expected paper count")
         ids = [p.identity() for p in self.papers]
         mains = [p.documents[0].sha256 for p in self.papers]
+        dois = [canonical_doi(p.doi) for p in self.papers if p.doi]
+        if len(set(dois)) != len(dois):
+            raise ValueError("Duplicate DOI versions do not count as independent papers")
         if len(set(ids)) != len(ids) or len(set(mains)) != len(mains):
             raise ValueError("Duplicate main PDFs do not count as independent papers")
         return self

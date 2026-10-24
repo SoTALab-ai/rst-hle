@@ -17,6 +17,8 @@ p.add_argument('--run-id', required=True)
 p.add_argument('--objects', required=True)
 p.add_argument('--config', default='configs/paper-reader.toml')
 p.add_argument('--reuse-root')
+p.add_argument('--preferred-reuse-root')
+p.add_argument('--cache-root')
 p.add_argument('--target-per-domain', type=int, default=100)
 a = p.parse_args()
 if a.target_per_domain < 1:
@@ -27,7 +29,7 @@ try:
     with store.lock():
         result = asyncio.run(acquire_library(store, json.loads(Path(a.discovery).read_text()), load(a.config),
             json.loads(Path(a.rates).read_text()), Path(a.directory), a.run_id,
-            reuse_root=a.reuse_root, target_per_domain=a.target_per_domain))
+            reuse_root=a.reuse_root, target_per_domain=a.target_per_domain, preferred_reuse_root=a.preferred_reuse_root, cache_root=a.cache_root))
         print(json.dumps(result, ensure_ascii=False))
 finally:
     store.db.close()
