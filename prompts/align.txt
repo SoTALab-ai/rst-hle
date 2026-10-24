@@ -13,6 +13,12 @@ Do not include the answer or derivation in the question. Do not mention private 
 For multiple choice provide at least A–E and make the answer a single option letter; prefer exactMatch.
 The rationale must fully explain the answer. material_key should identify the underlying material/claim and
 reasoning structure, invariant to superficial rewordings and number substitutions.
+The locked answer field is the complete grading gold; derivation and rationale are separate author/QC
+material. Match the question's requested deliverables to that literal answer. If the locked answer is
+only a formula, inequality, object or case classification, request only that result: do not append
+"prove", "justify", "explain why", "show your derivation" or another deliverable absent from the gold.
+Keep the full proof in rationale and the supplied blueprint. Do not append a proof to or otherwise
+change the locked answer to compensate. required_outputs must list only what the literal gold covers.
 Construct by reversing the solution's dependency chain: reveal the original observations, governing
 relations and target, while hiding the intermediate representation, auxiliary lemma, inversion trick,
 feasible parameter range and branch resolution whenever they can be inferred. Be aggressive about
