@@ -3,12 +3,16 @@ import argparse
 import asyncio
 import hashlib
 import json
+import subprocess
 from pathlib import Path
+
+import httpx
 
 from diamond_factory.config import load
 from diamond_factory.costs import MeteredGateway, measure_cost
 from diamond_factory.models import digest
 from diamond_factory.pdf_library import PdfReceipt
+from diamond_factory.pdf_ocr import MinerUAgent
 from diamond_factory.pdf_review import (
     MaterialSelection,
     SupplementCheck,
@@ -33,8 +37,9 @@ async def run(args):
     if not receipts or len(by_doi) != len(checks) or set(by_doi) != {r["paper"]["doi"] for r in receipts}:
         raise ValueError("Supplement review must cover every planned paper exactly once")
     manifest = {"run_id": args.run_id, "config": settings.model_dump(), "pricing": pricing,
+                "parser": args.parser,
                 "code_sha256": {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in
-                    [Path(__file__), Path("src/diamond_factory/pdf_review.py"),
+                    [Path(__file__), Path("src/diamond_factory/pdf_review.py"), Path("src/diamond_factory/pdf_ocr.py"),
                      Path("src/diamond_factory/llm.py")]},
                 "receipts": [r["integrity_sha256"] for r in receipts],
                 "supplements": [c.model_dump() for c in checks]}
@@ -45,6 +50,7 @@ async def run(args):
     gateway = MeteredGateway(settings, directory / "requests", run_id=args.run_id,
                              pricing=pricing, visible_cost_limit_usd=None)
     sem = asyncio.Semaphore(args.workers)
+    ocr = MinerUAgent(directory / "ocr") if args.parser == "mineru" else None
 
     async def one(receipt):
         async with sem:
@@ -86,9 +92,10 @@ async def run(args):
                 for i in range(0, len(selection.pages), 2):
                     refs = selection.pages[i:i+2]
                     batch, audit, attempts = await transcribe_batch(gateway, directory, receipt, refs,
-                        salt=f"{key}:pages:{i//2}", executable=args.renderer)
+                        salt=f"{key}:pages:{i//2}", executable=args.renderer, ocr=ocr)
                     for attempt in attempts:
-                        verify_request(directory / "requests", attempt["transcription_request"])
+                        if attempt["transcription_request"]:
+                            verify_request(directory / "requests", attempt["transcription_request"])
                         verify_request(directory / "requests", attempt["audit_request"])
                     transcripts.extend(batch)
                     audits.append((batch, audit))
@@ -97,8 +104,10 @@ async def run(args):
                 row.update(ready=True, source=source.model_dump(), reviewed_pages=len(transcripts),
                            formula_count=sum(len(p.formula_labels) for p in transcripts), batches=batches,
                            selection_sha256=digest(selection.model_dump()))
-            except (RuntimeError, ValueError, OSError) as e:
-                row.update(error_type=type(e).__name__, error=str(e)[:500])
+            except (RuntimeError, ValueError, OSError, httpx.HTTPError, subprocess.SubprocessError) as e:
+                # 外部异常可能带临时签名URL；公开报告只保留类型，原始收据留私有库。
+                row.update(error_type=type(e).__name__, error=str(e)[:500] if
+                           isinstance(e, (RuntimeError, ValueError)) else "External I/O failure; inspect private receipt")
             atomic_json(directory / "papers" / (key + ".json"), row)
             print(json.dumps({k: v for k, v in row.items() if k not in
                               ("source", "selection", "batches")}, ensure_ascii=False), flush=True)
@@ -111,6 +120,11 @@ async def run(args):
               "cost": measure_cost(None, args.run_id, directory / "requests", settings, pricing),
               "scope": "Only selected result/proof pages were image-reviewed, not every formula in every PDF.",
               "papers": [{k: v for k, v in r.items() if k != "source"} for r in rows]}
+    tasks = [json.loads(p.read_text()) for p in (directory / "ocr").glob("*/receipt.json")]
+    report["external_ocr"] = {"provider": args.parser, "tasks_submitted": sum(t["submitted"] for t in tasks),
+        "tasks_completed": sum(bool(t.get("markdown_sha256")) for t in tasks),
+        "known_cost_usd": None, "billing_identity_supplied": False,
+        "note": "No billing credentials used; no returned fee receipt. Do not record unknown external fees as zero."}
     atomic_json(directory / "review-report.json", report)
     (directory / "sources.jsonl").write_text("\n".join(json.dumps(r["source"], ensure_ascii=False)
                                                       for r in rows if r["ready"]) + "\n")
@@ -126,4 +140,5 @@ if __name__ == "__main__":
     p.add_argument("--run-id", required=True)
     p.add_argument("--workers", type=int, default=4, choices=range(1, 9))
     p.add_argument("--renderer", default="pdftoppm")
+    p.add_argument("--parser", choices=("mineru", "model_vision"), default="mineru")
     asyncio.run(run(p.parse_args()))
