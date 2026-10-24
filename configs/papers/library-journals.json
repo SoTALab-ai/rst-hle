@@ -1,0 +1,14 @@
+[
+  {"id":"annals","journal":"Annals of Mathematics","issn":"0003-486X","domain":"Math"},
+  {"id":"jams","journal":"Journal of the American Mathematical Society","issn":"0894-0347","domain":"Math"},
+  {"id":"inventiones","journal":"Inventiones mathematicae","issn":"0020-9910","domain":"Math"},
+  {"id":"ihes","journal":"Publications Mathématiques de l’IHÉS","issn":"0073-8301","domain":"Math"},
+  {"id":"ens","journal":"Annales scientifiques de l’École Normale Supérieure","issn":"0012-9593","domain":"Math"},
+  {"id":"duke","journal":"Duke Mathematical Journal","issn":"0012-7094","domain":"Math"},
+  {"id":"cmp","journal":"Communications in Mathematical Physics","issn":"0010-3616","domain":"Physics"},
+  {"id":"prl","journal":"Physical Review Letters","issn":"0031-9007","domain":"Physics"},
+  {"id":"prx","journal":"Physical Review X","issn":"2160-3308","domain":"Physics"},
+  {"id":"prd","journal":"Physical Review D","issn":"2470-0010","domain":"Physics"},
+  {"id":"jhep","journal":"Journal of High Energy Physics","issn":"1029-8479","domain":"Physics"},
+  {"id":"annphys","journal":"Annals of Physics","issn":"0003-4916","domain":"Physics"}
+]
