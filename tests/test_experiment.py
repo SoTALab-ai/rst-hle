@@ -237,7 +237,16 @@ def test_failed_rewrite_without_a_saved_candidate_is_reported_as_completed_with_
 
 
 def test_author_repair_resumes_after_a_saved_rejection_without_repeating_first_draft(tmp_path,settings,source,candidate):
-    from diamond_factory.models import Audit, Question, Solution
+    from conftest import passing_consistency
+
+    from diamond_factory.models import (
+        Audit,
+        CertificateAudit,
+        ConsistencyAudit,
+        IndependentSolution,
+        Question,
+        Solution,
+    )
     pipe,store,_=setup_pipeline(tmp_path,settings,source,candidate)
 
     class Author:
@@ -253,6 +262,12 @@ def test_author_repair_resumes_after_a_saved_rejection_without_repeating_first_d
             elif schema is Question:
                 answer=candidate.item.model_copy(deep=True)
                 if ':repair:0:' in salt:answer.evidence[0].quote='This claim is not in the synthetic source.'
+            elif schema is IndependentSolution:
+                answer=IndependentSolution(outcome="solved",derivation=["Tree theorem", "37-1=36"],answer="36",issues=[])
+            elif schema is ConsistencyAudit:answer=passing_consistency()
+            elif schema is CertificateAudit:
+                answer=CertificateAudit(faithful_translation=True,reason="The fixture translation is correct.",
+                                        checks=passing_consistency().substitution_checks)
             else:raise AssertionError(schema)
             return answer,digest(salt),'fixture-model'
 
@@ -266,4 +281,6 @@ def test_author_repair_resumes_after_a_saved_rejection_without_repeating_first_d
     pipe.gateway=Author(False)
     fixed=asyncio.run(pipe.generate(source,None,target,0,0))
     assert fixed.authoring_complete and fixed.status=='quality_seed'
-    assert len(pipe.gateway.calls)==3 and all(':repair:1:' in s for s in pipe.gateway.calls)
+    author_calls=[s for s in pipe.gateway.calls if ':consistency:' not in s]
+    assert len(author_calls)==3 and all(':repair:1:' in s for s in author_calls)
+    assert len(pipe.gateway.calls)==6

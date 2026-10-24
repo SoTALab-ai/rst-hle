@@ -138,14 +138,15 @@ class Gateway:
         # A DB outage here must never discard a just-paid model response.
 
     async def _fetch(self, role, config, payload, request_id, base, key):
+        limit = self.settings.max_requests if self.settings.request_cap_enabled else None
         for retry in range(self.settings.max_retries + 1):
             if self.store:
-                ordinal = self.store.reserve_request(self.run_id, self.settings.max_requests)
+                ordinal = self.store.reserve_request(self.run_id, limit)
                 if ordinal is None:
                     raise BudgetExceeded("Persistent request cap reached")
                 self.attempts = ordinal
             else:
-                if self.attempts >= self.settings.max_requests:
+                if limit is not None and self.attempts >= limit:
                     raise BudgetExceeded(f"Request cap reached: {self.attempts}")
                 self.attempts += 1
                 ordinal = self.attempts

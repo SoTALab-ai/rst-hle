@@ -1,0 +1,78 @@
+{
+  "roots": [
+    {
+      "name": "M01MASK",
+      "source_id": "arxiv:1306.3969v4",
+      "category": "Math",
+      "subtopic": "代数",
+      "focus": "Select an already proved non-headline barrier-function, mixed-characteristic-polynomial or real-stability result from this source, with its exact expression and original hypotheses. Prefer a result whose proof needs an essential structural inequality rather than recall of the main Kadison-Singer conclusion. First lock an EXISTING source conclusion, target and exact gold; reconstruct and independently review the entire proof, then mask its hardest necessary inference and equivalent hints. Every harder/easier variant must preserve that locked result. If the excerpt lacks a supported result, report unavailable instead of fabricating one."
+    },
+    {
+      "name": "P01MASK",
+      "source_id": "arxiv:1003.4968v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Select an already established slab or coherent-channel exact absorption relation from the source, with its original amplitudes, phase conventions and domain. Prefer a mechanism deeper than the basic two-by-two determinant criterion. Do not invent an asymmetric extension or claim a new material realization. First lock an EXISTING source conclusion, target and exact gold; reconstruct and independently review the entire proof, then mask its hardest necessary inference and equivalent hints. Every harder/easier variant must preserve that locked result. If the excerpt lacks a supported result, report unavailable instead of fabricating one."
+    },
+    {
+      "name": "M02MASK",
+      "source_id": "arxiv:1603.04246v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Select an already established auxiliary-function, Fourier-eigenfunction or interpolation identity with an explicit exact expression and proof in the supplied source. Avoid asking for the famous E8 density. Do not invent a finite polynomial model absent from the paper. First lock an EXISTING source conclusion, target and exact gold; reconstruct and independently review the entire proof, then mask its hardest necessary inference and equivalent hints. Every harder/easier variant must preserve that locked result. If the excerpt lacks a supported result, report unavailable instead of fabricating one."
+    },
+    {
+      "name": "P02MASK",
+      "source_id": "arxiv:1504.01323v2",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Select an already derived quantitative susceptibility or near-field bound with its exact normalization and original approximation regime. Reconstruct the necessary passivity-to-observable argument from the source; do not substitute a newly invented finite optimization or impose an unsupported physical model. First lock an EXISTING source conclusion, target and exact gold; reconstruct and independently review the entire proof, then mask its hardest necessary inference and equivalent hints. Every harder/easier variant must preserve that locked result. If the excerpt lacks a supported result, report unavailable instead of fabricating one."
+    },
+    {
+      "name": "M03MASK",
+      "source_id": "arxiv:1907.00847v2",
+      "category": "Math",
+      "subtopic": "组合与图论",
+      "focus": "Select an already proved signed-hypercube operator spectral identity or multiplicity result with an explicit exact target. Hide the essential recursive cancellation or structural reduction; do not supply the squared-matrix identity as a hint. Avoid merely restating the Sensitivity Conjecture. First lock an EXISTING source conclusion, target and exact gold; reconstruct and independently review the entire proof, then mask its hardest necessary inference and equivalent hints. Every harder/easier variant must preserve that locked result. If the excerpt lacks a supported result, report unavailable instead of fabricating one."
+    },
+    {
+      "name": "P03MASK",
+      "source_id": "arxiv:1609.03902v3",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Select an already established exact modal normalization, scattering expansion or rescaling invariant from the supplied source. Preserve reciprocity, background and loss assumptions. Hide the essential compatibility or inversion step; do not invent an exactly lossless realization from a least-squares fit. First lock an EXISTING source conclusion, target and exact gold; reconstruct and independently review the entire proof, then mask its hardest necessary inference and equivalent hints. Every harder/easier variant must preserve that locked result. If the excerpt lacks a supported result, report unavailable instead of fabricating one."
+    },
+    {
+      "name": "M04MASK",
+      "source_id": "arxiv:1402.0290v3",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Select an already established explicit energy-transfer identity, rate relation or local cascade mechanism from the source with all original equations and hypotheses. Prefer a compact exact target supported by a full derivation. Do not invent a toy ODE or pose the unsolved Navier-Stokes regularity problem. First lock an EXISTING source conclusion, target and exact gold; reconstruct and independently review the entire proof, then mask its hardest necessary inference and equivalent hints. Every harder/easier variant must preserve that locked result. If the excerpt lacks a supported result, report unavailable instead of fabricating one."
+    },
+    {
+      "name": "P04MASK",
+      "source_id": "arxiv:1108.2493v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Select an already established exact grating scattering or invisibility relation under the source model and its original approximation regime. Prefer a hidden phase or transfer-structure argument, with a compact target and all conventions fixed. Do not extend an approximate result to exact full-wave physics. First lock an EXISTING source conclusion, target and exact gold; reconstruct and independently review the entire proof, then mask its hardest necessary inference and equivalent hints. Every harder/easier variant must preserve that locked result. If the excerpt lacks a supported result, report unavailable instead of fabricating one."
+    },
+    {
+      "name": "M05MASK",
+      "source_id": "arxiv:2311.01189v2",
+      "category": "Math",
+      "subtopic": "分析",
+      "focus": "Select an already established Weyl-function transformation, spectral trace identity or explicit inverse relation from the provided excerpt. Preserve its precise analytic domain and normalization. Prefer coupled inversion and exceptional-point reasoning over recall of the paper headline. First lock an EXISTING source conclusion, target and exact gold; reconstruct and independently review the entire proof, then mask its hardest necessary inference and equivalent hints. Every harder/easier variant must preserve that locked result. If the excerpt lacks a supported result, report unavailable instead of fabricating one."
+    },
+    {
+      "name": "P05MASK",
+      "source_id": "arxiv:1408.0237v1",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "focus": "Select an already established quantitative winding or symmetry constraint on a radiation-zero charge, with the exact source symmetry and polarization conventions. Prefer recovering a nontrivial charge constraint through the source argument rather than asking only whether charge is conserved. Do not invent a perturbed model. First lock an EXISTING source conclusion, target and exact gold; reconstruct and independently review the entire proof, then mask its hardest necessary inference and equivalent hints. Every harder/easier variant must preserve that locked result. If the excerpt lacks a supported result, report unavailable instead of fabricating one."
+    }
+  ],
+  "max_revisions": 2,
+  "root_workers": 5,
+  "visible_cost_limit_usd": null,
+  "resume_request_run_id": "theory10-masked-20261024"
+}

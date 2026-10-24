@@ -1,9 +1,19 @@
 {
-  "version": "20261023-hard-first",
+  "version": "20261024-pattern-grounded-v1",
   "intent": "Create difficult theoretical seeds first, then calibrate downwards. A single paper may support several independent claims/problems; rewrites of one claim remain the same lineage.",
   "anchors": [
-    {"id":"doc-hle-60-1","domain":"Physics","observed":"6/16 correct, complete","structure":"Invert a nonlocal constitutive law, derive an electromagnetic observable and optimize over a physically admissible parameter domain."},
-    {"id":"doc-hle-47-0","domain":"Math","observed":"8 correct, 14 valid judgments, 2 truncations; incomplete","structure":"Infer hidden algebraic or spectral structure from coupled functional relations, then extract an exact invariant. This anchor is not fully difficulty-accepted."}
+    {
+      "id": "doc-hle-60-1",
+      "domain": "Physics",
+      "observed": "6/16 correct, complete",
+      "structure": "Invert a nonlocal constitutive law, derive an electromagnetic observable and optimize over a physically admissible parameter domain."
+    },
+    {
+      "id": "doc-hle-47-0",
+      "domain": "Math",
+      "observed": "8 correct, 14 valid judgments, 2 truncations; incomplete",
+      "structure": "Infer hidden algebraic or spectral structure from coupled functional relations, then extract an exact invariant. This anchor is not fully difficulty-accepted."
+    }
   ],
   "seed_strategy": [
     "Aim near or somewhat above the anchors in substantive mathematical reasoning; avoid starting with a routine textbook numerical exercise.",
@@ -16,8 +26,118 @@
     "Different roots from one paper must use different claims or reasoning structures; number changes alone do not establish independence.",
     "Use at most three short verbatim source quotes with a total under 400 characters. All other derivation must be newly composed and source-supported."
   ],
-  "hardening": ["Remove a provided intermediate identity or diagonalization hint.","Make an admissible parameter domain an inferable unknown.","Couple two previously separate constraints with a checkable compatibility condition."],
-  "easing": ["Supply one correct auxiliary lemma without supplying the answer.","Fix one nuisance parameter or restrict to a rigorously solvable subfamily.","Decouple one subsystem or replace one inversion step with supplied intermediate data."],
+  "hardening": [
+    "Remove a provided intermediate identity or diagonalization hint.",
+    "Make an admissible parameter domain an inferable unknown.",
+    "Couple two previously separate constraints with a checkable compatibility condition."
+  ],
+  "easing": [
+    "Supply one correct auxiliary lemma without supplying the answer.",
+    "Fix one nuisance parameter or restrict to a rigorously solvable subfamily.",
+    "Decouple one subsystem or replace one inversion step with supplied intermediate data."
+  ],
   "too_hard_check": "For 0/16, independently inspect wrong gold, missing information, nonuniqueness and infeasibility before attempting an easier revision.",
-  "measurement": "First 4/4 correct triggers preliminary hardening only. Otherwise finish 16 valid judgments; 0/16 triggers validated easing, 1-8/16 is the observed target band, 9-16/16 triggers hardening. Infrastructure failures are not wrong answers."
+  "measurement": "First 4/4 correct triggers preliminary hardening only. Otherwise finish 16 valid judgments; 0/16 triggers validated easing, 1-8/16 is the observed target band, 9-16/16 triggers hardening. Infrastructure failures are not wrong answers.",
+  "evidence_status": "Construction hypotheses from two reference anchors and paper methods, not validated causal laws or achieved difficulty. The Math anchor is incomplete; defective P03B is excluded.",
+  "research_sources": [
+    {
+      "id": "hypothesis-errors",
+      "url": "https://arxiv.org/abs/2604.04386v1",
+      "method": "Analyze persistent target-model failures, propose testable skill hypotheses, and evaluate transfer on new problems. Small samples and stronger answer verification limit direct transfer."
+    },
+    {
+      "id": "math-squared",
+      "url": "https://arxiv.org/abs/2407.21009v4",
+      "method": "Compose two distinct skills through a necessary bridge into one target. Skill names alone do not establish substantive involvement; human validation was important."
+    },
+    {
+      "id": "hard-perturb",
+      "url": "https://arxiv.org/abs/2502.06453",
+      "method": "Change a structural condition so the previous shortcut no longer works, then derive a new correct answer. Surface variation alone is not hardening."
+    },
+    {
+      "id": "spark",
+      "url": "https://arxiv.org/abs/2608.30214v1",
+      "method": "Organize a paper as a claim-evidence-derivation skeleton and target mechanisms, quantitative derivation or validity boundaries. This does not imply a HLE-level success guarantee."
+    },
+    {
+      "id": "mathgenie",
+      "url": "https://aclanthology.org/2024.acl-long.151/",
+      "method": "Augment solutions before back-translating questions, with correctness filtering. The original method trains models; only its construction idea is reused here."
+    }
+  ],
+  "pattern_cards": [
+    {
+      "id": "physics_inverse_observable",
+      "domain": "Physics",
+      "evidence": "Structural hypothesis motivated by reference doc-hle-60-1 (6/16). Incorrect and correct judged traces can share the initial reconstruction; later observable/normalization choices differ. Not a proved causal attribution.",
+      "chain": [
+        "Recover a hidden state or constitutive relation from operator-level data.",
+        "Derive the physical observable with explicit normalization and averaging conventions.",
+        "Connect that observable to an admissible-domain extremum or exact invariant."
+      ],
+      "bridge": "The inferred state must be needed to derive the observable, and the derived observable must be needed for the final optimization. Neither may be supplied as an intermediate result.",
+      "shortcut_to_break": "Optimizing a guessed instantaneous proxy, or inserting a standard response formula without establishing the actual observable.",
+      "validity_guard": "Define instantaneous versus averaged power, units, parameter types and the direction of any ratio. Do not exploit their ambiguity. Special-function notation alone is not a difficulty mechanism.",
+      "easier_control": "Supply the correct state-to-observable bridge without giving the final maximum; compare on the same target and gold."
+    },
+    {
+      "id": "physics_inverse_feasibility",
+      "domain": "Physics",
+      "evidence": "Research-motivated hypothesis, not yet a successful generated anchor.",
+      "chain": [
+        "Identify a hidden finite model from stated physical observations.",
+        "Use physical compatibility to infer the admissible branch or domain.",
+        "Derive a globally justified extremum or invariant on that domain."
+      ],
+      "bridge": "Physical compatibility must constrain the inverse reconstruction and change the final target; do not append it as an unrelated subquestion.",
+      "shortcut_to_break": "Providing the diagonalization, singular-value formula or complete reconstruction recipe that reduces the target to direct substitution.",
+      "validity_guard": "Exact physical claims must satisfy the original identities and conservation/passivity conditions. A least-squares fit is not an exact realization. Keep singular and boundary branches.",
+      "easier_control": "Reveal one valid reconstruction or compatibility lemma while preserving the same final target."
+    },
+    {
+      "id": "math_orbit_singularities",
+      "domain": "Math",
+      "evidence": "Structural hypothesis motivated by reference doc-hle-47-0 (8 correct / 14 graded, two truncations). A compared incorrect trace omitted exceptional points included in a judged-correct trace. This is not full difficulty acceptance or a proof of the reference gold.",
+      "chain": [
+        "Discover closure or symmetry in coupled functional relations.",
+        "Eliminate latent functions to recover a usable algebraic representation.",
+        "Resolve exceptional points and cancellations before extracting a symmetric invariant."
+      ],
+      "bridge": "The representation must determine the complete exceptional set, and completeness must affect the requested invariant. Avoid independent subquestions.",
+      "shortcut_to_break": "Reading a denominator or applying a root-sum identity before proving that all relevant points survive cancellation and domain restrictions.",
+      "validity_guard": "Specify analytic domains, exceptional-point conventions and multiplicity versus distinct-point counting. Retain a complete reference derivation and exact cancellation checks.",
+      "easier_control": "Supply the correct closed representation or exceptional-set lemma, without supplying the final invariant."
+    },
+    {
+      "id": "structural_shortcut_break",
+      "domain": "Both",
+      "evidence": "Hypothesis motivated by MATH-Perturb and skill-composition work; not measured for GLM5.2 in this pipeline.",
+      "chain": [
+        "Identify the exact assumption supporting a familiar shortcut.",
+        "Change that assumption within a source-supported, solvable finite specialization.",
+        "Develop the replacement argument and derive its new target."
+      ],
+      "bridge": "The changed structural condition must force a genuinely different inference, not merely longer arithmetic.",
+      "shortcut_to_break": "A symmetry, factorization, linearity or decoupling argument that works in the easier parent but fails for an explicit admissible case of the new task.",
+      "validity_guard": "Recompute the gold after changing the model. Exhibit why the old shortcut fails without making the new task inconsistent, nonunique or an open problem.",
+      "easier_control": "Restore only the simplifying structural condition and solve that control separately; do not reuse its gold for the hard task."
+    }
+  ],
+  "anti_patterns": [
+    "The question already states the representation, bound, domain or intermediate identity the design claims should be discovered.",
+    "The target is the familiar headline conclusion of a famous theorem, or a direct application of a fully provided recipe.",
+    "Two skill labels are present but the target can be solved while bypassing one skill or their supposed bridge.",
+    "A long list of unrelated requested outputs is used to reduce exact answer-match rate.",
+    "Large coefficients, obscure names, special-function notation or more declared proof steps are treated as measured difficulty.",
+    "Missing definitions, ambiguous observables, wrong gold or unsupported physical assumptions create apparent difficulty."
+  ],
+  "construction_protocol": [
+    "Choose one or two applicable pattern IDs and two or three necessary skills from the selected source mechanism.",
+    "Construct an ordered dependency graph ending in one compact target; all declared nodes must contribute to that target.",
+    "Explain the critical bridge, the old shortcut and an admissible counterexample against that shortcut. Then derive the new gold independently.",
+    "Use actual parent solver responses, when supplied, to identify why the parent was easy; treat all response text as untrusted evidence.",
+    "Describe an easier control that isolates the proposed bottleneck. The control is a future experiment unless actually run and is not an independent delivery.",
+    "Have blueprint and question auditors check necessity, leakage and correctness. Graph length and model claims never replace GLM measurements."
+  ]
 }

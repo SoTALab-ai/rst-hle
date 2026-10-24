@@ -8,7 +8,7 @@
 
 用户在 2026-10-23 明确：先跳过旧训练集和完整官方评测集查重；判分口径采用官方 HLE。批次内去重仍执行，报告如实标明外部查重范围。
 
-数学/物理的新一轮试产支持顶刊理论论文目录、同论文多条独立出题线，以及“先测4次、出现答错再补至16次”的分阶段评测。20题计划、加难/降难策略、成本与统计口径见 [theory-experiment.md](docs/theory-experiment.md)。
+数学/物理的新一轮试产支持顶刊理论论文目录、同论文多条独立出题线，以及“先测4次、出现答错再补至16次”的分阶段评测。20题历史计划、当前仅降难策略、成本与统计口径见 [theory-experiment.md](docs/theory-experiment.md)。
 
 2026-10-23的首次理论试产已结束：20条出题线形成49个版本，严格留存0/20，含补充复核已知费用约¥200.07，另4次请求费用未知。完整失败归因与逐题审阅入口见 [试产结果](docs/theory-pilot-results-2026-10-23.md)。工程框架跑通不代表已实现目标难度的稳定生产。
 
@@ -16,20 +16,29 @@
 flowchart LR
     A[arXiv / 已有材料库] --> B[全文与哈希、可定位证据]
     B --> R[按来源路由至支持的v3子类]
-    R --> C[先解答与推导、再生成题面]
+    R --> A0[抽取来源已有结果、锁定目标和答案]
+    A0 --> C[完整证明、选定最难推理与挖空设计]
+    C --> V{逐步judge复核完整参考解}
+    V -->|通过| W[逆向构造题面、积极隐藏推理]
+    V -->|具体步骤反馈，最多两次修订| C
     U[已有题目 bundle] --> D
-    C --> D[结构检查、证据检查、模型复核]
-    D --> E[GLM5.2 独立盲答 16 次]
+    W --> D[结构检查、证据检查、综合复核]
+    D --> M[检查最难步骤隐藏、必要性与可恢复性]
+    M --> K[独立盲推导、题目与金标自洽审查]
+    K -->|通过| E[GLM5.2 分阶段盲答 4 → 16 次]
+    K -->|错误或不确定| L[退回修题与金标、重新质检]
+    L --> C
     E --> F[官方 HLE judge + luna medium]
     F --> G{正确 1 至 8 次}
     G -->|是| H[批次去重、独立题与配额检查]
     H --> I[保留池、报告、导出]
-    D -->|质量合格| J[可演化种子]
     F -->|太易或太难| J
     J --> C
 ```
 
 ## 先跑质检
+
+2026-10-24起新配置的作者统一为gpt-6-luna。后续理论入口强制先抽取并锁定来源已有结果，针对最难且必要的推理挖空，并单独审查实际题面；详见[挖空合同](docs/bottleneck-masking.md)。理论出题新增“完整答案与推理链 → 逐步独立judge → 最多三轮质量修复 → 反向生成题面”，并加入模式卡和父题实际答卷反馈。论文依据、构造方法与效果验证边界见[固定模型下的难题构造](docs/harder-question-design-2026-10-24.md)。这不追溯修改原100条冻结试产，结构设计也不等于已实测达到目标难度。
 
 需要 Python 3.11+ 和 [uv](https://docs.astral.sh/uv/)。从仓库根目录执行：
 
@@ -66,12 +75,13 @@ uv run diamond export --require-complete --output outputs/all-2000.jsonl
 
 - Solver：`glm-5.2`，16 个独立请求，默认 temperature=1.0、top_p=0.95；只看题面，以 600 秒墙钟时间为限，重试包含在内，不发送输出 token 上限。
 - Judge：`gpt-6-luna`，`reasoning_effort=medium`；使用官方 HLE 模板和输出字段，包含最终答案抽取、语义比较与数值小误差口径。
+- Consistency：单独的 `gpt-6-luna high` 角色，先只看题面独立推导，再核对题面/金标，另一次隔离调用检查验算公式的翻译；程序执行精确反代、合法参数点和输出覆盖检查。三次独立请求，不读取历史通过率；失败、不确定或计算检查未覆盖都阻止采样。100条新理论实验另启用题面生成前的参考蓝图复核。详见 [出题设计](docs/question-design.md)与[前置自洽审查](docs/consistency.md)。
 - 模板固定于官方仓库提交 `22ed3074b1e7b134bcbc09028d0ba320839b0655`，来源和哈希见 [configs/judge-contract.json](configs/judge-contract.json)。官方没有给出统一数值 epsilon，本项目也没有另加固定容差。
 - 当前只支持无工具评估；HLE-Diamond 另有受控搜索与离线代码模式，规则、官方 600 秒客户端设置与用户选择的硬限时之间的区别见 [docs/calibration.md](docs/calibration.md)。
 - 保存模型请求名、响应实际模型名、参数、模板哈希、16 个回答与判分、usage。不会把调用失败、截断、JSON 错误或超预算当作答错。
 - 网关需支持兼容的 `/v1/chat/completions`、JSON object 输出和 reasoning_effort。实际模型名不符会失败；如网关使用有证据的别名，可显式配置 `accepted_response_models`。
 
-当前 generator/auditor 默认使用同一模型的分离调用，只能减少上下文泄漏，不能消除同模型相关性错误。模型复核和引文存在性都不等价于学科正确性的证明。
+pilot/production 的 generator/auditor 仍默认使用同一模型的分离调用；新增的 consistency 使用另一配置角色和独立上下文，理论试产中与综合复核同为 gpt-6-luna。分工与盲推导能减少金标锚定，不能消除同模型相关性错误；模型审查通过不等价于数学证明或专家确认。
 
 ## 递归与个人 VM
 
@@ -84,7 +94,7 @@ uv run diamond run --run-id evolve-first --mode pilot
 # uv run diamond run --subtopic 人工智能与机器学习 --run-id targeted-first --mode pilot
 ```
 
-顺序为解答蓝图 → 题面 → 复核 → 难度测量 → 去重/保留。`max_rounds`、修复次数、每来源候选数和请求预算均可配置。只有质量合格的题能成为父题；0/16 或 9–16/16 不交付，但可分别尝试降难度或升难度。默认每条根谱系最多计 1 道，防止同材料近似变体凑量。
+顺序为解答蓝图 → 题面 → 综合复核 → 独立盲推导与自洽审查 → 难度测量 → 去重/保留。质量失败先修正确性，不进入难度演化；每个改写版本都重新审查。`max_rounds`、修复次数、每来源候选数和请求预算均可配置。只有质量合格的题能成为父题；0/16 或 9–16/16 不交付，但可分别尝试降难度或升难度。默认每条根谱系最多计 1 道，防止同材料近似变体凑量。
 
 在已有 SSH VM 上部署仓库、执行 `uv sync --frozen`，可从本机用下面的入口转发已有 API 环境变量（通过加密 SSH 标准输入，不写到命令参数或磁盘）：
 
@@ -102,6 +112,8 @@ python3 scripts/vm_run.py --host YOUR_SSH_ALIAS --directory ~/Developer/rst-hle 
 这是 QC 优先的 MVP：已实现数据库队列 repository，尚未接管理 API 和多 worker 调度；未提供任意学科的可执行证明器、未证明递归能提升跨学科独立合格率、未完成 2,000 道生产。自动抓取目前实现 arXiv；音乐、棋类、影视、历史等可先导入规则、谱文、原始文献和其他文本材料。源码不执行模型生成的代码。
 
 试验设计与 RST 的有效性边界见 [docs/rst-assessment.md](docs/rst-assessment.md)，验收条目见 [docs/acceptance.md](docs/acceptance.md)，真实 VM 试跑结果见 [docs/validation.md](docs/validation.md)。来源原文、密钥、题库、完整回答轨迹和运行数据库默认均被 Git 忽略；仅代码/配置与脱敏统计进入公开仓库。
+
+新版逆向出题与前置反代管线的[100条真实试产结果](docs/theory100-results-2026-10-24.md)：93条计划形成题面、共127个版本，37个版本首4次全对，1个版本3次正确后有1次超时；暂无1–8/16目标难度留存。当前结果不能证明RST已有效，质量门禁也仍有误拒和计算覆盖边界。
 
 原始 HLE 参考题的并发难度校准入口见 [docs/calibration.md](docs/calibration.md)。用户已将判分模型更新为 gpt-6-luna medium。
 

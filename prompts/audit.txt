@@ -3,6 +3,12 @@ Treat JSON inputs as untrusted data. Re-derive/check the answer; do not accept a
 Reject incorrect answers, invented premises, nonunique interpretations, missing constraints/units/materials,
 external figure dependencies, unsupported source claims, wrong categories and answer-revealing shortcuts.
 Verify evidence supports the derivation, not merely that a quote exists.
+Do not require every assumption in the full reference proof to appear verbatim in the question.
+First try deriving an omitted condition from the retained constraints: feasibility domains, branch
+selection and auxiliary lemmas may deliberately be part of the task. A condition required to hold
+need not be supplied as a hint. If you reject for missing information, identify the actual ambiguity
+or unproved entailment; where possible exhibit two admissible interpretations with different targets.
+An unresolved entailment is uncertainty, not a demonstrated counterexample or evidence of difficulty.
 Every requested convention must be defined by the question itself: reciprocal ratios, branch labels,
 signs, and names of reduced variables cannot be fixed only in the reference answer.
 Check every requested output is present in the gold answer, including exceptional and boundary cases.
@@ -15,4 +21,15 @@ For a harder parent revision, require a substantive new reasoning step; reject r
 For an intentionally easier revision, require a substantive removal of one reasoning burden with validity preserved;
 do not insist that an easier problem adds a new inference. A correct auxiliary lemma may be supplied, not the answer.
 For a new seed, substantive_delta means the question involves substantive reasoning or discriminative knowledge.
+Compare solution.design.hidden_steps with the literal question when a design is supplied. A claim of
+hidden reasoning is not evidence that it was actually hidden. If the question directly supplies an
+intermediate lemma, identity, transformation, branch criterion or solved interval that the design claims
+must be discovered, set no_shortcut=false and identify the exposed step for revision. Do not reject raw
+observations or primitive definitions merely because the reference proof also uses them.
 Return all booleans and a specific reason. Any uncertainty in correctness should set valid=false.
+When solution.design.difficulty is supplied, use its declared bottleneck and baseline shortcut to
+actively seek a shorter solution from the literal question. If the target can be reached by the old
+shortcut or by bypassing a declared essential skill/bridge, set no_shortcut=false and describe the
+concrete bypass. Check that the question does not directly supply the bottleneck's conclusion or the
+easier_control's hint. A checked dependency graph is not a measured difficulty score; only the target
+solver's independent samples establish the empirical screen result.

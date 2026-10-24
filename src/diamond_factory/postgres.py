@@ -174,7 +174,8 @@ class PostgresStore:
 
     def reserve_request(self, run_id, limit):
         row = self.db.execute("""UPDATE diamond.runs SET http_attempts=http_attempts+1
-            WHERE id=%s AND http_attempts < %s RETURNING http_attempts""", (run_id, limit)).fetchone()
+            WHERE id=%s AND (%s::bigint IS NULL OR http_attempts < %s) RETURNING http_attempts""",
+                              (run_id, limit, limit)).fetchone()
         return row[0] if row else None
 
     def save_quotas(self, quotas):

@@ -1,0 +1,53 @@
+require_solution_design = true
+preverify_blueprint = true
+require_stepwise_blueprint_review = true
+require_known_result = true
+require_bottleneck_mask = true
+require_difficulty_design = true
+samples = 16
+correct_min = 1
+correct_max = 8
+early_screen_samples = 4
+difficulty_profile_path = "configs/difficulty-archetypes.json"
+max_requests = 1500
+max_retries = 1
+max_rounds = 3
+attempts_per_round = 1
+max_repairs = 2
+concurrency = 16
+solver_concurrency = 14
+request_timeout = 600.0
+request_deadline_seconds = 600.0
+max_source_chars = 65000
+evaluation_mode = "no_tools"
+source_max_candidates = 4
+max_per_root = 1
+dedup_corpora = []
+external_dedup_required = false
+operators = ["mask_hardest_required_bridge", "hide_more_recoverable_intermediates"]
+
+[generator]
+model = "gpt-6-luna"
+accepted_response_models = ["gpt-6-luna", "gpt-6-luna-2026-09-22"]
+reasoning_effort = "high"
+
+[auditor]
+model = "gpt-6-luna"
+accepted_response_models = ["gpt-6-luna", "gpt-6-luna-2026-09-22"]
+reasoning_effort = "high"
+
+[consistency]
+model = "gpt-6-luna"
+accepted_response_models = ["gpt-6-luna", "gpt-6-luna-2026-09-22"]
+reasoning_effort = "high"
+
+[solver]
+model = "glm-5.2"
+accepted_response_models = ["glm-5.2", "z-ai/glm-5.2"]
+temperature = 1.0
+top_p = 0.95
+
+[judge]
+model = "gpt-6-luna"
+accepted_response_models = ["gpt-6-luna", "gpt-6-luna-2026-09-22"]
+reasoning_effort = "medium"

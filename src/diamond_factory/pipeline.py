@@ -3,6 +3,18 @@ from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 
+from pydantic import ValidationError
+
+from .consistency import QualityRejected, consistency_input, has_valid_consistency, verifier_fingerprint
+from .difficulty import (
+    blueprint_stamp,
+    bottleneck_input,
+    bottleneck_mask_errors,
+    difficulty_design_errors,
+    known_result_errors,
+    parent_solver_feedback,
+    profile_for_category,
+)
 from .evaluation import judge_answer
 from .gates import (
     can_count,
@@ -13,12 +25,36 @@ from .gates import (
     static_errors,
 )
 from .llm import BudgetExceeded, Gateway, ModelResponseError
-from .models import Audit, Candidate, DedupVerdict, Question, Record, Solution, Trial, digest
+from .models import (
+    Audit,
+    BlueprintAudit,
+    BottleneckAssessment,
+    BottleneckReview,
+    Candidate,
+    CertificateAudit,
+    ConsistencyAssessment,
+    ConsistencyAudit,
+    DedupVerdict,
+    IndependentSolution,
+    Question,
+    Record,
+    ResultSelection,
+    Solution,
+    StepwiseBlueprintAudit,
+    SubstitutionReport,
+    Trial,
+    digest,
+)
 from .routing import read_routes
 from .runtime import gather_cancel_on_error
+from .substitution import verify_substitutions
 
 
 class SampleIncomplete(RuntimeError):
+    pass
+
+
+class AuthoringRejected(RuntimeError):
     pass
 
 
@@ -73,7 +109,221 @@ class Pipeline:
         return digest({"run":self.run_id,"source":source.id,"parent":parent.id if parent else None,
                        "generation":generation,"attempt":attempt,"target":target,"brief":brief})[:24]
 
+    async def consistency_call(self, prompt, salt, schema):
+        request_prompt = prompt
+        for repair in range(self.settings.consistency_schema_repairs + 1):
+            attempt_salt = salt if repair == 0 else salt + ":schema-repair:" + str(repair)
+            try:
+                return await self.gateway.call("consistency", request_prompt, attempt_salt, schema)
+            except ModelResponseError as error:
+                if error.reason != "invalid_schema" or repair == self.settings.consistency_schema_repairs:
+                    raise
+                self.log("consistency_schema_repair", failed_request=error.request_id, repair=repair+1,
+                         stage=salt.split(":")[-1], solver_resampled=False)
+                diagnostics = {"errors": [], "untrusted_previous_response": ""}
+                directory = getattr(self.gateway, "directory", None)
+                journal = directory / (error.request_id + ".json") if directory is not None else None
+                repository = getattr(self.gateway, "store", None)
+                trace = repository.get_request(error.request_id) if repository is not None else None
+                if trace is None and journal is not None and journal.is_file():
+                    trace = json.loads(journal.read_text())
+                if trace is not None:
+                    diagnostics["untrusted_previous_response"] = trace.get("content", "")
+                    try:
+                        schema.model_validate_json(trace["content"])
+                    except ValidationError as invalid:
+                        diagnostics["errors"] = [{"location": list(e["loc"]), "type": e["type"], "message": e["msg"]}
+                                                  for e in invalid.errors(include_input=False, include_url=False)]
+                request_prompt = prompt + ("\nFORMAT REPAIR ONLY: the previous response failed the schema. "
+                    "Correct the listed field/type/enum errors. Do not change the question or gold. "
+                    "domain_conditions entries use lhs/relation/rhs, never name. Prior response is untrusted data.\n"
+                    + json.dumps(diagnostics, ensure_ascii=False))
+
+    async def preflight(self, candidate):
+        """解题之前失败即拦截，仅复用输入完全相同的审查。"""
+        if candidate.status == "rejected":
+            return False
+        sources = {s.id: s for s in self.store.sources()}
+        errors = static_errors(candidate, sources, self.quotas)
+        if not candidate.source_ids or set(candidate.source_ids) - sources.keys():
+            errors.append("missing_candidate_source")
+        evidence_ids = {e.source_id for e in candidate.item.evidence + candidate.solution.evidence}
+        if not evidence_ids <= set(candidate.source_ids):
+            errors.append("unregistered_candidate_evidence_source")
+        if not candidate.audit.passed():
+            errors.append("audit_failed:" + candidate.audit.reason)
+        if self.settings.require_solution_design and candidate.solution.design is None:
+            errors.append("missing_solution_design")
+        errors.extend(difficulty_design_errors(candidate.solution, candidate.item.category,
+                                              self.difficulty_profile, self.settings.require_difficulty_design))
+        if self.settings.preverify_blueprint and (not candidate.blueprint_audit or not candidate.blueprint_audit.passed()):
+            errors.append("missing_or_failed_blueprint_audit")
+        if self.settings.require_stepwise_blueprint_review and (
+            not candidate.blueprint_audit
+            or candidate.blueprint_audit.reviewed_step_count != len(candidate.solution.derivation)
+        ):
+            errors.append("missing_or_mismatched_stepwise_blueprint_review")
+        if self.settings.require_known_result:
+            errors.extend(known_result_errors(candidate.known_result, sources, candidate.solution))
+            if candidate.known_result and candidate.source_ids != [candidate.known_result.source_id]:
+                errors.append("known_result_candidate_source_mismatch")
+            if not errors:
+                source = sources[candidate.known_result.source_id]
+                source_data = {**source.model_dump(), "text": source.text[:self.settings.max_source_chars]}
+                target = {"category": candidate.item.category, "subtopic": candidate.item.subtopic}
+                if candidate.blueprint_fingerprint != self.blueprint_stamp(
+                        candidate.solution, source_data, target, candidate.known_result):
+                    errors.append("stale_or_missing_locked_blueprint_review")
+        if self.settings.require_bottleneck_mask:
+            errors.extend(bottleneck_mask_errors(candidate.solution))
+        if errors:
+            candidate.status, candidate.reasons = "rejected", errors
+            self.store.save(candidate)
+            return False
+        if self.settings.require_bottleneck_mask and not await self.review_bottleneck(candidate, sources):
+            return False
+        input_hash = consistency_input(candidate, sources)
+        hashes = {name: digest(self.prompts[name]) for name in ("consistency_solve", "consistency_review")}
+        model_hash = digest(self.settings.consistency.model_dump())
+        assessment = candidate.consistency
+        reusable = (assessment and assessment.input_sha256 == input_hash and assessment.prompt_hashes == hashes
+                    and assessment.model_config_sha256 == model_hash)
+        certificate_hash = digest(self.prompts["consistency_certificate"])
+        if (reusable and assessment.certificate_audit and assessment.certificate_prompt_sha256 == certificate_hash
+                and assessment.verifier_sha256 == verifier_fingerprint()):
+            return assessment.passed()
+        if reusable:
+            independent, sid, smodel = (assessment.independent_solution, assessment.independent_request,
+                                        assessment.independent_actual_model)
+            review, rid, rmodel = assessment.audit, assessment.review_request, assessment.review_actual_model
+        else:
+            independent, sid, smodel = await self.consistency_call(
+                self.prompts["consistency_solve"] + "\n" +
+                json.dumps({"question": candidate.item.question}, ensure_ascii=False),
+                f"{candidate.id}:consistency:{input_hash}:solve", IndependentSolution)
+            review, rid, rmodel = await self.consistency_call(
+                self.prompts["consistency_review"] + "\n" + json.dumps({
+                    "item": candidate.item.model_dump(), "solution": candidate.solution.model_dump(),
+                    "independent_solution": independent.model_dump(),
+                    "sources": [{**sources[s].model_dump(), "text": sources[s].text[:self.settings.max_source_chars]}
+                                for s in candidate.source_ids]}, ensure_ascii=False),
+                f"{candidate.id}:consistency:{input_hash}:review", ConsistencyAudit)
+        certificate, cid, cmodel = await self.consistency_call(
+            self.prompts["consistency_certificate"] + "\n" + json.dumps({
+                "question": candidate.item.question, "gold_answer": candidate.item.answer,
+                "required_outputs": candidate.item.required_outputs, "proposed_checks":
+                [case.model_dump() for case in review.substitution_checks]}, ensure_ascii=False),
+            f"{candidate.id}:consistency:{input_hash}:certificate", CertificateAudit)
+        executable_review = review.model_copy(update={"substitution_checks": certificate.checks})
+        substitution = (verify_substitutions(executable_review, candidate.item)
+                        if certificate.faithful_translation else SubstitutionReport(
+                            verdict="unsupported", results=[], uncovered_outputs=list(candidate.item.required_outputs),
+                            reason="Formula translation was not verified; no scientific counterexample is established."))
+        candidate.consistency = ConsistencyAssessment(
+            input_sha256=input_hash, prompt_hashes=hashes, model_config_sha256=model_hash,
+            independent_solution=independent, audit=review, independent_request=sid, review_request=rid,
+            independent_actual_model=smodel, review_actual_model=rmodel, substitution=substitution)
+        candidate.consistency.certificate_audit = certificate
+        candidate.consistency.certificate_prompt_sha256 = certificate_hash
+        candidate.consistency.certificate_request = cid
+        candidate.consistency.certificate_actual_model = cmodel
+        candidate.consistency.verifier_sha256 = verifier_fingerprint()
+        passed = candidate.consistency.passed()
+        if not passed:
+            candidate.status = "rejected"
+            candidate.reasons = ["consistency_failed:" + reason for reason in review.failures()]
+            if not substitution.passed():
+                candidate.reasons.append("substitution_" + substitution.verdict + ":" + substitution.reason)
+            if not certificate.faithful_translation:
+                candidate.reasons.append("certificate_translation_unverified:" + certificate.reason)
+        self.store.save(candidate)
+        self.log("preflight_consistency", candidate=candidate.id, passed=passed,
+                 independent_request=sid, review_request=rid, actual_model=rmodel,
+                 certificate_request=cid, certificate_actual_model=cmodel,
+                 substitution_verdict=substitution.verdict, uncovered_outputs=substitution.uncovered_outputs,
+                 checks={name: getattr(review, name).verdict for name in
+                         ("premises", "definitions", "parameter_domain", "reference_answer", "physical_regime")})
+        return passed
+
+    def blueprint_stamp(self, solution, source_data, target, known_result):
+        return blueprint_stamp(solution, source_data, target, known_result,
+                               self.prompts["blueprint_audit"], self.settings.consistency.model_dump())
+
+    async def select_known_result(self, source, source_data, target, identity, brief):
+        """只从来源抽取已有结果；完整证明复核前不把抽取当作真值。"""
+        data = {"source": source_data, "target": target, "research_brief": brief}
+        for repair in range(self.settings.max_repairs + 1):
+            selection, rid, model = await self.gateway.call("generator", self.prompts["known_result"] + "\n" +
+                json.dumps(data, ensure_ascii=False), f"{identity}:known-result:{repair}", ResultSelection)
+            if selection.outcome == "unavailable":
+                raise AuthoringRejected("known_result_unavailable:" + selection.reason)
+            errors = known_result_errors(selection.result, {source.id: source})
+            self.log("known_result_selection", candidate=identity, repair=repair, request_id=rid,
+                     actual_model=model, result_sha256=digest(selection.result.model_dump()), errors=errors)
+            if not errors:
+                return selection.result
+            data["feedback"] = {"previous": selection.model_dump(), "errors": errors}
+        raise AuthoringRejected("known_result_selection_failed:" + ";".join(errors))
+
+    async def review_bottleneck(self, candidate, sources):
+        """核对真实题面的挖空，不以作者声明或旧通过标志代替审查。"""
+        input_hash = bottleneck_input(candidate, sources)
+        prompt_hash = digest(self.prompts["bottleneck_audit"])
+        model_hash = digest(self.settings.consistency.model_dump())
+        assessment = candidate.bottleneck_assessment
+        if not (assessment and assessment.input_sha256 == input_hash
+                and assessment.prompt_sha256 == prompt_hash and assessment.model_config_sha256 == model_hash):
+            review, rid, model = await self.consistency_call(self.prompts["bottleneck_audit"] + "\n" + json.dumps({
+                "item": candidate.item.model_dump(), "solution": candidate.solution.model_dump(),
+                "known_result": candidate.known_result.model_dump() if candidate.known_result else None},
+                ensure_ascii=False), f"{candidate.id}:bottleneck:{input_hash}", BottleneckReview)
+            mask = candidate.solution.design.difficulty.mask
+            if review.step_id != mask.step_id:
+                raise ModelResponseError("consistency", rid, "invalid_bottleneck_step_mapping")
+            assessment = BottleneckAssessment(input_sha256=input_hash, prompt_sha256=prompt_hash,
+                model_config_sha256=model_hash, review=review, request_id=rid, actual_model=model)
+            candidate.bottleneck_assessment = assessment
+            self.store.save(candidate)
+        if assessment.review.step_id != candidate.solution.design.difficulty.mask.step_id:
+            raise ModelResponseError("consistency", assessment.request_id, "invalid_bottleneck_step_mapping")
+        passed = assessment.review.passed()
+        if not passed:
+            candidate.status = "rejected"
+            candidate.reasons = ["bottleneck_mask_failed:" + name + ":" + getattr(assessment.review, name).reasoning
+                                 for name in assessment.review.check_names()
+                                 if getattr(assessment.review, name).verdict != "pass"]
+            self.store.save(candidate)
+        self.log("bottleneck_mask_review", candidate=candidate.id, passed=passed,
+                 step_id=assessment.review.step_id, request_id=assessment.request_id,
+                 actual_model=assessment.actual_model)
+        return passed
+
+    async def review_blueprint(self, solution, source_data, target, salt, known_result=None):
+        """审完整证明；步骤映射不合法只修审查格式，不重购作者答案。"""
+        schema = StepwiseBlueprintAudit if self.settings.require_stepwise_blueprint_review else BlueprintAudit
+        prompt = self.prompts["blueprint_audit"] + "\n" + json.dumps({
+            "solution": solution.model_dump(), "source": source_data, "target": target,
+            "known_result": known_result.model_dump() if known_result else None,
+            "step_indexing": "One-based indices into solution.derivation; inspect every entry.",
+            "expected_step_count": len(solution.derivation)}, ensure_ascii=False)
+        for attempt in range(2):
+            review, rid, model = await self.consistency_call(
+                prompt, salt if attempt == 0 else salt + ":step-map-repair", schema)
+            if (not self.settings.require_stepwise_blueprint_review
+                    or review.reviewed_step_count == len(solution.derivation)):
+                return review, rid, model
+            self.log("blueprint_step_map_repair", request_id=rid, author_resampled=False,
+                     expected_steps=len(solution.derivation), reported_steps=review.reviewed_step_count)
+            prompt += ("\nFORMAT REPAIR ONLY: reviewed_step_count must equal " + str(len(solution.derivation))
+                       + ". Map every issue to the actual proof entries; do not change the proof or gold.")
+        raise ModelResponseError("consistency", rid, "invalid_blueprint_step_mapping")
+
     async def generate(self, source, parent, target, generation, attempt, brief=None):
+        if (parent and self.settings.difficulty_policy == "ease_only" and (
+                len(parent.trials) != self.settings.samples or correct_count(parent.trials, self.settings.samples) != 0)):
+            raise QualityRejected("Only a complete zero-correct parent may enter easing; no hardening is allowed")
+        if parent and not await self.preflight(parent):
+            raise QualityRejected("Invalid parent: repair correctness before difficulty evolution")
         feedback = "Increase substantive difficulty" if parent else "Create a solvable evidence-grounded seed"
         if parent and parent.trials:
             preliminary = (self.settings.early_screen_samples == 4 and len(parent.trials) == 4
@@ -89,28 +339,93 @@ class Pipeline:
         existing = next((c for c in self.store.candidates() if c.id == identity), None)
         if existing and existing.authoring_complete:
             return existing
+        if existing and existing.status == "quality_seed":
+            # 已保存完整题面及证明时，先接着做未完成的质检，不重新购买作者输出。
+            if await self.preflight(existing):
+                existing.authoring_complete = True
+                self.store.save(existing)
+                return existing
+            existing.authoring_repairs_completed += 1
+            existing.authoring_complete = existing.authoring_repairs_completed > self.settings.max_repairs
+            self.store.save(existing)
+            if existing.authoring_complete:
+                return existing
         source_data = source.model_dump()
         source_data["text"] = source.text[:self.settings.max_source_chars]
         data = {"source": source_data, "parent": parent.item.model_dump() if parent else None,
                 "parent_solution": parent.solution.model_dump() if parent else None,
                 "target": target, "generation": generation, "operator": operator,
-                "feedback": feedback}
+                "feedback": feedback, "require_difficulty_design": self.settings.require_difficulty_design}
         if self.difficulty_profile:
-            data["difficulty_profile"] = self.difficulty_profile
+            data["difficulty_profile"] = profile_for_category(self.difficulty_profile, target["category"])
+        solver_feedback = parent_solver_feedback(parent)
+        if solver_feedback:
+            data["parent_solver_feedback"] = solver_feedback
         if brief:
             data["research_brief"] = brief
+        known_result = None
+        if self.settings.require_known_result:
+            known_result = (existing.known_result if existing else parent.known_result if parent else None)
+            if known_result is None:
+                known_result = await self.select_known_result(source, source_data, target, identity, brief)
+            data["known_result"] = known_result.model_dump()
+            data["require_bottleneck_mask"] = self.settings.require_bottleneck_mask
         first_repair = existing.authoring_repairs_completed if existing else 0
         if existing:
             data["feedback"] = {"original": feedback,"errors":existing.reasons,
-                                "previous":existing.item.model_dump()}
+                                "stage": "question_or_consistency", "previous":existing.item.model_dump(),
+                                "previous_solution": existing.solution.model_dump(),
+                                "bottleneck_assessment": (existing.bottleneck_assessment.model_dump()
+                                                          if existing.bottleneck_assessment else None),
+                                "consistency_assessment": (existing.consistency.model_dump()
+                                                           if existing.consistency else None)}
         result = None
         for repair in range(first_repair,self.settings.max_repairs + 1):
             salt = f"{identity}:repair:{repair}"
             plan, _, _ = await self.gateway.call("generator", self.prompts["solution"] + "\n" +
                                                 json.dumps(data, ensure_ascii=False), salt + ":solution", Solution)
-            item, _, _ = await self.gateway.call("generator", self.prompts["align"] + "\n" +
+            blueprint, bid, bmodel = None, "", ""
+            blueprint_errors = []
+            if self.settings.require_solution_design and plan.design is None:
+                blueprint_errors.append("missing_solution_design")
+            blueprint_errors.extend(difficulty_design_errors(plan, target["category"], self.difficulty_profile,
+                                                             self.settings.require_difficulty_design))
+            if self.settings.require_known_result:
+                blueprint_errors.extend(known_result_errors(known_result, {source.id: source}, plan))
+            if self.settings.require_bottleneck_mask:
+                blueprint_errors.extend(bottleneck_mask_errors(plan))
+            if self.settings.preverify_blueprint:
+                blueprint, bid, bmodel = await self.review_blueprint(plan, source_data, target,
+                                                                    salt + ":blueprint-audit", known_result)
+                self.log("blueprint_review", candidate=identity, repair=repair, request_id=bid,
+                         actual_model=bmodel, solution_sha256=digest(plan.model_dump()),
+                         passed=blueprint.passed(), reviewed_step_count=blueprint.reviewed_step_count,
+                         issues=[issue.model_dump() for issue in blueprint.issues])
+                if not blueprint.passed():
+                    blueprint_errors.append("blueprint_failed:" + blueprint.reason)
+            if blueprint_errors:
+                self.log("blueprint_repair_feedback", candidate=identity, repair=repair, reasons=blueprint_errors)
+                data["feedback"] = {"original": feedback, "stage": "reference_proof",
+                                    "errors": blueprint_errors, "previous": plan.model_dump(),
+                                    "blueprint_review": blueprint.model_dump() if blueprint else None,
+                                    "repair_instruction": "Repair the specified claims and every dependent step. "
+                                    "Return the complete corrected proof and gold; preserve independently valid steps. "
+                                    "Do not change the locked result, target or original premises. If it is wrong, "
+                                    "identify the contradiction; never silently replace it. "
+                                    "Do not write a question before the proof is approved."}
+                if blueprint and any(issue.part == "known_result" for issue in blueprint.issues):
+                    raise AuthoringRejected("locked_known_result_rejected:" + blueprint.reason)
+                if repair == self.settings.max_repairs:
+                    raise AuthoringRejected("; ".join(blueprint_errors))
+                continue
+            item, align_request, _ = await self.gateway.call("generator", self.prompts["align"] + "\n" +
                                                 json.dumps({"solution": plan.model_dump(), "target": target},
                                                            ensure_ascii=False), salt + ":align", Question)
+            if item.answer != plan.answer:
+                # 题面生成不能重新决定金标；后续盲推导仍须验证题面是否匹配该参考解。
+                self.log("align_answer_rebound", candidate=identity, request_id=align_request,
+                         emitted_answer_sha256=digest(item.answer), reference_answer_sha256=digest(plan.answer))
+                item = Question.model_validate({**item.model_dump(), "answer": plan.answer})
             audit, _, _ = await self.gateway.call("auditor", self.prompts["audit"] + "\n" +
                                                  json.dumps({"source": source_data, "solution": plan.model_dump(),
                                                              "item": item.model_dump(),
@@ -119,6 +434,10 @@ class Pipeline:
             result = Candidate(id=identity, parent_id=parent.id if parent else None,
                                root_id=parent.root_id if parent else identity, generation=generation,
                                operator=operator, source_ids=[source.id], solution=plan, item=item, audit=audit,
+                               blueprint_audit=blueprint, blueprint_request=bid, blueprint_actual_model=bmodel,
+                               known_result=known_result,
+                               blueprint_fingerprint=self.blueprint_stamp(plan, source_data, target, known_result),
+                               authoring_repairs_completed=repair,
                                status="quality_seed", run_id=self.run_id)
             errors = static_errors(result, {source.id: source}, self.quotas)
             if (item.category, item.subtopic) != (target["category"], target["subtopic"]):
@@ -126,17 +445,30 @@ class Pipeline:
             if not audit.passed():
                 errors.append("audit_failed:" + audit.reason)
             if not errors:
+                result.authoring_complete = False
                 self.store.save(result)
-                return result
+                if await self.preflight(result):
+                    result.authoring_complete = True
+                    self.store.save(result)
+                    return result
+                errors.extend(result.reasons)
             result.status, result.reasons = "rejected", errors
             result.authoring_repairs_completed = repair+1
             result.authoring_complete = repair == self.settings.max_repairs
             self.store.save(result)
             self.log("repair_feedback", candidate=identity, repair=repair, reasons=errors)
-            data["feedback"] = {"original": feedback, "errors": errors, "previous": item.model_dump()}
+            data["feedback"] = {"original": feedback, "stage": "question_or_consistency",
+                                "errors": errors, "previous": item.model_dump(),
+                                "previous_solution": plan.model_dump(),
+                                "bottleneck_assessment": (result.bottleneck_assessment.model_dump()
+                                                          if result.bottleneck_assessment else None),
+                                "consistency_assessment": (result.consistency.model_dump()
+                                                           if result.consistency else None)}
         return result
 
     async def sample(self, candidate, limit=None):
+        if not candidate.authoring_complete:
+            raise ValueError("Finish the pending author repair before paid solver evaluation")
         limit = self.settings.samples if limit is None else limit
         if not 1 <= limit <= self.settings.samples:
             raise ValueError("Invalid sampling stage")
@@ -147,6 +479,8 @@ class Pipeline:
         for role in ("solver", "judge"):
             if len({getattr(t, role + "_request") for t in prior}) != len(prior):
                 raise ValueError("Reused persisted sample response")
+        if not await self.preflight(candidate):
+            raise QualityRejected("Question failed preflight; no difficulty samples allowed")
         done = {t.sample_id for t in prior}
 
         async def one(i):
@@ -201,9 +535,17 @@ class Pipeline:
     async def evaluate(self, c):
         if not c.authoring_complete:
             raise ValueError("Finish the pending author repair before paid solver evaluation")
+        if not await self.preflight(c):
+            return c
         if self.settings.early_screen_samples == 4 and len(c.trials) < self.settings.samples:
             first = await self.sample(c, 4)
             if first == 4:
+                if self.settings.difficulty_policy == "ease_only":
+                    c.status, c.reasons = "rejected", ["too_easy:first_four_all_correct"]
+                    self.store.save(c)
+                    self.log("too_easy_rejected", candidate=c.id, correct=4, valid_samples=4,
+                             full_16_sample_verdict=False, hardening_allowed=False)
+                    return c
                 c.status, c.reasons = "quality_seed", ["preliminary_4_of_4_correct:needs_hardening"]
                 self.store.save(c)
                 self.log("preliminary_hardening", candidate=c.id, correct=4, valid_samples=4,
@@ -225,7 +567,10 @@ class Pipeline:
                 else:
                     c.reasons = ["pilot_only:not_counted_as_delivery"]
         else:
-            c.reasons = ["outside_1_to_8_correct_band"]
+            if self.settings.difficulty_policy == "ease_only" and n > self.settings.correct_max:
+                c.status, c.reasons = "rejected", ["too_easy:complete_16_above_max"]
+            else:
+                c.reasons = ["outside_1_to_8_correct_band"]
         self.store.save(c)
         self.log("candidate_finished", candidate=c.id, status=c.status, reasons=c.reasons)
         return c
@@ -244,12 +589,13 @@ class Pipeline:
         if hasattr(self.store, "save_quotas"):
             self.store.save_quotas(self.quotas)
 
-    async def qc(self, submissions):
+    async def qc(self, submissions, *, preflight_only=False):
         """Quality control accepts authored bundles, never caller-provided scores or audit flags."""
         submissions = list(submissions)
         if not submissions or len({s.id for s in submissions}) != len(submissions):
             raise ValueError("Provide nonempty submissions with unique ids")
-        self.start({"command": "qc", "submissions_sha256": digest([s.model_dump() for s in submissions])})
+        self.start({"command": "preflight" if preflight_only else "qc",
+                    "submissions_sha256": digest([s.model_dump() for s in submissions])})
         sources = {s.id: s for s in self.store.sources()}
         incomplete = False
         try:
@@ -264,13 +610,16 @@ class Pipeline:
                         continue
                     if old.status == "rejected":
                         continue
-                    try:
-                        await self.evaluate(old)
-                    except SampleIncomplete:
-                        incomplete = True
+                    if preflight_only:
+                        await self.preflight(old)
+                    else:
+                        try:
+                            await self.evaluate(old)
+                        except SampleIncomplete:
+                            incomplete = True
                     continue
                 parent = next((c for c in self.store.candidates() if c.id == submission.parent_id), None)
-                if submission.parent_id and (parent is None or not parent.audit.passed()):
+                if submission.parent_id and (parent is None or not await self.preflight(parent)):
                     raise ValueError("Unknown or unqualified parent")
                 provisional_audit = Audit(valid=False, self_contained=False, uniquely_answerable=False,
                                            answer_supported=False, substantive_delta=False,
@@ -301,6 +650,9 @@ class Pipeline:
                     self.store.save(c)
                     continue
                 self.store.save(c)
+                if preflight_only:
+                    await self.preflight(c)
+                    continue
                 try:
                     await self.evaluate(c)
                 except SampleIncomplete:
@@ -347,7 +699,11 @@ class Pipeline:
                                 break
                             self.log("generation_started", source=source.id, subtopic=target["subtopic"],
                                      generation=generation, attempt=attempt)
-                            c = await self.generate(source, parent, target, generation, attempt)
+                            try:
+                                c = await self.generate(source, parent, target, generation, attempt)
+                            except AuthoringRejected:
+                                generated += 1
+                                continue
                             generated += 1
                             if c.status == "rejected":
                                 continue
@@ -377,12 +733,16 @@ class Pipeline:
 
 def report(store, quotas):
     candidates = store.candidates()
+    sources = {s.id: s for s in store.sources()}
     accepted = [c for c in candidates if c.status == "accepted"]
     counts = Counter((c.item.category, c.item.subtopic) for c in accepted)
     return {"target": quotas["target"], "accepted": len(accepted),
             "statuses": dict(Counter(c.status for c in candidates)),
             "candidates": [{"id": c.id, "parent_id": c.parent_id, "generation": c.generation,
                             "subtopic": c.item.subtopic, "status": c.status, "reasons": c.reasons,
+                            "consistency_passed": has_valid_consistency(c, sources),
+                            "difficulty_measurement_valid": (c.audit.passed()
+                                and has_valid_consistency(c, sources) and len(c.trials) == 16),
                             "samples": len(c.trials),
                             "correct_count": correct_count(c.trials) if len(c.trials) == 16 else None}
                            for c in candidates],

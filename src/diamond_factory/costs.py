@@ -13,7 +13,7 @@ def validate_pricing(settings,pricing):
     fx=pricing.get("rmb_reference_exchange_rate")
     if not isinstance(fx,(int,float)) or not math.isfinite(fx) or fx<=0:
         raise ValueError("Positive reference exchange rate required")
-    for role in ("generator","auditor","solver","judge"):
+    for role in ("generator","auditor","consistency","solver","judge"):
         model=getattr(settings,role).model
         rates=pricing.get("rates_per_million",{}).get(model)
         if not rates:
@@ -88,6 +88,8 @@ class MeteredGateway(Gateway):
         self.visible_cost_limit_usd = visible_cost_limit_usd
 
     async def _fetch(self, role, config, payload, request_id, base, key):
+        if self.visible_cost_limit_usd is None:
+            return await super()._fetch(role, config, payload, request_id, base, key)
         if self.store:
             rows = self.store.db.execute("SELECT role,usage FROM diamond.model_requests WHERE run_id=%s",
                                          (self.run_id,)).fetchall()

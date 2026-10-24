@@ -6,11 +6,12 @@ from itertools import pairwise
 
 from pydantic import Field
 
+from .consistency import QualityRejected, has_valid_consistency
 from .costs import measure_cost
 from .gates import correct_count
 from .llm import BudgetExceeded, ModelResponseError
 from .models import Audit, StrictModel, digest
-from .pipeline import Pipeline, SampleIncomplete
+from .pipeline import AuthoringRejected, Pipeline, SampleIncomplete
 from .runtime import atomic_json, gather_cancel_on_error
 
 
@@ -26,13 +27,17 @@ class ExperimentPlan(StrictModel):
     roots: list[RootPlan] = Field(min_length=1, max_length=100)
     max_revisions: int = Field(default=2, ge=0, le=3)
     root_workers: int = Field(default=4, ge=1, le=16)
-    visible_cost_limit_usd: float = Field(default=90.0, gt=0)
+    visible_cost_limit_usd: float | None = Field(default=90.0, gt=0)
+    resume_request_run_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]+$")
 
 
 def branch(candidate):
     if candidate.status in ("screened","accepted"):
         return "retained"
     if candidate.status == "rejected":
+        if any(r in ("too_easy:first_four_all_correct", "too_easy:complete_16_above_max")
+               for r in candidate.reasons):
+            return "too_easy_rejected"
         return "quality_rejected"
     if len(candidate.trials) == 4 and correct_count(candidate.trials,4) == 4:
         return "preliminary_harden"
@@ -75,6 +80,9 @@ class QuestionExperiment(Pipeline):
             initial += bool(passed and passed[0].generation == 0)
             versions = [{"id":c.id,"generation":c.generation,"parent_id":c.parent_id,
                          "decision":branch(c),"samples":len(c.trials),
+                         "consistency_passed":has_valid_consistency(c, sources),
+                         "difficulty_measurement_valid":(c.audit.passed()
+                             and has_valid_consistency(c, sources) and len(c.trials)==16),
                          "observed_correct":sum(t.judgment.correct=="yes" for t in c.trials),
                          "status":c.status,"reasons":c.reasons} for c in lineage]
             for a,b in pairwise(versions):
@@ -106,6 +114,13 @@ class QuestionExperiment(Pipeline):
     def root_identity(self,root,sources):
         return self.generation_identity(sources[root.source_id],None,
              {"category":root.category,"subtopic":root.subtopic},0,0,self.brief(root,None))
+
+    def generation_identity(self, source, parent, target, generation, attempt, brief=None):
+        # 续跑只保留首代请求命名空间；内容仍须通过网关逐字及完整性校验，降难使用新run。
+        if generation == 0 and parent is None and self.plan.resume_request_run_id:
+            return digest({"run": self.plan.resume_request_run_id, "source": source.id, "parent": None,
+                           "generation": generation, "attempt": attempt, "target": target, "brief": brief})[:24]
+        return super().generation_identity(source, parent, target, generation, attempt, brief)
 
     async def final_audit(self,c):
         sources = {s.id:s for s in self.store.sources()}
@@ -158,7 +173,9 @@ class QuestionExperiment(Pipeline):
                 existing = [c for c in self.store.candidates() if c.run_id==self.run_id and
                             c.root_id==self.root_identity(root,sources)]
                 parent = next((c for c in existing if c.generation==generation-1),None) if generation else None
-                if generation and (parent is None or branch(parent) not in ("preliminary_harden","harden","ease")):
+                allowed = ("ease",) if self.settings.difficulty_policy == "ease_only" else (
+                    "preliminary_harden", "harden", "ease")
+                if generation and (parent is None or branch(parent) not in allowed):
                     return None
                 if any(c.status in ("screened","accepted") for c in existing):
                     return None
@@ -173,6 +190,14 @@ class QuestionExperiment(Pipeline):
                         if n == 4:
                             await self.evaluate(c)
                     return c
+                except QualityRejected:
+                    return next((c for c in self.store.candidates() if c.run_id == self.run_id
+                                 and c.root_id == self.root_identity(root, sources)
+                                 and c.generation == generation), None)
+                except AuthoringRejected as error:
+                    self.plan_state[root.name] = {"phase":"authoring_rejected","reason":str(error)[:400]}
+                    self.log("experiment_authoring_rejected",root=root.name,generation=generation,reason=str(error)[:400])
+                    return None
                 except (ModelResponseError,SampleIncomplete) as error:
                     self.plan_state[root.name] = {"phase":"prefix_failed","reason":str(error)[:180]}
                     self.log("experiment_root_incomplete",root=root.name,generation=generation,
@@ -192,6 +217,8 @@ class QuestionExperiment(Pipeline):
                     # Dedup finalization is serialized so two parallel candidates cannot miss each other.
                     async with self.finalize_lock:
                         await self.evaluate(c)
+                except QualityRejected:
+                    return
                 except (ModelResponseError,SampleIncomplete) as error:
                     self.log("experiment_candidate_incomplete",candidate=c.id,reason=str(error)[:180])
                 finally:

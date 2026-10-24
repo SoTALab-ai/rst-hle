@@ -4,12 +4,44 @@ from pathlib import Path
 import pytest
 
 from diamond_factory.config import load
-from diamond_factory.models import Audit, Candidate, Evidence, Judgment, Question, Solution, Source, Trial
+from diamond_factory.models import (
+    Audit,
+    Candidate,
+    ConsistencyAudit,
+    ConsistencyCheck,
+    Evidence,
+    Judgment,
+    Question,
+    Solution,
+    Source,
+    SubstitutionBinding,
+    SubstitutionCase,
+    SubstitutionRelation,
+    Trial,
+)
+
+
+def passing_consistency():
+    check = ConsistencyCheck(verdict="pass", reasoning="The tree theorem establishes the requested result.",
+                             witness="37 vertices minus one gives exactly 36 edges.")
+    return ConsistencyAudit(premises=check, definitions=check, parameter_domain=check, reference_answer=check,
+                            physical_regime=ConsistencyCheck(verdict="not_applicable",
+                                reasoning="This is a purely mathematical graph exercise.",
+                                witness="No physical regime or conservation claim is present."),
+                            task_kind="computational", substitution_checks=[SubstitutionCase(
+                                name="gold edge count in defining theorem", target_output="edge count",
+                                question_anchor="37 vertices", answer_anchor="36",
+                                domain_justification="The problem specifies a finite tree with 37 vertices.",
+                                bindings=[SubstitutionBinding(name="n", expression="37"),
+                                          SubstitutionBinding(name="gold", expression="36")],
+                                domain_conditions=[SubstitutionRelation(lhs="n",relation="greater_equal",rhs="1")],
+                                lhs="n-1", relation="equal", rhs="gold")])
 
 
 @pytest.fixture
 def settings():
-    return load("configs/pilot.toml")
+    # 历史双向协议的既有对照；新协议用例显式测试ease_only，不改写旧测试语义。
+    return load("configs/pilot.toml").model_copy(update={"difficulty_policy": "bidirectional"})
 
 
 @pytest.fixture
