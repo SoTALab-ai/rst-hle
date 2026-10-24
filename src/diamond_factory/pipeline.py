@@ -22,6 +22,7 @@ from .gates import (
     lexical_duplicate,
     production_blockers,
     read_corpus,
+    sample_outcomes,
     static_errors,
 )
 from .llm import BudgetExceeded, Gateway, ModelResponseError
@@ -320,20 +321,20 @@ class Pipeline:
 
     async def generate(self, source, parent, target, generation, attempt, brief=None):
         if (parent and self.settings.difficulty_policy == "ease_only" and (
-                len(parent.trials) != self.settings.samples or correct_count(parent.trials, self.settings.samples) != 0)):
+                len(sample_outcomes(parent)) != self.settings.samples or correct_count(sample_outcomes(parent), self.settings.samples) != 0)):
             raise QualityRejected("Only a complete zero-correct parent may enter easing; no hardening is allowed")
         if parent and not await self.preflight(parent):
             raise QualityRejected("Invalid parent: repair correctness before difficulty evolution")
         feedback = "Increase substantive difficulty" if parent else "Create a solvable evidence-grounded seed"
-        if parent and parent.trials:
-            preliminary = (self.settings.early_screen_samples == 4 and len(parent.trials) == 4
-                           and correct_count(parent.trials, 4) == 4)
-            n = self.settings.samples if preliminary else correct_count(parent.trials, self.settings.samples)
+        if parent and sample_outcomes(parent):
+            preliminary = (self.settings.early_screen_samples == 4 and len(sample_outcomes(parent)) == 4
+                           and correct_count(sample_outcomes(parent), 4) == 4)
+            n = self.settings.samples if preliminary else correct_count(sample_outcomes(parent), self.settings.samples)
             feedback = "Increase difficulty" if n > self.settings.correct_max else "Keep in difficulty band"
             if n < self.settings.correct_min:
                 feedback = "Reduce difficulty while preserving a substantive task and complete correctness"
         operator = "bootstrap" if parent is None else self.settings.operators[(generation-1) % len(self.settings.operators)]
-        if parent and parent.trials and n < self.settings.correct_min:
+        if parent and sample_outcomes(parent) and n < self.settings.correct_min:
             operator = "supply_one_lemma_or_reduce_one_coupling"
         identity = self.generation_identity(source,parent,target,generation,attempt,brief)
         existing = next((c for c in self.store.candidates() if c.id == identity), None)
@@ -466,33 +467,59 @@ class Pipeline:
                                                            if result.consistency else None)}
         return result
 
+    def validate_deadlines(self, candidate):
+        if candidate.deadline_outcomes and not self.settings.solver_deadline_counts_as_incorrect:
+            raise ValueError("The frozen policy does not count solver deadlines as incorrect")
+        for recorded in candidate.deadline_outcomes:
+            verified = self.gateway.deadline_outcome(recorded.sample_id, candidate.item.question,
+                f"{candidate.id}:solver:{recorded.sample_id}", recorded.solver_request,
+                system_prompt=self.prompts["solver_hle_system"].strip())
+            if verified != recorded:
+                raise ValueError("Stored deadline outcome differs from its verified receipt")
+
     async def sample(self, candidate, limit=None):
         if not candidate.authoring_complete:
             raise ValueError("Finish the pending author repair before paid solver evaluation")
         limit = self.settings.samples if limit is None else limit
         if not 1 <= limit <= self.settings.samples:
             raise ValueError("Invalid sampling stage")
-        prior = list(candidate.trials)
+        prior = sample_outcomes(candidate)
+        self.validate_deadlines(candidate)
         if (len({t.sample_id for t in prior}) != len(prior) or
                 any(not 0 <= t.sample_id < self.settings.samples for t in prior)):
             raise ValueError("Invalid persisted sample identities")
         for role in ("solver", "judge"):
-            if len({getattr(t, role + "_request") for t in prior}) != len(prior):
+            rows = prior if role == "solver" else candidate.trials
+            if len({getattr(t, role + "_request") for t in rows}) != len(rows):
                 raise ValueError("Reused persisted sample response")
         if not await self.preflight(candidate):
             raise QualityRejected("Question failed preflight; no difficulty samples allowed")
         done = {t.sample_id for t in prior}
 
         async def one(i):
+            phase = "solver"
             try:
                 response, sid, smodel = await self.gateway.call(
                     "solver", candidate.item.question, f"{candidate.id}:solver:{i}",
                     system_prompt=self.prompts["solver_hle_system"].strip())
+                phase = "judge"
                 judgment, jid, jmodel = await judge_answer(
                     self.gateway, self.prompts["judge"].format(question=candidate.item.question,
                                                                correct_answer=candidate.item.answer, response=response),
                     f"{candidate.id}:judge:{i}", self.settings.judge_schema_repairs)
             except ModelResponseError as error:
+                if (phase == "solver" and error.reason == "deadline_exceeded"
+                        and self.settings.solver_deadline_counts_as_incorrect):
+                    outcome = self.gateway.deadline_outcome(i, candidate.item.question,
+                        f"{candidate.id}:solver:{i}", error.request_id,
+                        system_prompt=self.prompts["solver_hle_system"].strip())
+                    candidate.deadline_outcomes = sorted(candidate.deadline_outcomes + [outcome],
+                                                        key=lambda t: t.sample_id)
+                    self.store.save(candidate)
+                    self.log("solver_deadline_scored_incorrect", candidate=candidate.id, sample=i,
+                             request_id=error.request_id, deadline_seconds=outcome.deadline_seconds,
+                             elapsed_seconds=outcome.elapsed_seconds, judge_called=False)
+                    return outcome
                 self.log("sample_failed", candidate=candidate.id, sample=i,
                          request_id=error.request_id, reason=error.reason)
                 return error
@@ -510,7 +537,7 @@ class Pipeline:
                                  for e in errors]
             self.store.save(candidate)
             raise SampleIncomplete(f"{len(errors)} samples failed; paired successes retained for resume")
-        return correct_count([t for t in candidate.trials if t.sample_id < limit], limit)
+        return correct_count([t for t in sample_outcomes(candidate) if t.sample_id < limit], limit)
 
     async def duplicate(self, candidate):
         refs = self.external + [Record(id=c.id, question=c.item.question, material_key=c.item.material_key)
@@ -537,7 +564,7 @@ class Pipeline:
             raise ValueError("Finish the pending author repair before paid solver evaluation")
         if not await self.preflight(c):
             return c
-        if self.settings.early_screen_samples == 4 and len(c.trials) < self.settings.samples:
+        if self.settings.early_screen_samples == 4 and len(sample_outcomes(c)) < self.settings.samples:
             first = await self.sample(c, 4)
             if first == 4:
                 if self.settings.difficulty_policy == "ease_only":
@@ -742,9 +769,9 @@ def report(store, quotas):
                             "subtopic": c.item.subtopic, "status": c.status, "reasons": c.reasons,
                             "consistency_passed": has_valid_consistency(c, sources),
                             "difficulty_measurement_valid": (c.audit.passed()
-                                and has_valid_consistency(c, sources) and len(c.trials) == 16),
-                            "samples": len(c.trials),
-                            "correct_count": correct_count(c.trials) if len(c.trials) == 16 else None}
+                                and has_valid_consistency(c, sources) and len(sample_outcomes(c)) == 16),
+                            "samples": len(sample_outcomes(c)),
+                            "correct_count": correct_count(sample_outcomes(c)) if len(sample_outcomes(c)) == 16 else None}
                            for c in candidates],
             "remaining": [{**q, "accepted": counts[(q["category"], q["subtopic"])],
                            "remaining": max(0, q["count"] - counts[(q["category"], q["subtopic"])])}

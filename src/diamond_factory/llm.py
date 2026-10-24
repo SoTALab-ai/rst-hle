@@ -60,8 +60,7 @@ class Gateway:
                                                            if k != "integrity_sha256"})):
             raise CacheIntegrityError("Request journal integrity mismatch; refusing to resubmit")
 
-    async def call(self, role: str, prompt: str, salt: str, schema: type[BaseModel] | None = None,
-                   *, system_prompt: str | None = None):
+    def _prepare(self, role, prompt, salt, schema=None, system_prompt=None):
         config = getattr(self.settings, role)
         if schema:
             prompt += "\nReturn ONLY valid JSON satisfying this schema:\n" + json.dumps(schema.model_json_schema())
@@ -81,6 +80,34 @@ class Gateway:
             base += "/v1"
         request_id = digest({"payload": payload, "salt": salt, "endpoint_hash": digest(base),
                              "deadline_seconds": self.settings.request_deadline_seconds})
+        return config, payload, request_id, base, key
+
+    def deadline_outcome(self, sample_id, question, salt, request_id, *, system_prompt):
+        """只接受同题同盐同端点、完整性有效且实际达到时限的解题失败收据。"""
+        from .models import DeadlineOutcome
+        _, payload, expected, _, _ = self._prepare("solver", question, salt, system_prompt=system_prompt)
+        if request_id != expected:
+            raise CacheIntegrityError("Deadline request identity mismatch")
+        trace = self.store.get_request(request_id) if self.store else None
+        local = trace is None
+        path = self.directory / (request_id + ".json")
+        if trace is None and path.is_file():
+            trace = json.loads(path.read_text())
+        if trace is None:
+            raise CacheIntegrityError("Missing deadline receipt; refusing to fabricate a scored outcome")
+        self._check(trace, request_id, payload, salt, local=local)
+        if not trace.get("integrity_sha256"):
+            raise CacheIntegrityError("Unsealed deadline receipt")
+        if (trace.get("role") != "solver" or trace.get("response_error") != "deadline_exceeded"
+                or not trace.get("attempts") or self.settings.request_deadline_seconds is None):
+            raise CacheIntegrityError("Only a completed solver deadline may count as incorrect")
+        return DeadlineOutcome(sample_id=sample_id, solver_request=request_id,
+            requested_model=payload["model"], deadline_seconds=float(self.settings.request_deadline_seconds),
+            elapsed_seconds=trace["elapsed_seconds"])
+
+    async def call(self, role: str, prompt: str, salt: str, schema: type[BaseModel] | None = None,
+                   *, system_prompt: str | None = None):
+        config, payload, request_id, base, key = self._prepare(role, prompt, salt, schema, system_prompt)
         path = self.directory / (request_id + ".json")
         role_permit = self.solver_sem if role=="solver" and self.solver_sem is not None else nullcontext()
         async with self.request_locks.setdefault(request_id, asyncio.Lock()), role_permit, self.sem:

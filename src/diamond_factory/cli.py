@@ -7,7 +7,7 @@ from .calibration import BenchmarkQuestion, Calibration
 from .config import load
 from .consistency import has_valid_consistency
 from .difficulty import construction_ready
-from .gates import can_count, correct_count, production_blockers, static_errors
+from .gates import can_count, correct_count, production_blockers, sample_outcomes, static_errors
 from .models import Submission, digest
 from .pipeline import Pipeline, report
 from .postgres import open_store
@@ -146,17 +146,20 @@ def main():
             accepted = [c for c in store.candidates() if c.status == "accepted"]
             prompts = {p.stem: p.read_text() for p in Path(settings.prompts_dir).glob("*.txt")}
             for c in accepted:
+                verifier = Pipeline(settings, store, c.run_id, "production", Path("work/runs") / c.run_id)
+                verifier.validate_deadlines(c)
                 if (static_errors(c, sources, quotas) or not c.audit.passed() or
                         not construction_ready(c, sources, settings, prompts) or
                         not has_valid_consistency(c, sources) or
-                        not 1 <= correct_count(c.trials) <= 8 or
+                        not 1 <= correct_count(sample_outcomes(c)) <= 8 or
                         can_count(c, accepted, quotas, settings.max_per_root)):
                     raise ValueError("Stored candidate failed export revalidation: " + c.id)
                 rows.append({"id": c.id, **c.item.model_dump(), "lineage": {"root": c.root_id,
                              "parent": c.parent_id, "generation": c.generation},
-                             "correct_count": correct_count(c.trials),
+                             "correct_count": correct_count(sample_outcomes(c)),
                              "consistency": c.consistency.model_dump(),
-                             "trials": [t.model_dump() for t in c.trials], "run_id": c.run_id})
+                             "trials": [t.model_dump() for t in c.trials],
+                             "deadline_outcomes": [d.model_dump() for d in c.deadline_outcomes], "run_id": c.run_id})
             target = Path(args.output)
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows))

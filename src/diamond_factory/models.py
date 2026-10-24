@@ -382,6 +382,23 @@ class Trial(StrictModel):
     judgment: Judgment
 
 
+class DeadlineOutcome(StrictModel):
+    """解题墙钟超时按协议计错；没有答卷，也没有模型judge收据。"""
+
+    sample_id: int = Field(ge=0, le=15)
+    solver_request: str
+    requested_model: str
+    reason: Literal["deadline_exceeded"] = "deadline_exceeded"
+    deadline_seconds: float = Field(gt=0, allow_inf_nan=False)
+    elapsed_seconds: float = Field(gt=0, allow_inf_nan=False)
+
+    @model_validator(mode="after")
+    def reached_deadline(self):
+        if self.elapsed_seconds < self.deadline_seconds:
+            raise ValueError("A deadline outcome requires the full wall-clock deadline")
+        return self
+
+
 class Candidate(StrictModel):
     id: str
     parent_id: str | None
@@ -400,6 +417,7 @@ class Candidate(StrictModel):
     known_result: KnownResult | None = None
     bottleneck_assessment: BottleneckAssessment | None = None
     trials: list[Trial] = Field(default_factory=list)
+    deadline_outcomes: list[DeadlineOutcome] = Field(default_factory=list)
     status: Literal["quality_seed", "rejected", "screened", "accepted"]
     reasons: list[str] = Field(default_factory=list)
     run_id: str

@@ -41,7 +41,7 @@ def passing_consistency():
 @pytest.fixture
 def settings():
     # 历史双向协议的既有对照；新协议用例显式测试ease_only，不改写旧测试语义。
-    return load("configs/pilot.toml").model_copy(update={"difficulty_policy": "bidirectional"})
+    return load("configs/pilot.toml").model_copy(update={"difficulty_policy": "bidirectional", "solver_deadline_counts_as_incorrect": False})
 
 
 @pytest.fixture

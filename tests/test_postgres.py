@@ -111,7 +111,7 @@ def test_pg_catalog_upgrade_preserves_existing_sources_and_run_budget(pg, source
     pg.migrate();pg.migrate()
     assert pg.sources()[0].sha256==source.sha256
     assert pg.db.execute("SELECT http_attempts FROM diamond.runs WHERE id='test'").fetchone()[0]==1
-    assert pg.db.execute("SELECT count(*) FROM diamond.schema_migrations").fetchone()[0]==2
+    assert pg.db.execute("SELECT count(*) FROM diamond.schema_migrations").fetchone()[0]==3
 
 
 def test_pg_paper_metadata_history_and_domain_query(pg):
@@ -217,3 +217,22 @@ def test_pg_unlimited_request_counter_still_persists_and_finite_cap_remains_atom
     assert other.reserve_request('test',None)==3
     assert pg.db.execute("SELECT http_attempts FROM diamond.runs WHERE id='test'").fetchone()[0]==3
     other.db.close()
+
+
+def test_pg_deadline_outcome_has_own_table_and_no_fabricated_judge(pg, source, candidate):
+    from diamond_factory.models import DeadlineOutcome
+    run_meta(pg)
+    pg.add_source(source)
+    pg.save_request('test', {'request_id':'expired','role':'solver','actual_model':'','usage':{},
+                            'content':None,'response_error':'deadline_exceeded'})
+    candidate.deadline_outcomes=[DeadlineOutcome(sample_id=0,solver_request='expired',
+        requested_model='glm-5.2',deadline_seconds=600.0,elapsed_seconds=600.01)]
+    pg.save(candidate)
+    assert pg.candidates()[0].deadline_outcomes==candidate.deadline_outcomes
+    assert pg.db.execute('SELECT count(*) FROM diamond.qc_samples').fetchone()[0]==0
+    assert pg.db.execute('SELECT requested_model,reason FROM diamond.qc_deadlines').fetchone()==(
+        'glm-5.2','deadline_exceeded')
+    candidate.trials=trials(0)[:1]
+    with pytest.raises(ValueError,match='cannot also'):
+        pg.save(candidate)
+    assert not pg.candidates()[0].trials

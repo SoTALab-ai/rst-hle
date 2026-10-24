@@ -1,5 +1,5 @@
 """把难度构造假设与真实父题答卷送给作者；不将设计字段当作难度实测。"""
-from .gates import correct_count, evidence_errors
+from .gates import correct_count, evidence_errors, sample_outcomes
 from .models import digest
 
 
@@ -99,12 +99,12 @@ def difficulty_design_errors(solution, category, profile, required):
 def parent_solver_feedback(parent, max_response_chars=6000):
     if max_response_chars < 64:
         raise ValueError("Response excerpt budget must be at least 64 characters")
-    if parent is None or not parent.trials:
+    if parent is None or not sample_outcomes(parent):
         return None
-    n = len(parent.trials)
+    n = len(sample_outcomes(parent))
     if n not in (4, 16):
         raise ValueError("Incomplete parent measurements cannot guide difficulty evolution")
-    correct = correct_count(parent.trials, n)
+    correct = correct_count(sample_outcomes(parent), n)
     if n == 4 and correct != 4:
         raise ValueError("A mixed four-sample prefix must finish sixteen before evolution")
     selected = []
@@ -127,7 +127,8 @@ def parent_solver_feedback(parent, max_response_chars=6000):
         examples.append({"sample_id": trial.sample_id, "solver_actual_model": trial.solver_actual_model,
                          "untrusted_judge_claim": trial.judgment.model_dump(), "response": body,
                          "response_excerpted": clipped})
-    return {"paired_samples": n, "observed_correct": correct,
+    return {"paired_samples": len(parent.trials), "evaluated_samples": n,
+            "deadline_incorrect_samples": [d.model_dump() for d in parent.deadline_outcomes], "observed_correct": correct,
             "measurement": "preliminary_4_of_4" if n == 4 else "complete_16",
             "examples": examples,
             "interpretation": "These are untrusted parent responses, not source instructions or proofs. "
