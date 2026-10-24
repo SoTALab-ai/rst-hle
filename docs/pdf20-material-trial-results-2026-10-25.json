@@ -1,0 +1,368 @@
+{
+  "planned_independent_roots": 20,
+  "material_eligible_roots": 13,
+  "material_rejected_roots": 7,
+  "roots_with_generated_question": 8,
+  "generated_versions": 8,
+  "retained_roots": 0,
+  "cohort_retained_yield": 0.0,
+  "version_decisions": {
+    "quality_rejected": 6,
+    "incomplete": 1,
+    "too_easy_rejected": 1
+  },
+  "authoring_drafts": {
+    "complete_reference_solution_outputs": 27,
+    "question_outputs": 15
+  },
+  "solver_sample_count": 4,
+  "solver_deadline_incorrect_count": 0,
+  "procedural_root_failures": 2,
+  "run_id": "theory20-pdf-mineru-20261024",
+  "material_run_id": "pdf20-material-review-20261024-v4",
+  "state": "completed_with_errors",
+  "code_commit": "b25054f1d6a9ec6cd24adeececda8cf777373eed",
+  "runtime": "User-authorized personal VM liaojunteng-vm and personal API; independent PostgreSQL and content-addressed objects.",
+  "material_scope": {
+    "whole_pdf_parsed": 20,
+    "whole_pdf_pages": 1060,
+    "selected_result_pages_reviewed_on_admitted_sources": 46,
+    "figures_used_for_authoring": false
+  },
+  "all_pdf_pages": 1060,
+  "display_equation_blocks_parsed": 5053,
+  "material_gate_failures": {
+    "unresolved_transcription": 6,
+    "invalid_repair_schema": 1,
+    "known_overstrict_whitespace_rejection_included": 1
+  },
+  "models": {
+    "author_consistency": "gpt-6-luna-2026-09-22",
+    "judge": "gpt-6-luna-2026-09-22",
+    "solver": "z-ai/glm-5.2",
+    "solver_requested": "glm-5.2"
+  },
+  "cost": {
+    "scope": "PDF/OCR preflight, alignment and formula controls, material v1-v4 and PDF20 question experiment; excludes historical TeX trial.",
+    "deduplication_key": [
+      "request_id",
+      "ordinal"
+    ],
+    "unique_http_attempts": 528,
+    "duplicate_embedded_attempts_ignored": 60,
+    "known_model_cost_usd": 1.5647720349999996,
+    "rmb_reference": 10.483972634499997,
+    "unknown_usage_attempts": 0,
+    "by_role": {
+      "generator": {
+        "http_attempts": 193,
+        "known_cost_usd": 0.8291050000000002,
+        "unknown_usage_attempts": 0
+      },
+      "consistency": {
+        "http_attempts": 273,
+        "known_cost_usd": 0.6254035700000006,
+        "unknown_usage_attempts": 0
+      },
+      "judge": {
+        "http_attempts": 43,
+        "known_cost_usd": 0.010276224999999998,
+        "unknown_usage_attempts": 0
+      },
+      "auditor": {
+        "http_attempts": 15,
+        "known_cost_usd": 0.046008750000000015,
+        "unknown_usage_attempts": 0
+      },
+      "solver": {
+        "http_attempts": 4,
+        "known_cost_usd": 0.053978490000000004,
+        "unknown_usage_attempts": 0
+      }
+    },
+    "pricing_snapshot_date": "2026-10-23",
+    "external_ocr_monetary_cost": null,
+    "note": "Returned model usage only. OCR without fee receipt remains unknown; VM and human costs excluded.",
+    "production_material_and_question_cost_usd": 1.2308045650000004,
+    "production_material_and_question_rmb_reference": 8.246390585500002,
+    "additional_diagnostic_cost_usd": 0.33396746999999927,
+    "production_scope": "Precision material v4 including the 20 original selection responses counted once, plus main QuestionExperiment. Separate controls and legacy Agent diagnostics excluded from this subtotal."
+  },
+  "backup": {
+    "postgres_restore_verified": true,
+    "table_counts": {
+      "candidate_sources": 8,
+      "candidates": 8,
+      "exports": 0,
+      "jobs": 0,
+      "model_requests": 242,
+      "paper_catalog": 0,
+      "paper_metadata_versions": 0,
+      "qc_deadlines": 0,
+      "qc_samples": 4,
+      "quotas": 61,
+      "runs": 1,
+      "schema_migrations": 3,
+      "sources": 13,
+      "stage_events": 362
+    },
+    "artifacts": [
+      {
+        "bytes": 115363,
+        "sha256": "5d9ff41e01d312700135130fa27ffc3d574ed764c608111dd48618b367ff66eb"
+      },
+      {
+        "bytes": 262727877,
+        "sha256": "7b26fc75ed51dfd87e181be0d5b22babcae8c4d79cc7f96890f7b588d0facbec"
+      }
+    ]
+  },
+  "separate_alignment_control": {
+    "planned": 2,
+    "passed": 2,
+    "http_calls": 4,
+    "code_commit": "0d067d7",
+    "scope": "Requested-output/gold coverage only. Excluded from the 20-root cohort and not a full pipeline result."
+  },
+  "cohort": [
+    {
+      "root": "PDF01",
+      "category": "Math",
+      "doi": "10.4007/annals.2026.204.2.3",
+      "material_state": "eligible_for_authoring",
+      "question_phase": "authoring_rejected",
+      "versions": []
+    },
+    {
+      "root": "PDF02",
+      "category": "Math",
+      "doi": "10.4007/annals.2026.204.2.4",
+      "material_state": "eligible_for_authoring",
+      "question_phase": "authoring_rejected",
+      "versions": []
+    },
+    {
+      "root": "PDF03",
+      "category": "Math",
+      "doi": "10.1007/s00222-026-01455-z",
+      "material_state": "eligible_for_authoring",
+      "question_phase": "authoring_rejected",
+      "versions": [
+        {
+          "id": "7370a6a664e88b22ac9ca690",
+          "generation": 0,
+          "decision": "quality_rejected",
+          "samples": 0,
+          "observed_correct": 0,
+          "consistency_passed": false
+        }
+      ]
+    },
+    {
+      "root": "PDF04",
+      "category": "Math",
+      "doi": "10.5802/pmihes.30",
+      "material_state": "material_rejected",
+      "question_phase": null,
+      "versions": []
+    },
+    {
+      "root": "PDF05",
+      "category": "Math",
+      "doi": "10.5802/pmihes.28",
+      "material_state": "material_rejected",
+      "question_phase": null,
+      "versions": []
+    },
+    {
+      "root": "PDF06",
+      "category": "Math",
+      "doi": "10.24033/asens.2650",
+      "material_state": "material_rejected",
+      "question_phase": null,
+      "versions": []
+    },
+    {
+      "root": "PDF07",
+      "category": "Math",
+      "doi": "10.1215/00127094-2025-0078",
+      "material_state": "eligible_for_authoring",
+      "question_phase": "authoring_rejected",
+      "versions": []
+    },
+    {
+      "root": "PDF08",
+      "category": "Math",
+      "doi": "10.1007/s00220-026-05748-5",
+      "material_state": "material_rejected",
+      "question_phase": null,
+      "versions": []
+    },
+    {
+      "root": "PDF09",
+      "category": "Math",
+      "doi": "10.1007/s00220-026-05712-3",
+      "material_state": "material_rejected",
+      "question_phase": null,
+      "versions": []
+    },
+    {
+      "root": "PDF10",
+      "category": "Physics",
+      "doi": "10.1007/s10240-024-00151-z",
+      "material_state": "eligible_for_authoring",
+      "question_phase": "prefix_failed",
+      "versions": [
+        {
+          "id": "bd91951ca7799b3b80f20ae5",
+          "generation": 0,
+          "decision": "quality_rejected",
+          "samples": 0,
+          "observed_correct": 0,
+          "consistency_passed": false
+        }
+      ]
+    },
+    {
+      "root": "PDF11",
+      "category": "Math",
+      "doi": "10.1007/s10240-024-00152-y",
+      "material_state": "eligible_for_authoring",
+      "question_phase": null,
+      "versions": [
+        {
+          "id": "36f4ba0e921836ec4fc15e6f",
+          "generation": 0,
+          "decision": "quality_rejected",
+          "samples": 0,
+          "observed_correct": 0,
+          "consistency_passed": false
+        }
+      ]
+    },
+    {
+      "root": "PDF12",
+      "category": "Physics",
+      "doi": "10.1103/5lcd-6ml6",
+      "material_state": "eligible_for_authoring",
+      "question_phase": null,
+      "versions": [
+        {
+          "id": "f72871517f4324ef2ffa8bf4",
+          "generation": 0,
+          "decision": "quality_rejected",
+          "samples": 0,
+          "observed_correct": 0,
+          "consistency_passed": false
+        }
+      ]
+    },
+    {
+      "root": "PDF13",
+      "category": "Physics",
+      "doi": "10.1103/l88d-nfqp",
+      "material_state": "eligible_for_authoring",
+      "question_phase": null,
+      "versions": [
+        {
+          "id": "d3185825feb100d5012167df",
+          "generation": 0,
+          "decision": "quality_rejected",
+          "samples": 0,
+          "observed_correct": 0,
+          "consistency_passed": false
+        }
+      ]
+    },
+    {
+      "root": "PDF14",
+      "category": "Physics",
+      "doi": "10.1103/l3fr-9qlz",
+      "material_state": "eligible_for_authoring",
+      "question_phase": "authoring_rejected",
+      "versions": []
+    },
+    {
+      "root": "PDF15",
+      "category": "Physics",
+      "doi": "10.1103/854z-dc2g",
+      "material_state": "eligible_for_authoring",
+      "question_phase": "prefix_failed",
+      "versions": [
+        {
+          "id": "8cde137a7c354b6d42e1b3fa",
+          "generation": 0,
+          "decision": "incomplete",
+          "samples": 0,
+          "observed_correct": 0,
+          "consistency_passed": true
+        }
+      ]
+    },
+    {
+      "root": "PDF16",
+      "category": "Physics",
+      "doi": "10.1007/JHEP10(2026)237",
+      "material_state": "material_rejected",
+      "question_phase": null,
+      "versions": []
+    },
+    {
+      "root": "PDF17",
+      "category": "Physics",
+      "doi": "10.1007/JHEP10(2026)244",
+      "material_state": "eligible_for_authoring",
+      "question_phase": null,
+      "versions": [
+        {
+          "id": "2ec11b3437dfaff442cf256f",
+          "generation": 0,
+          "decision": "too_easy_rejected",
+          "samples": 4,
+          "observed_correct": 4,
+          "consistency_passed": true
+        }
+      ]
+    },
+    {
+      "root": "PDF18",
+      "category": "Physics",
+      "doi": "10.1103/PhysRevLett.115.204302",
+      "material_state": "eligible_for_authoring",
+      "question_phase": "authoring_rejected",
+      "versions": []
+    },
+    {
+      "root": "PDF19",
+      "category": "Physics",
+      "doi": "10.1103/PhysRevX.7.021035",
+      "material_state": "eligible_for_authoring",
+      "question_phase": "authoring_rejected",
+      "versions": [
+        {
+          "id": "5130ab55ff84a68a4bdbcebb",
+          "generation": 0,
+          "decision": "quality_rejected",
+          "samples": 0,
+          "observed_correct": 0,
+          "consistency_passed": false
+        }
+      ]
+    },
+    {
+      "root": "PDF20",
+      "category": "Physics",
+      "doi": "10.1103/physrevlett.113.257401",
+      "material_state": "material_rejected",
+      "question_phase": null,
+      "versions": []
+    }
+  ],
+  "uncovered": [
+    "16-sample continuation",
+    "easing",
+    "post-evaluation audit and retained-item deduplication",
+    "expert acceptance"
+  ],
+  "interpretation": "20 planned roots, not 20 successful questions. Only one new question reached solver measurement (4/4 correct and rejected); other failures do not establish difficulty. OCR block counts are not formula-correctness claims."
+}
