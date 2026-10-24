@@ -1,0 +1,295 @@
+[
+  {
+    "doi": "10.4007/annals.2026.204.2.3",
+    "main_pdf_sha256": "7261083b46cc8ec3fad81215250ff6bef47da05ef6054813572de21db10dc103",
+    "status": "embedded",
+    "evidence_urls": [
+      "https://doi.org/10.4007/annals.2026.204.2.3",
+      "https://api.openalex.org/works/https://doi.org/10.4007/annals.2026.204.2.3",
+      "https://annals.math.princeton.edu/2026/204-2/p03"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。附录/补充材料起始定位为PDF物理页35；完整文件保留，未裁切或拼接TeX。部分出版社入口被挑战页阻挡，不能以HTTP 200宣称网页核查成功；采用固定PDF自身指引及仓储清单，保留版本差异风险。",
+    "embedded_pages": [
+      35
+    ],
+    "unresolved": []
+  },
+  {
+    "doi": "10.4007/annals.2026.204.2.4",
+    "main_pdf_sha256": "aead1bb445e1b6dfaf5a8e1239af4d1b1d347c2bbde9f22cfc496c9ad9ec0780",
+    "status": "embedded",
+    "evidence_urls": [
+      "https://doi.org/10.4007/annals.2026.204.2.4",
+      "https://api.openalex.org/works/https://doi.org/10.4007/annals.2026.204.2.4",
+      "https://annals.math.princeton.edu/2026/204-2/p04"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。附录/补充材料起始定位为PDF物理页106,114,120；完整文件保留，未裁切或拼接TeX。部分出版社入口被挑战页阻挡，不能以HTTP 200宣称网页核查成功；采用固定PDF自身指引及仓储清单，保留版本差异风险。",
+    "embedded_pages": [
+      106,
+      114,
+      120
+    ],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1007/s00222-026-01455-z",
+    "main_pdf_sha256": "75ea438412e0871a3740c9ae23466b2c30ed804b6f2645f1fa9b2ebf7e33019e",
+    "status": "embedded",
+    "evidence_urls": [
+      "https://doi.org/10.1007/s00222-026-01455-z",
+      "https://api.openalex.org/works/https://doi.org/10.1007/s00222-026-01455-z"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。附录/补充材料起始定位为PDF物理页172,177；完整文件保留，未裁切或拼接TeX。部分出版社入口被挑战页阻挡，不能以HTTP 200宣称网页核查成功；采用固定PDF自身指引及仓储清单，保留版本差异风险。",
+    "embedded_pages": [
+      172,
+      177
+    ],
+    "unresolved": []
+  },
+  {
+    "doi": "10.5802/pmihes.30",
+    "main_pdf_sha256": "884ba0edc714eafa288a3f3e852caf1e0ef6b647adfb2a750b5c576364e10ae1",
+    "status": "embedded",
+    "evidence_urls": [
+      "https://doi.org/10.5802/pmihes.30",
+      "https://pmihes.centre-mersenne.org/articles/10.5802/pmihes.30/"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。附录/补充材料起始定位为PDF物理页54,59；完整文件保留，未裁切或拼接TeX。",
+    "embedded_pages": [
+      54,
+      59
+    ],
+    "unresolved": []
+  },
+  {
+    "doi": "10.5802/pmihes.28",
+    "main_pdf_sha256": "f139dc435528dc8a8975ffdcae91fdd5fa8b4c3aea5fec1fd4827ef7e97b1bc3",
+    "status": "no_separate_listed",
+    "evidence_urls": [
+      "https://doi.org/10.5802/pmihes.28",
+      "https://pmihes.centre-mersenne.org/articles/10.5802/pmihes.28/"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。当前PDF未指向独立补充材料；核查入口未列出关联的独立补充PDF，故记为no_separate_listed而非全局不存在。",
+    "embedded_pages": [],
+    "unresolved": []
+  },
+  {
+    "doi": "10.24033/asens.2650",
+    "main_pdf_sha256": "09abab169021e4b4f89aaed76d2453b3336e07244bf52001d1330f5d74d13fb4",
+    "status": "no_separate_listed",
+    "evidence_urls": [
+      "https://doi.org/10.24033/asens.2650",
+      "https://api.openalex.org/works/https://doi.org/10.24033/asens.2650"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。当前PDF未指向独立补充材料；核查入口未列出关联的独立补充PDF，故记为no_separate_listed而非全局不存在。",
+    "embedded_pages": [],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1215/00127094-2025-0078",
+    "main_pdf_sha256": "226f9b2708c7de49e3151680cf315bcd9fb8139d45f6a53fb67040320586a42f",
+    "status": "no_separate_listed",
+    "evidence_urls": [
+      "https://doi.org/10.1215/00127094-2025-0078",
+      "https://api.openalex.org/works/https://doi.org/10.1215/00127094-2025-0078"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。当前PDF未指向独立补充材料；核查入口未列出关联的独立补充PDF，故记为no_separate_listed而非全局不存在。部分出版社入口被挑战页阻挡，不能以HTTP 200宣称网页核查成功；采用固定PDF自身指引及仓储清单，保留版本差异风险。",
+    "embedded_pages": [],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1007/s00220-026-05748-5",
+    "main_pdf_sha256": "f45a9e946e4725e634b7b5b9b7d7a09f82e2c5c6a308937797107b2bc56ad97d",
+    "status": "no_separate_listed",
+    "evidence_urls": [
+      "https://doi.org/10.1007/s00220-026-05748-5",
+      "https://api.openalex.org/works/https://doi.org/10.1007/s00220-026-05748-5"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。当前PDF未指向独立补充材料；核查入口未列出关联的独立补充PDF，故记为no_separate_listed而非全局不存在。部分出版社入口被挑战页阻挡，不能以HTTP 200宣称网页核查成功；采用固定PDF自身指引及仓储清单，保留版本差异风险。",
+    "embedded_pages": [],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1007/s00220-026-05712-3",
+    "main_pdf_sha256": "6dbcc5cdd3a8c9bd8b30eb6dbbde5a1c451723d8562740b4c72b652fc6280dc6",
+    "status": "embedded",
+    "evidence_urls": [
+      "https://doi.org/10.1007/s00220-026-05712-3",
+      "https://api.openalex.org/works/https://doi.org/10.1007/s00220-026-05712-3"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。附录/补充材料起始定位为PDF物理页54,57；完整文件保留，未裁切或拼接TeX。部分出版社入口被挑战页阻挡，不能以HTTP 200宣称网页核查成功；采用固定PDF自身指引及仓储清单，保留版本差异风险。",
+    "embedded_pages": [
+      54,
+      57
+    ],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1007/s10240-024-00151-z",
+    "main_pdf_sha256": "e91e0312a785d00be67ffa78a016b08801e2c3abdd8ea9d3c7e9544a3c00d759",
+    "status": "embedded",
+    "evidence_urls": [
+      "https://doi.org/10.1007/s10240-024-00151-z",
+      "https://www.numdam.org/articles/10.1007/s10240-024-00151-z/"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。附录/补充材料起始定位为PDF物理页79,82,84,88,91,92；完整文件保留，未裁切或拼接TeX。",
+    "embedded_pages": [
+      79,
+      82,
+      84,
+      88,
+      91,
+      92
+    ],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1007/s10240-024-00152-y",
+    "main_pdf_sha256": "afdb264b7ee9e263f0f6eab442ce2f7398ccb2b26fd6a85cd654086b3b29570c",
+    "status": "no_separate_listed",
+    "evidence_urls": [
+      "https://doi.org/10.1007/s10240-024-00152-y",
+      "https://www.numdam.org/articles/10.1007/s10240-024-00152-y/"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。当前PDF未指向独立补充材料；核查入口未列出关联的独立补充PDF，故记为no_separate_listed而非全局不存在。",
+    "embedded_pages": [],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1103/5lcd-6ml6",
+    "main_pdf_sha256": "1017e9336d2e4577420b85a0e2fb7527a35fb9a4030bff5398f04e4400b05e97",
+    "status": "embedded",
+    "evidence_urls": [
+      "https://doi.org/10.1103/5lcd-6ml6",
+      "https://repo.scoap3.org/records/112427",
+      "https://scoap3-prod-backend.s3.cern.ch/media/harvested_files/10.1103/5lcd-6ml6/5lcd-6ml6.xml"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。附录/补充材料起始定位为PDF物理页12；完整文件保留，未裁切或拼接TeX。SCOAP3同DOI文件清单只有主PDF与出版社XML；XML无supplementary-material元素或补充信息指引。",
+    "embedded_pages": [
+      12
+    ],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1103/l88d-nfqp",
+    "main_pdf_sha256": "7cb2cf3342651e76d1d0d6cde2dc3f9e65f082ed4725dbd73d2a97eceae19f55",
+    "status": "embedded",
+    "evidence_urls": [
+      "https://doi.org/10.1103/l88d-nfqp",
+      "https://repo.scoap3.org/records/112428",
+      "https://scoap3-prod-backend.s3.cern.ch/media/harvested_files/10.1103/l88d-nfqp/l88d-nfqp.xml"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。附录/补充材料起始定位为PDF物理页19,21；完整文件保留，未裁切或拼接TeX。SCOAP3同DOI文件清单只有主PDF与出版社XML；XML无supplementary-material元素或补充信息指引。",
+    "embedded_pages": [
+      19,
+      21
+    ],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1103/l3fr-9qlz",
+    "main_pdf_sha256": "ed7d77302faba0175112fd1ffc7acb37b042e98a8aaa30993374074012e8684e",
+    "status": "no_separate_listed",
+    "evidence_urls": [
+      "https://doi.org/10.1103/l3fr-9qlz",
+      "https://repo.scoap3.org/records/112404",
+      "https://scoap3-prod-backend.s3.cern.ch/media/harvested_files/10.1103/l3fr-9qlz/l3fr-9qlz.xml"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。当前PDF未指向独立补充材料；核查入口未列出关联的独立补充PDF，故记为no_separate_listed而非全局不存在。SCOAP3同DOI文件清单只有主PDF与出版社XML；XML无supplementary-material元素或补充信息指引。",
+    "embedded_pages": [],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1103/854z-dc2g",
+    "main_pdf_sha256": "6d93768ac74d8a09a92bfe43b208a634c0a26b38c3cfe29fdbb983d7dfd276b6",
+    "status": "embedded",
+    "evidence_urls": [
+      "https://doi.org/10.1103/854z-dc2g",
+      "https://repo.scoap3.org/records/112401",
+      "https://scoap3-prod-backend.s3.cern.ch/media/harvested_files/10.1103/854z-dc2g/854z-dc2g.xml"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。附录/补充材料起始定位为PDF物理页13；完整文件保留，未裁切或拼接TeX。SCOAP3同DOI文件清单只有主PDF与出版社XML；XML无supplementary-material元素或补充信息指引。",
+    "embedded_pages": [
+      13
+    ],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1007/JHEP10(2026)237",
+    "main_pdf_sha256": "5cc83d16eeeda819e2695b548870b8de27fc8a9a7cda58af567d25cb46a84ce5",
+    "status": "embedded",
+    "evidence_urls": [
+      "https://doi.org/10.1007/JHEP10(2026)237",
+      "https://repo.scoap3.org/records/112438",
+      "https://scoap3-prod-backend.s3.cern.ch/media/harvested_files/10.1007/JHEP10(2026)237/13130_2026_Article_30404.xml.scoap.xml"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。附录/补充材料起始定位为PDF物理页26,27,28；完整文件保留，未裁切或拼接TeX。SCOAP3同DOI文件清单只有主PDF与出版社XML；XML无supplementary-material元素或补充信息指引。",
+    "embedded_pages": [
+      26,
+      27,
+      28
+    ],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1007/JHEP10(2026)244",
+    "main_pdf_sha256": "5f08db9599a8132033596325f1be023257ae70b0cdb42f7e7e73c9aaa9ddd073",
+    "status": "embedded",
+    "evidence_urls": [
+      "https://doi.org/10.1007/JHEP10(2026)244",
+      "https://repo.scoap3.org/records/112439",
+      "https://scoap3-prod-backend.s3.cern.ch/media/harvested_files/10.1007/JHEP10(2026)244/13130_2026_Article_30411.xml.scoap.xml"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。附录/补充材料起始定位为PDF物理页25,26,30；完整文件保留，未裁切或拼接TeX。SCOAP3同DOI文件清单只有主PDF与出版社XML；XML无supplementary-material元素或补充信息指引。",
+    "embedded_pages": [
+      25,
+      26,
+      30
+    ],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1103/PhysRevLett.115.204302",
+    "main_pdf_sha256": "d370f339b2398c1196941a240900fe4df0949c12d6649dfcdab5e7d4ed98be7c",
+    "status": "embedded",
+    "evidence_urls": [
+      "https://doi.org/10.1103/PhysRevLett.115.204302",
+      "https://arxiv.org/abs/1504.01323v2"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。附录/补充材料起始定位为PDF物理页8；完整文件保留，未裁切或拼接TeX。",
+    "embedded_pages": [
+      8
+    ],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1103/PhysRevX.7.021035",
+    "main_pdf_sha256": "8fa204b1ade884f3df3fbead4551c54ac888b21331fde85fe1083517e002949b",
+    "status": "embedded",
+    "evidence_urls": [
+      "https://doi.org/10.1103/PhysRevX.7.021035",
+      "https://arxiv.org/abs/1609.03902v3",
+      "https://journals.aps.org/prx/supplemental/10.1103/PhysRevX.7.021035/SupplementalMaterial.pdf"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。附录/补充材料起始定位为PDF物理页11,14；完整文件保留，未裁切或拼接TeX。普通pypdf抽字的14–16页出现字体编码；已渲染14页人工目视核对，确为同作者同标题的Supplemental Material，三页对应出版社所列文件。",
+    "embedded_pages": [
+      11,
+      14
+    ],
+    "unresolved": []
+  },
+  {
+    "doi": "10.1103/physrevlett.113.257401",
+    "main_pdf_sha256": "fca097f56196a6bfa101dd5bca8745691db7212610a3611edc6243c2ebd36de8",
+    "status": "embedded",
+    "evidence_urls": [
+      "https://doi.org/10.1103/physrevlett.113.257401",
+      "https://arxiv.org/abs/1408.0237v1"
+    ],
+    "evidence": "核对当前固定PDF的正文、结尾及补充/附录指引，并核查所列仓储或期刊资料入口。本记录范围是这份PDF版本及已发现的关联文件，不宣称排除了互联网上一切后续附件。附录/补充材料起始定位为PDF物理页8；完整文件保留，未裁切或拼接TeX。",
+    "embedded_pages": [
+      8
+    ],
+    "unresolved": []
+  }
+]

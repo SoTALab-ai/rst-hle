@@ -3,9 +3,9 @@ import json
 
 import httpx
 import pytest
+from test_gateway import install_mock
 
 from diamond_factory.llm import Gateway
-from test_gateway import install_mock
 
 
 def test_page_images_are_cached_and_image_change_changes_identity(tmp_path, settings, monkeypatch):
