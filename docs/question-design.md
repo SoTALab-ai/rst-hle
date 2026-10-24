@@ -26,8 +26,8 @@
 | 重建完整证明并设计挖空 | 论文正文、定位证据、目标方向、父题反馈 | Solution及design：来源结论、目标、全部底层条件、隐藏步骤、待推条件、不变量、逆构造与反代方法 | [solution](../prompts/solution.txt) |
 | 先验参考蓝图 | 来源和完整参考解，尚未有最终题面 | 检查推导、答案、物理域和来源支持；不通过先修参考解 | [blueprint_audit](../prompts/blueprint_audit.txt) |
 | 反向生成题面 | 参考解和逆构造设计 | 只保留约束与短目标；隐藏中间推理，保留与金标一致的required_outputs | [align](../prompts/align.txt) |
-| 最难步骤挖空审查 | 实际题面、完整证明、固定结果和mask | 比较瓶颈选择、检查等价提示泄露、旁路、可恢复性，以及是否只挖答案 | [bottleneck_audit](../prompts/bottleneck_audit.txt) |
 | 综合审查 | 题面、金标、来源和父题 | 完整性、类别、证据、实质性变更、歧义及捷径 | [audit](../prompts/audit.txt) |
+| 最难步骤挖空审查 | 实际题面、完整证明、固定结果和mask | 比较瓶颈选择、检查等价提示泄露、旁路、可恢复性，以及是否只挖答案 | [bottleneck_audit](../prompts/bottleneck_audit.txt) |
 | 题面独立求解 | 仅题面 | 不看金标重做推导，识别遗漏与矛盾 | [consistency_solve](../prompts/consistency_solve.txt) |
 | 自洽与验算设计 | 题面、金标、独立推导、来源 | 五项正确性检查、逐输出反代证书和合法域条件 | [consistency_review](../prompts/consistency_review.txt) |
 | 验算公式对齐 | 原题、原金标、提出的证书 | 隔离检查公式翻译，修正验算表达式但绝不修改原金标 | [consistency_certificate](../prompts/consistency_certificate.txt) |
