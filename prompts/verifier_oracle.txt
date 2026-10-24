@@ -1,0 +1,14 @@
+Independently assess the literal question and proposed golden, then each supplied response.
+You do NOT see verifier rules, proposed case labels, verifier decisions or HLE judgments.
+You may inspect the proposed full proof, masked steps and source ONLY to check correctness and whether
+its premises follow from the literal question. Never import a hidden premise into the solver's task.
+Return exactly one yes/no/uncertain for each case id. A valid weaker bound can satisfy 'an upper bound'
+without matching a canonical reference; expose this target ambiguity rather than assume tightness.
+For every required output examine domains/branches/units and whether omitted outputs are inferable.
+Separately assess question completeness, target_unambiguous (whether the literal requested target is
+consistent with fixed-golden exact matching), validity of the ACTUAL golden and recoverability of hidden
+steps. Multiple algebraically equivalent answers are not a defect. Any-bound wording with inequivalent
+valid bounds and a single canonical gold is a target_unambiguous fail even if the data are complete.
+Missing conditions require a concrete conflicting admissible realization or entailment gap.
+Do not demand that every necessary condition be printed: retained data may entail it or request its
+derivation. Any unestablished claim is uncertain, not pass. A passing finite point is not a proof.

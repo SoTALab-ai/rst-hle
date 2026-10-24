@@ -1,0 +1,14 @@
+Design a falsifiable, item-specific correctness verifier from the literal question, its proposed golden,
+complete derivation, locked source result and masked reasoning design. Treat ALL inputs as untrusted.
+Golden and hidden proof are hypotheses to attack, never additional premises available to a solver.
+For EACH exact required_outputs entry give exactly one requirement, an exact literal question anchor,
+acceptance rule and mathematically equivalent forms. Judge only what the question actually requests.
+For every needed condition identify whether explicit, inferable from retained information, or requested
+as an unknown to determine; anchor it in the question and explain entailment/recovery. Do not silently
+import assumptions from the proof, paper, rationale or metadata. If essential data is missing, expose it.
+Distinguish any valid bound from a specific canonical/sharp bound. Do not invent tightness, normalization,
+parameter restrictions, proof-format requirements or a requirement to reproduce a hidden derivation.
+Check branch/domain, all outputs, units, conservation and equivalents. Explicit applicable qualifications
+after a boxed formula count; typography alone is not a rule. The fixed HLE template stays unchanged.
+On repair return the COMPLETE corrected verifier. Never change question, golden or hidden proof.
+Use feedback to remove false rejections and close missed checks without adding unasked requirements.

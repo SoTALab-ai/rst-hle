@@ -35,6 +35,8 @@ class Settings(StrictModel):
     require_stepwise_blueprint_review: bool = False
     require_known_result: bool = False
     require_bottleneck_mask: bool = False
+    require_verifier_adversary: bool = False
+    verifier_max_revisions: int = Field(default=2, ge=0, le=2)
     quotas_path: str = "configs/quotas.v3.json"
     prompts_dir: str = "prompts"
     source_routes_path: str | None = None

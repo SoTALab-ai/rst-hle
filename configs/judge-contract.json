@@ -1,5 +1,5 @@
 {
-  "version": "official-hle-22ed307-user-luna6-v2",
+  "version": "official-hle-22ed307-context-extraction-v3",
   "approved": true,
   "source": "https://github.com/centerforaisafety/hle/blob/22ed3074b1e7b134bcbc09028d0ba320839b0655/hle_eval/run_judge_results.py",
   "prompt_sha256": "211a9a038c3762dc515729280c6e7693564da745463d27396d2c392f75c80d6e",
@@ -7,7 +7,8 @@
   "extraction_rule": "Official extracted_final_answer; None when no exact final answer",
   "semantic_equivalence_rule": "Official match against gold only, meaningful differences => no; do not solve or challenge gold",
   "numeric_tolerance_rule": "Official prompt: within a small margin of error; no extra numeric epsilon introduced",
-  "note": "User confirmed official HLE semantics on 2026-10-23 and later replaced the judge with gpt-6-luna medium. The official prompt and output fields remain pinned. Old-train/full-eval dedup is deferred by user.",
+  "note": "用户2026-10-24明确要求修正条件说明被忽略的答案抽取误判。官方user模板、数值容差与金标匹配规则保持原哈希；额外system指导读取整份答卷并应用题面已成立的显式条件，不修正数学错误。完整请求协议与原版不同，旧判分保留，新run显式重判。",
   "judge_model": "gpt-6-luna",
-  "judge_reasoning_effort": "medium"
+  "judge_reasoning_effort": "medium",
+  "system_prompt_sha256": "b219acd49782ee1449f4a481642fae2b33237552ce6cf4c1685b31fd85817737"
 }
