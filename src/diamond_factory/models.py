@@ -40,6 +40,43 @@ class Evidence(StrictModel):
     supports: str = Field(min_length=10)
 
 
+class InferenceStep(StrictModel):
+    id: str = Field(pattern=r"^[A-Za-z][A-Za-z0-9_]{0,39}$")
+    depends_on: list[str]
+    inference: str = Field(min_length=15)
+
+
+class DifficultyDesign(StrictModel):
+    pattern_ids: list[str] = Field(min_length=1, max_length=2)
+    skills: list[str] = Field(min_length=2, max_length=3)
+    skill_bridge: str = Field(min_length=20)
+    steps: list[InferenceStep] = Field(min_length=3, max_length=8)
+    bottleneck_step: str
+    baseline_shortcut: str = Field(min_length=20)
+    shortcut_counterexample: str = Field(min_length=20)
+    easier_control: str = Field(min_length=20)
+
+    @model_validator(mode="after")
+    def connected_reasoning(self):
+        # 只检查申报的推理图结构，不能据此证明题目真的难或数学正确。
+        prior = set()
+        for step in self.steps:
+            if step.id in prior or len(set(step.depends_on)) != len(step.depends_on):
+                raise ValueError("Inference steps and dependencies must be unique")
+            if not set(step.depends_on) <= prior:
+                raise ValueError("Dependencies must reference earlier inference steps")
+            prior.add(step.id)
+        needed = {self.steps[-1].id}
+        for step in reversed(self.steps):
+            if step.id in needed:
+                needed.update(step.depends_on)
+        if needed != prior or self.bottleneck_step not in needed:
+            raise ValueError("All steps and the bottleneck must contribute to the final target")
+        if len(set(self.skills)) != len(self.skills) or len(set(self.pattern_ids)) != len(self.pattern_ids):
+            raise ValueError("Skills and pattern IDs must be distinct")
+        return self
+
+
 class TaskDesign(StrictModel):
     source_claim: str = Field(min_length=20)
     claim_locator: str = Field(min_length=3)
@@ -50,6 +87,7 @@ class TaskDesign(StrictModel):
     preserved_invariants: list[str] = Field(min_length=1)
     inverse_construction: str = Field(min_length=20)
     answer_check: str = Field(min_length=20)
+    difficulty: DifficultyDesign | None = None
 
 
 class Solution(StrictModel):
@@ -63,15 +101,42 @@ class Solution(StrictModel):
     design: TaskDesign | None = None
 
 
+class BlueprintIssue(StrictModel):
+    part: Literal["derivation", "answer", "assumptions", "source", "difficulty_design"]
+    step_index: int | None = Field(default=None, ge=1)
+    claim: str = Field(min_length=10)
+    evidence: str = Field(min_length=10)
+    repair_requirement: str = Field(min_length=10)
+
+
 class BlueprintAudit(StrictModel):
     valid: bool
     answer_correct: bool
     derivation_complete: bool
     source_grounded: bool
     reason: str = Field(min_length=10)
+    reviewed_step_count: int | None = Field(default=None, ge=1)
+    issues: list[BlueprintIssue] = Field(default_factory=list)
 
     def passed(self):
-        return self.valid and self.answer_correct and self.derivation_complete and self.source_grounded
+        return (self.valid and self.answer_correct and self.derivation_complete and self.source_grounded
+                and not self.issues)
+
+
+class StepwiseBlueprintAudit(BlueprintAudit):
+    reviewed_step_count: int = Field(ge=1)
+    issues: list[BlueprintIssue]
+
+    @model_validator(mode="after")
+    def actionable_issues(self):
+        if not self.passed() and not self.issues:
+            raise ValueError("A rejected proof must include actionable issues")
+        for issue in self.issues:
+            if issue.part == "derivation" and issue.step_index is None:
+                raise ValueError("Derivation issues must identify a one-based step index")
+            if issue.step_index is not None and issue.step_index > self.reviewed_step_count:
+                raise ValueError("Issue step index exceeds the reviewed proof")
+        return self
 
 
 class Question(StrictModel):

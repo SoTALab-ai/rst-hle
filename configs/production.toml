@@ -17,8 +17,8 @@ external_dedup_required = false
 dedup_corpora = []
 
 [generator]
-model = "gpt-5.6-luna"
-accepted_response_models = ["gpt-5.6-luna", "gpt-5.6-luna-2026-07-09"]
+model = "gpt-6-luna"
+accepted_response_models = ["gpt-6-luna", "gpt-6-luna-2026-09-22"]
 reasoning_effort = "medium"
 max_tokens = 12000
 

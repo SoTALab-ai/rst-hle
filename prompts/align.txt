@@ -24,3 +24,8 @@ list of requested intermediate outputs. required_outputs must match the actual q
 Check the literal question against design.hidden_steps before returning: do not explicitly provide the
 intermediate lemma, spectral identity, transformation, branch criterion or solved interval that the
 design claims the solver must discover. Preserve primitive definitions and raw constraints instead.
+If design.difficulty exists, preserve the final target of its dependency chain while omitting the
+outputs of its intermediate steps. Do not reveal the skill names, pattern IDs, baseline shortcut,
+counterexample explanation or easier-control hint in the question. These are author/auditor metadata.
+Retain clear observable definitions, averaging conventions, domains and multiplicity conventions;
+their ambiguity must never stand in for the intended reasoning bottleneck.

@@ -27,3 +27,9 @@ intermediate lemma, identity, transformation, branch criterion or solved interva
 must be discovered, set no_shortcut=false and identify the exposed step for revision. Do not reject raw
 observations or primitive definitions merely because the reference proof also uses them.
 Return all booleans and a specific reason. Any uncertainty in correctness should set valid=false.
+When solution.design.difficulty is supplied, use its declared bottleneck and baseline shortcut to
+actively seek a shorter solution from the literal question. If the target can be reached by the old
+shortcut or by bypassing a declared essential skill/bridge, set no_shortcut=false and describe the
+concrete bypass. Check that the question does not directly supply the bottleneck's conclusion or the
+easier_control's hint. A checked dependency graph is not a measured difficulty score; only the target
+solver's independent samples establish the empirical screen result.

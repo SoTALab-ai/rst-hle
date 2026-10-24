@@ -1,3 +1,7 @@
+require_solution_design = true
+preverify_blueprint = true
+require_stepwise_blueprint_review = true
+require_difficulty_design = true
 samples = 16
 correct_min = 1
 correct_max = 8
@@ -7,7 +11,7 @@ max_requests = 2200
 max_retries = 1
 max_rounds = 3
 attempts_per_round = 1
-max_repairs = 1
+max_repairs = 2
 concurrency = 16
 solver_concurrency = 14
 request_timeout = 600.0
@@ -21,8 +25,8 @@ external_dedup_required = false
 operators = ["hide_intermediate_structure_and_infer_parameter_domain", "compose_nontrivial_constraints"]
 
 [generator]
-model = "gpt-5.6-luna"
-accepted_response_models = ["gpt-5.6-luna", "gpt-5.6-luna-2026-07-09"]
+model = "gpt-6-luna"
+accepted_response_models = ["gpt-6-luna", "gpt-6-luna-2026-09-22"]
 reasoning_effort = "high"
 
 [auditor]

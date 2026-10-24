@@ -6,6 +6,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from .consistency import QualityRejected, consistency_input, has_valid_consistency, verifier_fingerprint
+from .difficulty import difficulty_design_errors, parent_solver_feedback, profile_for_category
 from .evaluation import judge_answer
 from .gates import (
     can_count,
@@ -28,6 +29,7 @@ from .models import (
     Question,
     Record,
     Solution,
+    StepwiseBlueprintAudit,
     SubstitutionReport,
     Trial,
     digest,
@@ -141,8 +143,15 @@ class Pipeline:
             errors.append("audit_failed:" + candidate.audit.reason)
         if self.settings.require_solution_design and candidate.solution.design is None:
             errors.append("missing_solution_design")
+        errors.extend(difficulty_design_errors(candidate.solution, candidate.item.category,
+                                              self.difficulty_profile, self.settings.require_difficulty_design))
         if self.settings.preverify_blueprint and (not candidate.blueprint_audit or not candidate.blueprint_audit.passed()):
             errors.append("missing_or_failed_blueprint_audit")
+        if self.settings.require_stepwise_blueprint_review and (
+            not candidate.blueprint_audit
+            or candidate.blueprint_audit.reviewed_step_count != len(candidate.solution.derivation)
+        ):
+            errors.append("missing_or_mismatched_stepwise_blueprint_review")
         if errors:
             candidate.status, candidate.reasons = "rejected", errors
             self.store.save(candidate)
@@ -210,6 +219,25 @@ class Pipeline:
                          ("premises", "definitions", "parameter_domain", "reference_answer", "physical_regime")})
         return passed
 
+    async def review_blueprint(self, solution, source_data, target, salt):
+        """审完整证明；步骤映射不合法只修审查格式，不重购作者答案。"""
+        schema = StepwiseBlueprintAudit if self.settings.require_stepwise_blueprint_review else BlueprintAudit
+        prompt = self.prompts["blueprint_audit"] + "\n" + json.dumps({
+            "solution": solution.model_dump(), "source": source_data, "target": target,
+            "step_indexing": "One-based indices into solution.derivation; inspect every entry.",
+            "expected_step_count": len(solution.derivation)}, ensure_ascii=False)
+        for attempt in range(2):
+            review, rid, model = await self.consistency_call(
+                prompt, salt if attempt == 0 else salt + ":step-map-repair", schema)
+            if (not self.settings.require_stepwise_blueprint_review
+                    or review.reviewed_step_count == len(solution.derivation)):
+                return review, rid, model
+            self.log("blueprint_step_map_repair", request_id=rid, author_resampled=False,
+                     expected_steps=len(solution.derivation), reported_steps=review.reviewed_step_count)
+            prompt += ("\nFORMAT REPAIR ONLY: reviewed_step_count must equal " + str(len(solution.derivation))
+                       + ". Map every issue to the actual proof entries; do not change the proof or gold.")
+        raise ModelResponseError("consistency", rid, "invalid_blueprint_step_mapping")
+
     async def generate(self, source, parent, target, generation, attempt, brief=None):
         if parent and not await self.preflight(parent):
             raise QualityRejected("Invalid parent: repair correctness before difficulty evolution")
@@ -233,15 +261,21 @@ class Pipeline:
         data = {"source": source_data, "parent": parent.item.model_dump() if parent else None,
                 "parent_solution": parent.solution.model_dump() if parent else None,
                 "target": target, "generation": generation, "operator": operator,
-                "feedback": feedback}
+                "feedback": feedback, "require_difficulty_design": self.settings.require_difficulty_design}
         if self.difficulty_profile:
-            data["difficulty_profile"] = self.difficulty_profile
+            data["difficulty_profile"] = profile_for_category(self.difficulty_profile, target["category"])
+        solver_feedback = parent_solver_feedback(parent)
+        if solver_feedback:
+            data["parent_solver_feedback"] = solver_feedback
         if brief:
             data["research_brief"] = brief
         first_repair = existing.authoring_repairs_completed if existing else 0
         if existing:
             data["feedback"] = {"original": feedback,"errors":existing.reasons,
-                                "previous":existing.item.model_dump()}
+                                "stage": "question_or_consistency", "previous":existing.item.model_dump(),
+                                "previous_solution": existing.solution.model_dump(),
+                                "consistency_assessment": (existing.consistency.model_dump()
+                                                           if existing.consistency else None)}
         result = None
         for repair in range(first_repair,self.settings.max_repairs + 1):
             salt = f"{identity}:repair:{repair}"
@@ -251,16 +285,25 @@ class Pipeline:
             blueprint_errors = []
             if self.settings.require_solution_design and plan.design is None:
                 blueprint_errors.append("missing_solution_design")
+            blueprint_errors.extend(difficulty_design_errors(plan, target["category"], self.difficulty_profile,
+                                                             self.settings.require_difficulty_design))
             if self.settings.preverify_blueprint:
-                blueprint, bid, bmodel = await self.consistency_call(
-                    self.prompts["blueprint_audit"] + "\n" + json.dumps({
-                        "solution": plan.model_dump(), "source": source_data, "target": target}, ensure_ascii=False),
-                    salt + ":blueprint-audit", BlueprintAudit)
+                blueprint, bid, bmodel = await self.review_blueprint(plan, source_data, target,
+                                                                    salt + ":blueprint-audit")
+                self.log("blueprint_review", candidate=identity, repair=repair, request_id=bid,
+                         actual_model=bmodel, solution_sha256=digest(plan.model_dump()),
+                         passed=blueprint.passed(), reviewed_step_count=blueprint.reviewed_step_count,
+                         issues=[issue.model_dump() for issue in blueprint.issues])
                 if not blueprint.passed():
                     blueprint_errors.append("blueprint_failed:" + blueprint.reason)
             if blueprint_errors:
                 self.log("blueprint_repair_feedback", candidate=identity, repair=repair, reasons=blueprint_errors)
-                data["feedback"] = {"original": feedback, "errors": blueprint_errors, "previous": plan.model_dump()}
+                data["feedback"] = {"original": feedback, "stage": "reference_proof",
+                                    "errors": blueprint_errors, "previous": plan.model_dump(),
+                                    "blueprint_review": blueprint.model_dump() if blueprint else None,
+                                    "repair_instruction": "Repair the specified claims and every dependent step. "
+                                    "Return the complete corrected proof and gold; preserve independently valid steps. "
+                                    "Do not write a question before the proof is approved."}
                 if repair == self.settings.max_repairs:
                     raise AuthoringRejected("; ".join(blueprint_errors))
                 continue
@@ -300,7 +343,11 @@ class Pipeline:
             result.authoring_complete = repair == self.settings.max_repairs
             self.store.save(result)
             self.log("repair_feedback", candidate=identity, repair=repair, reasons=errors)
-            data["feedback"] = {"original": feedback, "errors": errors, "previous": item.model_dump()}
+            data["feedback"] = {"original": feedback, "stage": "question_or_consistency",
+                                "errors": errors, "previous": item.model_dump(),
+                                "previous_solution": plan.model_dump(),
+                                "consistency_assessment": (result.consistency.model_dump()
+                                                           if result.consistency else None)}
         return result
 
     async def sample(self, candidate, limit=None):

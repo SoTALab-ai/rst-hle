@@ -46,7 +46,7 @@ uv run python scripts/run_question_experiment.py \
 
 价格快照使用真实网关的USD/百万tokens费率，包含 `observed_at`、`currency: "USD"`、`rmb_reference_exchange_rate` 和 `rates_per_million`。每个配置模型必须提供 `input`、`output`、`cache_read`、`cache_write` 四项；存在输入长度阶梯时提供 `input_tier_limit` 和 `above_limit`。不要把上游响应的 `usage.cost` 直接当成自己的网关账单。
 
-每个版本先建立参考解，再出题，执行结构检查与分离调用复核。作者使用gpt-5.6-luna high；复核使用gpt-6-luna high；目标解题模型为GLM5.2；HLE官方模板的判分模型为gpt-6-luna medium。均不发送客户端输出token上限；每次调用最多600秒、包含接口重试。
+每个版本先建立参考解，再出题，执行结构检查与分离调用复核。首次20条和已结束100条冻结试产的作者为gpt-5.6-luna high；2026-10-24起新配置按用户要求改为gpt-6-luna high。复核使用gpt-6-luna high；目标解题模型为GLM5.2；HLE官方模板的判分模型为gpt-6-luna medium。理论配置均不发送客户端输出token上限；每次调用最多600秒、包含接口重试。
 
 后续版本新增必经的[前置自洽审查](consistency.md)：单独的gpt-6-luna high先只看题面独立推导，再核对作者金标、定义、参数域和物理可行性；第三次隔离调用校验验算公式翻译，再执行程序反代。必须在首4次解题之前通过；任何错误、不确定或计算输出验算未覆盖都先退回质量修复，每次加/降难都重做。新增请求与费用单列为consistency，不覆盖首次试产快照或其7/16结果。100条新实验另启用参考蓝图先验及逆构造设计，配置与口径见[100条协议](theory100.md)。
 
