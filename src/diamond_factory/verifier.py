@@ -21,7 +21,8 @@ from .runtime import gather_cancel_on_error
 
 PROMPTS = ("verifier_draft", "verifier_challenge", "verifier_oracle", "verifier_apply",
            "verifier_review", "verifier_question_repair", "judge", "judge_system", "audit",
-           "consistency_solve", "consistency_review", "consistency_certificate", "bottleneck_audit")
+           "consistency_solve", "consistency_review", "consistency_certificate", "consistency_certificate_anchors",
+           "bottleneck_audit")
 
 
 def context_hash(candidate, sources):

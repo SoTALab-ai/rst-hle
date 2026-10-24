@@ -323,6 +323,17 @@ class CertificateAudit(StrictModel):
     checks: list[SubstitutionCase] = Field(max_length=64)
 
 
+class CertificateAnchorPatch(StrictModel):
+    check_index: int = Field(ge=0, le=63)
+    question_anchor: str = Field(min_length=5)
+    answer_anchor: str = Field(min_length=1)
+    target_output_index: int = Field(ge=0)
+
+
+class CertificateAnchors(StrictModel):
+    patches: list[CertificateAnchorPatch] = Field(min_length=1, max_length=64)
+
+
 class ConsistencyAssessment(StrictModel):
     protocol: Literal["preflight-v1"] = "preflight-v1"
     input_sha256: str
@@ -339,6 +350,9 @@ class ConsistencyAssessment(StrictModel):
     certificate_prompt_sha256: str = ""
     certificate_request: str = ""
     certificate_actual_model: str = ""
+    certificate_anchor_request: str = ""
+    certificate_anchor_actual_model: str = ""
+    certificate_anchor_prompt_sha256: str = ""
     verifier_sha256: str = ""
 
     def passed(self):

@@ -8,6 +8,8 @@ from test_qc import FakeGateway, setup_pipeline
 from diamond_factory.difficulty import construction_ready
 from diamond_factory.llm import ModelResponseError
 from diamond_factory.models import (
+    CertificateAnchors,
+    CertificateAudit,
     Judgment,
     VerifierChallenges,
     VerifierDecision,
@@ -257,3 +259,32 @@ def test_initial_audit_ambiguity_can_enter_question_repair_but_not_skip_audit(tm
     candidate.audit = candidate.audit.model_copy(update={"uniquely_answerable": False})
     assert asyncio.run(pipe.preflight(candidate))
     assert candidate.audit.passed() and len(candidate.verifier_assessment.versions) == 2
+
+
+@pytest.mark.parametrize("bad_math", [False, True])
+def test_certificate_anchor_recovery_cannot_edit_math_or_hide_a_counterexample(
+        tmp_path, settings, source, candidate, bad_math):
+    pipe, _, gateway = setup_pipeline(tmp_path, settings, source, candidate)
+    original = gateway.call
+    originals = []
+
+    async def anchors(role, prompt, salt, schema=None, **kwargs):
+        if schema is CertificateAnchors:
+            data = json.loads(prompt.splitlines()[-1])
+            assert data["bad_check_indices"] == [0]
+            return CertificateAnchors.model_validate({"patches": [{"check_index": 0,
+                "question_anchor": "37 vertices", "answer_anchor": "36", "target_output_index": 0}]}), digest(salt), "gpt-6-luna"
+        value, rid, model = await original(role, prompt, salt, schema, **kwargs)
+        if schema is CertificateAudit:
+            value = value.model_copy(deep=True)
+            value.checks[0].question_anchor = "37 Vertices"
+            if bad_math: value.checks[0].rhs = "gold+1"
+            originals.append(value.checks[0])
+        return value, rid, model
+
+    gateway.call = anchors
+    assert asyncio.run(pipe.preflight(candidate)) == (not bad_math)
+    after = candidate.consistency.certificate_audit.checks[0]
+    assert after.model_dump(exclude={"question_anchor"}) == originals[0].model_dump(exclude={"question_anchor"})
+    assert candidate.consistency.certificate_anchor_request
+    assert candidate.consistency.substitution.verdict == ("fail" if bad_math else "pass")
