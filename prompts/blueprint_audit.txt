@@ -24,3 +24,11 @@ proof replaces it correctly. A counterexample to an old shortcut must not contra
 premises. Do not approve the difficulty claim merely because the graph has several nodes or the
 author names advanced concepts. If a claimed necessary bridge can be bypassed, explain this so the
 author can revise; never invent an additional requested output solely to force a skill into the task.
+If known_result is present, independently check that this is an already established conclusion of
+this supplied source, with its original premises, exact target and gold preserved. Do not approve
+an author-invented replacement target. If the locked source result is wrong or unsupported, return
+an issue with part=known_result; this invalidates the selection rather than authorizing a silent
+change of gold. Check any newly introduced restriction does not narrow the original target domain.
+If a mask is supplied, map its one-based proof indices to the actual inference, compare its burden
+to other proof steps, and inspect bypasses and recoverability. Select the hardest supported actual
+bridge, not just the last answer line. Its proposed concealment must leave the original target intact.

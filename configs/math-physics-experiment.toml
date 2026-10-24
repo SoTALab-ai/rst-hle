@@ -1,6 +1,8 @@
 require_solution_design = true
 preverify_blueprint = true
 require_stepwise_blueprint_review = true
+require_known_result = true
+require_bottleneck_mask = true
 require_difficulty_design = true
 samples = 16
 correct_min = 1

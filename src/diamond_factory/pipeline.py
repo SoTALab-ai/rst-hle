@@ -6,7 +6,15 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from .consistency import QualityRejected, consistency_input, has_valid_consistency, verifier_fingerprint
-from .difficulty import difficulty_design_errors, parent_solver_feedback, profile_for_category
+from .difficulty import (
+    blueprint_stamp,
+    bottleneck_input,
+    bottleneck_mask_errors,
+    difficulty_design_errors,
+    known_result_errors,
+    parent_solver_feedback,
+    profile_for_category,
+)
 from .evaluation import judge_answer
 from .gates import (
     can_count,
@@ -20,6 +28,8 @@ from .llm import BudgetExceeded, Gateway, ModelResponseError
 from .models import (
     Audit,
     BlueprintAudit,
+    BottleneckAssessment,
+    BottleneckReview,
     Candidate,
     CertificateAudit,
     ConsistencyAssessment,
@@ -28,6 +38,7 @@ from .models import (
     IndependentSolution,
     Question,
     Record,
+    ResultSelection,
     Solution,
     StepwiseBlueprintAudit,
     SubstitutionReport,
@@ -152,9 +163,24 @@ class Pipeline:
             or candidate.blueprint_audit.reviewed_step_count != len(candidate.solution.derivation)
         ):
             errors.append("missing_or_mismatched_stepwise_blueprint_review")
+        if self.settings.require_known_result:
+            errors.extend(known_result_errors(candidate.known_result, sources, candidate.solution))
+            if candidate.known_result and candidate.source_ids != [candidate.known_result.source_id]:
+                errors.append("known_result_candidate_source_mismatch")
+            if not errors:
+                source = sources[candidate.known_result.source_id]
+                source_data = {**source.model_dump(), "text": source.text[:self.settings.max_source_chars]}
+                target = {"category": candidate.item.category, "subtopic": candidate.item.subtopic}
+                if candidate.blueprint_fingerprint != self.blueprint_stamp(
+                        candidate.solution, source_data, target, candidate.known_result):
+                    errors.append("stale_or_missing_locked_blueprint_review")
+        if self.settings.require_bottleneck_mask:
+            errors.extend(bottleneck_mask_errors(candidate.solution))
         if errors:
             candidate.status, candidate.reasons = "rejected", errors
             self.store.save(candidate)
+            return False
+        if self.settings.require_bottleneck_mask and not await self.review_bottleneck(candidate, sources):
             return False
         input_hash = consistency_input(candidate, sources)
         hashes = {name: digest(self.prompts[name]) for name in ("consistency_solve", "consistency_review")}
@@ -219,11 +245,65 @@ class Pipeline:
                          ("premises", "definitions", "parameter_domain", "reference_answer", "physical_regime")})
         return passed
 
-    async def review_blueprint(self, solution, source_data, target, salt):
+    def blueprint_stamp(self, solution, source_data, target, known_result):
+        return blueprint_stamp(solution, source_data, target, known_result,
+                               self.prompts["blueprint_audit"], self.settings.consistency.model_dump())
+
+    async def select_known_result(self, source, source_data, target, identity, brief):
+        """只从来源抽取已有结果；完整证明复核前不把抽取当作真值。"""
+        data = {"source": source_data, "target": target, "research_brief": brief}
+        for repair in range(self.settings.max_repairs + 1):
+            selection, rid, model = await self.gateway.call("generator", self.prompts["known_result"] + "\n" +
+                json.dumps(data, ensure_ascii=False), f"{identity}:known-result:{repair}", ResultSelection)
+            if selection.outcome == "unavailable":
+                raise AuthoringRejected("known_result_unavailable:" + selection.reason)
+            errors = known_result_errors(selection.result, {source.id: source})
+            self.log("known_result_selection", candidate=identity, repair=repair, request_id=rid,
+                     actual_model=model, result_sha256=digest(selection.result.model_dump()), errors=errors)
+            if not errors:
+                return selection.result
+            data["feedback"] = {"previous": selection.model_dump(), "errors": errors}
+        raise AuthoringRejected("known_result_selection_failed:" + ";".join(errors))
+
+    async def review_bottleneck(self, candidate, sources):
+        """核对真实题面的挖空，不以作者声明或旧通过标志代替审查。"""
+        input_hash = bottleneck_input(candidate, sources)
+        prompt_hash = digest(self.prompts["bottleneck_audit"])
+        model_hash = digest(self.settings.consistency.model_dump())
+        assessment = candidate.bottleneck_assessment
+        if not (assessment and assessment.input_sha256 == input_hash
+                and assessment.prompt_sha256 == prompt_hash and assessment.model_config_sha256 == model_hash):
+            review, rid, model = await self.consistency_call(self.prompts["bottleneck_audit"] + "\n" + json.dumps({
+                "item": candidate.item.model_dump(), "solution": candidate.solution.model_dump(),
+                "known_result": candidate.known_result.model_dump() if candidate.known_result else None},
+                ensure_ascii=False), f"{candidate.id}:bottleneck:{input_hash}", BottleneckReview)
+            mask = candidate.solution.design.difficulty.mask
+            if review.step_id != mask.step_id:
+                raise ModelResponseError("consistency", rid, "invalid_bottleneck_step_mapping")
+            assessment = BottleneckAssessment(input_sha256=input_hash, prompt_sha256=prompt_hash,
+                model_config_sha256=model_hash, review=review, request_id=rid, actual_model=model)
+            candidate.bottleneck_assessment = assessment
+            self.store.save(candidate)
+        if assessment.review.step_id != candidate.solution.design.difficulty.mask.step_id:
+            raise ModelResponseError("consistency", assessment.request_id, "invalid_bottleneck_step_mapping")
+        passed = assessment.review.passed()
+        if not passed:
+            candidate.status = "rejected"
+            candidate.reasons = ["bottleneck_mask_failed:" + name + ":" + getattr(assessment.review, name).reasoning
+                                 for name in assessment.review.check_names()
+                                 if getattr(assessment.review, name).verdict != "pass"]
+            self.store.save(candidate)
+        self.log("bottleneck_mask_review", candidate=candidate.id, passed=passed,
+                 step_id=assessment.review.step_id, request_id=assessment.request_id,
+                 actual_model=assessment.actual_model)
+        return passed
+
+    async def review_blueprint(self, solution, source_data, target, salt, known_result=None):
         """审完整证明；步骤映射不合法只修审查格式，不重购作者答案。"""
         schema = StepwiseBlueprintAudit if self.settings.require_stepwise_blueprint_review else BlueprintAudit
         prompt = self.prompts["blueprint_audit"] + "\n" + json.dumps({
             "solution": solution.model_dump(), "source": source_data, "target": target,
+            "known_result": known_result.model_dump() if known_result else None,
             "step_indexing": "One-based indices into solution.derivation; inspect every entry.",
             "expected_step_count": len(solution.derivation)}, ensure_ascii=False)
         for attempt in range(2):
@@ -269,11 +349,20 @@ class Pipeline:
             data["parent_solver_feedback"] = solver_feedback
         if brief:
             data["research_brief"] = brief
+        known_result = None
+        if self.settings.require_known_result:
+            known_result = (existing.known_result if existing else parent.known_result if parent else None)
+            if known_result is None:
+                known_result = await self.select_known_result(source, source_data, target, identity, brief)
+            data["known_result"] = known_result.model_dump()
+            data["require_bottleneck_mask"] = self.settings.require_bottleneck_mask
         first_repair = existing.authoring_repairs_completed if existing else 0
         if existing:
             data["feedback"] = {"original": feedback,"errors":existing.reasons,
                                 "stage": "question_or_consistency", "previous":existing.item.model_dump(),
                                 "previous_solution": existing.solution.model_dump(),
+                                "bottleneck_assessment": (existing.bottleneck_assessment.model_dump()
+                                                          if existing.bottleneck_assessment else None),
                                 "consistency_assessment": (existing.consistency.model_dump()
                                                            if existing.consistency else None)}
         result = None
@@ -287,9 +376,13 @@ class Pipeline:
                 blueprint_errors.append("missing_solution_design")
             blueprint_errors.extend(difficulty_design_errors(plan, target["category"], self.difficulty_profile,
                                                              self.settings.require_difficulty_design))
+            if self.settings.require_known_result:
+                blueprint_errors.extend(known_result_errors(known_result, {source.id: source}, plan))
+            if self.settings.require_bottleneck_mask:
+                blueprint_errors.extend(bottleneck_mask_errors(plan))
             if self.settings.preverify_blueprint:
                 blueprint, bid, bmodel = await self.review_blueprint(plan, source_data, target,
-                                                                    salt + ":blueprint-audit")
+                                                                    salt + ":blueprint-audit", known_result)
                 self.log("blueprint_review", candidate=identity, repair=repair, request_id=bid,
                          actual_model=bmodel, solution_sha256=digest(plan.model_dump()),
                          passed=blueprint.passed(), reviewed_step_count=blueprint.reviewed_step_count,
@@ -303,7 +396,11 @@ class Pipeline:
                                     "blueprint_review": blueprint.model_dump() if blueprint else None,
                                     "repair_instruction": "Repair the specified claims and every dependent step. "
                                     "Return the complete corrected proof and gold; preserve independently valid steps. "
+                                    "Do not change the locked result, target or original premises. If it is wrong, "
+                                    "identify the contradiction; never silently replace it. "
                                     "Do not write a question before the proof is approved."}
+                if blueprint and any(issue.part == "known_result" for issue in blueprint.issues):
+                    raise AuthoringRejected("locked_known_result_rejected:" + blueprint.reason)
                 if repair == self.settings.max_repairs:
                     raise AuthoringRejected("; ".join(blueprint_errors))
                 continue
@@ -324,6 +421,8 @@ class Pipeline:
                                root_id=parent.root_id if parent else identity, generation=generation,
                                operator=operator, source_ids=[source.id], solution=plan, item=item, audit=audit,
                                blueprint_audit=blueprint, blueprint_request=bid, blueprint_actual_model=bmodel,
+                               known_result=known_result,
+                               blueprint_fingerprint=self.blueprint_stamp(plan, source_data, target, known_result),
                                status="quality_seed", run_id=self.run_id)
             errors = static_errors(result, {source.id: source}, self.quotas)
             if (item.category, item.subtopic) != (target["category"], target["subtopic"]):
@@ -346,6 +445,8 @@ class Pipeline:
             data["feedback"] = {"original": feedback, "stage": "question_or_consistency",
                                 "errors": errors, "previous": item.model_dump(),
                                 "previous_solution": plan.model_dump(),
+                                "bottleneck_assessment": (result.bottleneck_assessment.model_dump()
+                                                          if result.bottleneck_assessment else None),
                                 "consistency_assessment": (result.consistency.model_dump()
                                                            if result.consistency else None)}
         return result

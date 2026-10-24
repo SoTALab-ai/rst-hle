@@ -1,5 +1,79 @@
 """把难度构造假设与真实父题答卷送给作者；不将设计字段当作难度实测。"""
-from .gates import correct_count
+from .gates import correct_count, evidence_errors
+from .models import digest
+
+
+def known_result_errors(result, sources, solution=None):
+    if result is None:
+        return ["missing_known_result"]
+    errors = evidence_errors(result.evidence, sources)
+    if result.source_id not in sources or any(e.source_id != result.source_id for e in result.evidence):
+        errors.append("known_result_source_mismatch")
+    if solution is not None:
+        if solution.answer != result.answer:
+            errors.append("locked_result_answer_changed")
+        if not solution.design or solution.design.target != result.target:
+            errors.append("locked_result_target_changed")
+        if not set(result.assumptions) <= set(solution.assumptions):
+            errors.append("locked_result_assumptions_missing")
+    return errors
+
+
+def bottleneck_mask_errors(solution):
+    difficulty = solution.design.difficulty if solution.design else None
+    mask = difficulty.mask if difficulty else None
+    if mask is None:
+        return ["missing_bottleneck_mask"]
+    errors = []
+    if mask.step_id != difficulty.bottleneck_step:
+        errors.append("mask_does_not_target_selected_bottleneck")
+    if max(mask.proof_step_indices) > len(solution.derivation):
+        errors.append("masked_step_outside_full_proof")
+    return errors
+
+
+def bottleneck_input(candidate, sources):
+    return digest({"item": candidate.item.model_dump(), "solution": candidate.solution.model_dump(),
+                   "known_result": candidate.known_result.model_dump() if candidate.known_result else None,
+                   "sources": {sid: sources[sid].sha256 for sid in candidate.source_ids}})
+
+
+def blueprint_stamp(solution, source_data, target, known_result, prompt, model_config):
+    return digest({"solution": solution.model_dump(), "source": source_data, "target": target,
+                   "known_result": known_result.model_dump() if known_result else None,
+                   "prompt": prompt, "model": model_config})
+
+
+def valid_bottleneck(candidate, sources, prompt=None, model_config=None):
+    assessment = candidate.bottleneck_assessment
+    if (not set(candidate.source_ids) <= sources.keys() or bottleneck_mask_errors(candidate.solution)
+            or not assessment or not assessment.review.passed()):
+        return False
+    mask = candidate.solution.design.difficulty.mask
+    return bool(assessment.review.step_id == mask.step_id
+                and assessment.input_sha256 == bottleneck_input(candidate, sources)
+                and (prompt is None or assessment.prompt_sha256 == digest(prompt))
+                and (model_config is None or assessment.model_config_sha256 == digest(model_config)))
+
+
+def construction_ready(candidate, sources, settings, prompts):
+    """导出只检查现有有效收据，不购买新的审查，也不接受旧通过标记。"""
+    if settings.require_known_result:
+        result = candidate.known_result
+        if (known_result_errors(result, sources, candidate.solution)
+                or candidate.source_ids != [result.source_id]
+                or not candidate.blueprint_audit or not candidate.blueprint_audit.passed()
+                or candidate.blueprint_audit.reviewed_step_count != len(candidate.solution.derivation)):
+            return False
+        source = sources[result.source_id]
+        expected = blueprint_stamp(candidate.solution,
+            {**source.model_dump(), "text": source.text[:settings.max_source_chars]},
+            {"category": candidate.item.category, "subtopic": candidate.item.subtopic}, result,
+            prompts["blueprint_audit"], settings.consistency.model_dump())
+        if candidate.blueprint_fingerprint != expected:
+            return False
+    return (not settings.require_bottleneck_mask or valid_bottleneck(
+        candidate, sources, prompts["bottleneck_audit"], settings.consistency.model_dump()))
 
 
 def profile_for_category(profile, category):

@@ -1,6 +1,6 @@
 import hashlib
 import json
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -46,6 +46,44 @@ class InferenceStep(StrictModel):
     inference: str = Field(min_length=15)
 
 
+class KnownResult(StrictModel):
+    source_id: str
+    locator: str = Field(min_length=3)
+    statement: str = Field(min_length=20)
+    target: str = Field(min_length=10)
+    answer: str = Field(min_length=1)
+    assumptions: list[str] = Field(min_length=1)
+    evidence: list[Evidence] = Field(min_length=1)
+
+
+class ResultSelection(StrictModel):
+    outcome: Literal["found", "unavailable"]
+    result: KnownResult | None
+    reason: str = Field(min_length=10)
+
+    @model_validator(mode="after")
+    def selected_result(self):
+        if (self.outcome == "found") != (self.result is not None):
+            raise ValueError("Found requires a result; unavailable must not invent one")
+        return self
+
+
+class BottleneckMask(StrictModel):
+    step_id: str
+    proof_step_indices: list[Annotated[int, Field(ge=1)]] = Field(min_length=1)
+    hardest_reason: str = Field(min_length=30)
+    alternative_steps: list[str] = Field(min_length=1)
+    hidden_information: list[str] = Field(min_length=1)
+    retained_information: list[str] = Field(min_length=1)
+    recoverability: str = Field(min_length=30)
+
+    @model_validator(mode="after")
+    def unique_indices(self):
+        if len(set(self.proof_step_indices)) != len(self.proof_step_indices):
+            raise ValueError("Masked proof indices must be unique")
+        return self
+
+
 class DifficultyDesign(StrictModel):
     pattern_ids: list[str] = Field(min_length=1, max_length=2)
     skills: list[str] = Field(min_length=2, max_length=3)
@@ -55,6 +93,7 @@ class DifficultyDesign(StrictModel):
     baseline_shortcut: str = Field(min_length=20)
     shortcut_counterexample: str = Field(min_length=20)
     easier_control: str = Field(min_length=20)
+    mask: BottleneckMask | None = None
 
     @model_validator(mode="after")
     def connected_reasoning(self):
@@ -102,7 +141,7 @@ class Solution(StrictModel):
 
 
 class BlueprintIssue(StrictModel):
-    part: Literal["derivation", "answer", "assumptions", "source", "difficulty_design"]
+    part: Literal["derivation", "answer", "assumptions", "source", "difficulty_design", "known_result"]
     step_index: int | None = Field(default=None, ge=1)
     claim: str = Field(min_length=10)
     evidence: str = Field(min_length=10)
@@ -177,6 +216,37 @@ class ConsistencyCheck(StrictModel):
     verdict: Literal["pass", "fail", "uncertain", "not_applicable"]
     reasoning: str = Field(min_length=10)
     witness: str = Field(min_length=10)
+
+
+class BottleneckReview(StrictModel):
+    step_id: str
+    selection_supported: ConsistencyCheck
+    hidden: ConsistencyCheck
+    necessary: ConsistencyCheck
+    recoverable: ConsistencyCheck
+    not_answer_only: ConsistencyCheck
+
+    @model_validator(mode="after")
+    def no_skipped_checks(self):
+        if any(getattr(self, name).verdict == "not_applicable" for name in self.check_names()):
+            raise ValueError("Bottleneck checks cannot be skipped")
+        return self
+
+    @staticmethod
+    def check_names():
+        return ("selection_supported", "hidden", "necessary", "recoverable", "not_answer_only")
+
+    def passed(self):
+        return all(getattr(self, name).verdict == "pass" for name in self.check_names())
+
+
+class BottleneckAssessment(StrictModel):
+    input_sha256: str
+    prompt_sha256: str
+    model_config_sha256: str
+    review: BottleneckReview
+    request_id: str
+    actual_model: str
 
 
 class SubstitutionBinding(StrictModel):
@@ -326,6 +396,9 @@ class Candidate(StrictModel):
     blueprint_audit: BlueprintAudit | None = None
     blueprint_request: str = ""
     blueprint_actual_model: str = ""
+    blueprint_fingerprint: str = ""
+    known_result: KnownResult | None = None
+    bottleneck_assessment: BottleneckAssessment | None = None
     trials: list[Trial] = Field(default_factory=list)
     status: Literal["quality_seed", "rejected", "screened", "accepted"]
     reasons: list[str] = Field(default_factory=list)

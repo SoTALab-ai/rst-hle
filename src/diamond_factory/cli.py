@@ -6,6 +6,7 @@ from pathlib import Path
 from .calibration import BenchmarkQuestion, Calibration
 from .config import load
 from .consistency import has_valid_consistency
+from .difficulty import construction_ready
 from .gates import can_count, correct_count, production_blockers, static_errors
 from .models import Submission, digest
 from .pipeline import Pipeline, report
@@ -143,8 +144,10 @@ def main():
             sources = {s.id: s for s in store.sources()}
             rows = []
             accepted = [c for c in store.candidates() if c.status == "accepted"]
+            prompts = {p.stem: p.read_text() for p in Path(settings.prompts_dir).glob("*.txt")}
             for c in accepted:
                 if (static_errors(c, sources, quotas) or not c.audit.passed() or
+                        not construction_ready(c, sources, settings, prompts) or
                         not has_valid_consistency(c, sources) or
                         not 1 <= correct_count(c.trials) <= 8 or
                         can_count(c, accepted, quotas, settings.max_per_root)):

@@ -33,6 +33,8 @@ class Settings(StrictModel):
     require_difficulty_design: bool = False
     preverify_blueprint: bool = False
     require_stepwise_blueprint_review: bool = False
+    require_known_result: bool = False
+    require_bottleneck_mask: bool = False
     quotas_path: str = "configs/quotas.v3.json"
     prompts_dir: str = "prompts"
     source_routes_path: str | None = None
@@ -67,6 +69,10 @@ class Settings(StrictModel):
             raise ValueError("Difficulty design requires solution design and a difficulty profile")
         if self.require_stepwise_blueprint_review and not self.preverify_blueprint:
             raise ValueError("Stepwise blueprint review requires blueprint verification")
+        if self.require_known_result and not self.require_stepwise_blueprint_review:
+            raise ValueError("Known result locking requires stepwise blueprint verification")
+        if self.require_bottleneck_mask and (not self.require_known_result or not self.require_difficulty_design):
+            raise ValueError("Bottleneck masking requires a locked known result and difficulty design")
         return self
 
 
