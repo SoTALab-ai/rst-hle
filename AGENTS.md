@@ -9,7 +9,7 @@
 
 ## 架构与版本边界
 
-- 2026-10-24起，新理论材料包只含论文正文PDF与明确关联的补充材料；保持文件、页码、版本及哈希。不拼TeX源码、注释、草稿和重复全文。正文已内嵌的附录保留；未检查补充材料不能声称不存在。下载、普通抽字与公式核验分开计数，未核验材料不自动进入出题；历史冻结材料保持原身份。
+- 2026-10-24起，新理论材料包只含论文正文PDF与明确关联的补充材料；保持文件、页码、版本及哈希。不拼TeX源码、注释、草稿和重复全文。正文已内嵌的附录保留；未检查补充材料不能声称不存在。下载、转录完成与科学审查分开计数。2026-10-25起新论文库用6Luna直接读取一次，程序检查文件/页码/结构和未读清标记，不追加第二模型逐页OCR验收；科学正确性仍在出题阶段独立审查，具体来源疑点回查原页。转录不自动放行为合格题源；历史冻结材料保持原身份。
 
 - 个人VM正式试产使用独立PostgreSQL保存状态和元数据，内容寻址文件库保存全文、候选和请求响应；SQLite用于离线测试及明确隔离的诊断回放。
 - schema显式迁移；不要修改已执行迁移或启动时自动升级。真实数据库测试只连接名称以_test结尾的专用库，绝不清理试产/ClawGym业务数据。
@@ -51,9 +51,10 @@
 
 ## 按任务查阅
 
+- 模块归属：[合成架构](docs/synthesis-architecture.md)；验证命令：[本地与个人VM验证](docs/local-validation.md)；论文库：[直接读取入库](docs/paper-library-ingestion.md)。
 - 项目入口与参数：[README](README.md)；需求映射：[验收](docs/acceptance.md)。
 - 逆向构造与提示：[出题设计](docs/question-design.md)；自洽/反代：[质检设计](docs/consistency.md)；[verifier对抗](docs/verifier-adversary.md)。
 - 理论试产：[实验协议](docs/theory-experiment.md)；数据库：[存储部署](docs/database.md)。
-- 原始HLE校准：[无工具限时评测](docs/calibration.md)；首次失败分析：[20条结果](docs/theory-pilot-results-2026-10-23.md)。
+- 原始HLE校准：[无工具限时评测](docs/calibration.md)；首次失败分析：[20条结果](docs/validation/theory-pilot-results-2026-10-23.md)。
 
 稳定JSON边界使用Pydantic严格模型，不绕过校验。文档与关键约束注释使用中文；既有英文模型提示与题面语言分开，不通过正则猜测自然语言结论。不得新增未经请求的agent委派。
