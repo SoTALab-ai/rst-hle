@@ -88,6 +88,8 @@ class MeteredGateway(Gateway):
         self.visible_cost_limit_usd = visible_cost_limit_usd
 
     async def _fetch(self, role, config, payload, request_id, base, key):
+        if self.visible_cost_limit_usd is None:
+            return await super()._fetch(role, config, payload, request_id, base, key)
         if self.store:
             rows = self.store.db.execute("SELECT role,usage FROM diamond.model_requests WHERE run_id=%s",
                                          (self.run_id,)).fetchall()

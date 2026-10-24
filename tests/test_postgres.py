@@ -206,3 +206,14 @@ def test_pg_cross_run_cache_reuse_keeps_attempts_with_original_run(pg, tmp_path,
     assert pg.db.execute("SELECT http_attempts FROM diamond.runs WHERE id='subset-run'").fetchone()[0] == 0
     assert pg.db.execute("SELECT count(*) FROM diamond.stage_events WHERE event='model_http_attempt'").fetchone()[0] == 1
     assert pg.db.execute("SELECT run_id FROM diamond.stage_events WHERE event='model_http_attempt'").fetchone()[0] == "source-run"
+
+
+def test_pg_unlimited_request_counter_still_persists_and_finite_cap_remains_atomic(pg):
+    run_meta(pg)
+    other=PostgresStore(URL,pg.objects.root)
+    assert pg.reserve_request('test',None)==1
+    assert other.reserve_request('test',None)==2
+    assert pg.reserve_request('test',1) is None
+    assert other.reserve_request('test',None)==3
+    assert pg.db.execute("SELECT http_attempts FROM diamond.runs WHERE id='test'").fetchone()[0]==3
+    other.db.close()

@@ -27,13 +27,17 @@ class ExperimentPlan(StrictModel):
     roots: list[RootPlan] = Field(min_length=1, max_length=100)
     max_revisions: int = Field(default=2, ge=0, le=3)
     root_workers: int = Field(default=4, ge=1, le=16)
-    visible_cost_limit_usd: float = Field(default=90.0, gt=0)
+    visible_cost_limit_usd: float | None = Field(default=90.0, gt=0)
+    resume_request_run_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]+$")
 
 
 def branch(candidate):
     if candidate.status in ("screened","accepted"):
         return "retained"
     if candidate.status == "rejected":
+        if any(r in ("too_easy:first_four_all_correct", "too_easy:complete_16_above_max")
+               for r in candidate.reasons):
+            return "too_easy_rejected"
         return "quality_rejected"
     if len(candidate.trials) == 4 and correct_count(candidate.trials,4) == 4:
         return "preliminary_harden"
@@ -111,6 +115,13 @@ class QuestionExperiment(Pipeline):
         return self.generation_identity(sources[root.source_id],None,
              {"category":root.category,"subtopic":root.subtopic},0,0,self.brief(root,None))
 
+    def generation_identity(self, source, parent, target, generation, attempt, brief=None):
+        # 续跑只保留首代请求命名空间；内容仍须通过网关逐字及完整性校验，降难使用新run。
+        if generation == 0 and parent is None and self.plan.resume_request_run_id:
+            return digest({"run": self.plan.resume_request_run_id, "source": source.id, "parent": None,
+                           "generation": generation, "attempt": attempt, "target": target, "brief": brief})[:24]
+        return super().generation_identity(source, parent, target, generation, attempt, brief)
+
     async def final_audit(self,c):
         sources = {s.id:s for s in self.store.sources()}
         disagreements = [{"sample_id":t.sample_id,"response":t.response[:12000],
@@ -162,7 +173,9 @@ class QuestionExperiment(Pipeline):
                 existing = [c for c in self.store.candidates() if c.run_id==self.run_id and
                             c.root_id==self.root_identity(root,sources)]
                 parent = next((c for c in existing if c.generation==generation-1),None) if generation else None
-                if generation and (parent is None or branch(parent) not in ("preliminary_harden","harden","ease")):
+                allowed = ("ease",) if self.settings.difficulty_policy == "ease_only" else (
+                    "preliminary_harden", "harden", "ease")
+                if generation and (parent is None or branch(parent) not in allowed):
                     return None
                 if any(c.status in ("screened","accepted") for c in existing):
                     return None

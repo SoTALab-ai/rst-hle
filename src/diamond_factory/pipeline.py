@@ -319,6 +319,9 @@ class Pipeline:
         raise ModelResponseError("consistency", rid, "invalid_blueprint_step_mapping")
 
     async def generate(self, source, parent, target, generation, attempt, brief=None):
+        if (parent and self.settings.difficulty_policy == "ease_only" and (
+                len(parent.trials) != self.settings.samples or correct_count(parent.trials, self.settings.samples) != 0)):
+            raise QualityRejected("Only a complete zero-correct parent may enter easing; no hardening is allowed")
         if parent and not await self.preflight(parent):
             raise QualityRejected("Invalid parent: repair correctness before difficulty evolution")
         feedback = "Increase substantive difficulty" if parent else "Create a solvable evidence-grounded seed"
@@ -336,6 +339,17 @@ class Pipeline:
         existing = next((c for c in self.store.candidates() if c.id == identity), None)
         if existing and existing.authoring_complete:
             return existing
+        if existing and existing.status == "quality_seed":
+            # 已保存完整题面及证明时，先接着做未完成的质检，不重新购买作者输出。
+            if await self.preflight(existing):
+                existing.authoring_complete = True
+                self.store.save(existing)
+                return existing
+            existing.authoring_repairs_completed += 1
+            existing.authoring_complete = existing.authoring_repairs_completed > self.settings.max_repairs
+            self.store.save(existing)
+            if existing.authoring_complete:
+                return existing
         source_data = source.model_dump()
         source_data["text"] = source.text[:self.settings.max_source_chars]
         data = {"source": source_data, "parent": parent.item.model_dump() if parent else None,
@@ -423,6 +437,7 @@ class Pipeline:
                                blueprint_audit=blueprint, blueprint_request=bid, blueprint_actual_model=bmodel,
                                known_result=known_result,
                                blueprint_fingerprint=self.blueprint_stamp(plan, source_data, target, known_result),
+                               authoring_repairs_completed=repair,
                                status="quality_seed", run_id=self.run_id)
             errors = static_errors(result, {source.id: source}, self.quotas)
             if (item.category, item.subtopic) != (target["category"], target["subtopic"]):
@@ -525,6 +540,12 @@ class Pipeline:
         if self.settings.early_screen_samples == 4 and len(c.trials) < self.settings.samples:
             first = await self.sample(c, 4)
             if first == 4:
+                if self.settings.difficulty_policy == "ease_only":
+                    c.status, c.reasons = "rejected", ["too_easy:first_four_all_correct"]
+                    self.store.save(c)
+                    self.log("too_easy_rejected", candidate=c.id, correct=4, valid_samples=4,
+                             full_16_sample_verdict=False, hardening_allowed=False)
+                    return c
                 c.status, c.reasons = "quality_seed", ["preliminary_4_of_4_correct:needs_hardening"]
                 self.store.save(c)
                 self.log("preliminary_hardening", candidate=c.id, correct=4, valid_samples=4,
@@ -546,7 +567,10 @@ class Pipeline:
                 else:
                     c.reasons = ["pilot_only:not_counted_as_delivery"]
         else:
-            c.reasons = ["outside_1_to_8_correct_band"]
+            if self.settings.difficulty_policy == "ease_only" and n > self.settings.correct_max:
+                c.status, c.reasons = "rejected", ["too_easy:complete_16_above_max"]
+            else:
+                c.reasons = ["outside_1_to_8_correct_band"]
         self.store.save(c)
         self.log("candidate_finished", candidate=c.id, status=c.status, reasons=c.reasons)
         return c
