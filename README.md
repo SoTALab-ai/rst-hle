@@ -49,6 +49,8 @@ flowchart LR
 
 新版verifier的[20条真实试产](docs/theory20-verifier-2026-10-24.md)已结束：13条形成候选题，0条通过全部前置质检、0条进入GLM测量，已知参考费用约¥13.77。来源引文、作者/蓝图、题面与golden合同、verifier锚点和反代覆盖分别记录；这轮尚不能评价新题难度。
 
+新论文采集使用[PDF正文与补充材料库](docs/pdf-paper-library.md)，按[12刊优先队列](configs/papers/library-journals.json)查DOI，再从开放仓储寻找版本。正文/补充PDF分别保存，不拼TeX；身份、补充完整性与公式尚未核验的材料保持待审，不直接进入出题。历史采集入口保留原协议。
+
 需要 Python 3.11+ 和 [uv](https://docs.astral.sh/uv/)。从仓库根目录执行：
 
 ```bash
