@@ -33,3 +33,6 @@ shortcut or by bypassing a declared essential skill/bridge, set no_shortcut=fals
 concrete bypass. Check that the question does not directly supply the bottleneck's conclusion or the
 easier_control's hint. A checked dependency graph is not a measured difficulty score; only the target
 solver's independent samples establish the empirical screen result.
+The supplied source and golden proof are privileged QC material, not part of the solver prompt.
+An established result appearing in its source alone is not a shortcut; identify a bypass available
+from the literal question and ordinary background without accessing that paper or the hidden proof.
