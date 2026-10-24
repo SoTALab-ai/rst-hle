@@ -105,7 +105,7 @@ python3 scripts/vm_run.py --host YOUR_SSH_ALIAS --directory ~/Developer/rst-hle 
 
 同一个数据库只允许一个写入进程；16 次模型请求内部并发。复用原 run-id 可续跑，配置/提示/材料/代码变更需新 run-id。预算按**实际 HTTP 尝试**计数，含失败和重试；不是费用上限。本轮解题不设客户端 token 限额；其他阶段按配置执行。未配置价格时不虚构美元成本。
 
-数据库已提供 **PostgreSQL + 独立文件产物库**，参考既有 ClawGym 的状态/产物分工。个人 VM 使用独立实例；离线测试保留 SQLite。详见 [数据库部署与 ClawGym 对照](docs/database.md)。首次显式运行 `diamond db-init`，普通启动只校验结构；GitHub CI 使用独立 PostgreSQL 覆盖真实读写、预算原子性与租约隔离。
+数据库已提供 **PostgreSQL + 独立文件产物库**，参考既有 ClawGym 的状态/产物分工。个人 VM 使用独立实例；离线测试保留 SQLite。详见 [数据库部署与 ClawGym 对照](docs/database.md)。首次及升级时显式运行 `diamond db-init`（本版003新增独立解题截止记录），普通启动只校验结构；GitHub CI 使用独立 PostgreSQL 覆盖真实读写、预算原子性与租约隔离。
 
 ## 项目边界
 

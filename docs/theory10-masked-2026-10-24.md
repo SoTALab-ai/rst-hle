@@ -29,4 +29,4 @@
 
 ## 600秒解题截止计错
 
-用户再次明确规定600秒解题超时计错。新入口为[theory10-timeout-incorrect.toml](../configs/theory10-timeout-incorrect.toml)和[计划](../configs/papers/theory10-timeout-incorrect.plan.json)，run-id为 `theory10-timeout-incorrect-20261024`，个人VM独立数据库 `rst_hle_theory10_timeout_20261024`。保留旧run的13份物理答卷、3份截止收据及数学4份答卷；超时确定性计错，不发judge，不重新购买GLM。物理3/16进入后置复核与去重；原先的incomplete快照保留。解题截止不是数学反例，其他接口错误及判分/质检超时仍不计错。
+用户再次明确规定600秒解题超时计错。新入口为[theory10-timeout-incorrect.toml](../configs/theory10-timeout-incorrect.toml)和[计划](../configs/papers/theory10-timeout-incorrect.plan.json)，run-id为 `theory10-timeout-incorrect-20261024`，个人VM独立数据库 `rst_hle_theory10_timeout_20261024`。保留旧run的13份物理答卷、3份截止收据及数学4份答卷；超时确定性计错，不发judge，不重新购买GLM。物理原判分3/16进入后置复核，因判分争议退回，最终去重未执行；原先的incomplete快照保留。结果见[10条结果](theory10-results-2026-10-24.md)。解题截止不是数学反例，其他接口错误及判分/质检超时仍不计错。

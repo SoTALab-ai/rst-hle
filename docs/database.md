@@ -66,3 +66,9 @@ uv run diamond doctor
 
 
 请求现在另有逐HTTP尝试收据，复用现有stage_events与内容寻址产物库，不修改已执行的001迁移。完整响应先落本地完整性日志、再提交数据库索引；索引或attempt登记短暂失败后可幂等恢复，不重新购买已有回答。实现与故障注入范围见[resilience.md](resilience.md)。
+
+## 解题截止计错存储
+
+显式迁移003新增 `qc_deadlines`，保存解题采样编号、原solver请求外键、请求模型、墙钟时限及实际耗时。实际作答和官方模板判分仍保存到 `qc_samples`；截止计错不伪造答卷、实际响应模型或judge外键。同一候选的相同采样不能同时作为答卷与截止事件写入。计分合并两种事件，原始 `deadline_exceeded` 和未知用量记录保留。
+
+已有数据库升级本版本后，先在对应个人独立数据库环境显式执行 `uv run diamond db-init`，再开启 `solver_deadline_counts_as_incorrect = true` 的新批次。不要把003添加到旧冻结快照，也不在应用启动时自动升级；本轮新run已在自己的独立库显式应用003。
