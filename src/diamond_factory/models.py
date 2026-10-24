@@ -449,6 +449,7 @@ class VerifierOracleCase(StrictModel):
 class VerifierOracle(StrictModel):
     cases: list[VerifierOracleCase]
     question_complete: ConsistencyCheck
+    target_unambiguous: ConsistencyCheck
     golden_valid: ConsistencyCheck
     hidden_steps_recoverable: ConsistencyCheck
 

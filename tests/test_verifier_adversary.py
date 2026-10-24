@@ -64,6 +64,7 @@ class Adversary(FakeGateway):
                 "verdict": "yes" if cid in ("golden", "word", "number") else "no",
                 "reasoning": "The literal question determines the single integer 36."} for cid in ids],
                 "question_complete": check("fail" if question_issue else "pass"),
+                "target_unambiguous": check(),
                 "golden_valid": check("fail" if self.mode == "bad_gold" else "pass"),
                 "hidden_steps_recoverable": check()})
         elif schema is VerifierDecision:
@@ -225,6 +226,29 @@ def test_pending_question_validation_resumes_before_accepting_old_audit(tmp_path
     assert asyncio.run(pipe.preflight(saved))
     assert not saved.verifier_assessment.versions[-1].revalidation_pending
     assert sum(s.endswith(":solve") for _, _, s in gateway.calls) == 2
+
+
+def test_literal_anchor_failure_has_bounded_format_repair_without_semantic_change(tmp_path, settings, source, candidate):
+    pipe, _, gateway = prepared(tmp_path, settings, source, candidate)
+    original = gateway.call
+    bad_request = []
+
+    async def bad_anchor(role, prompt, salt, schema=None, **kwargs):
+        value, rid, model = await original(role, prompt, salt, schema, **kwargs)
+        if schema is VerifierSpec and salt.endswith(":draft"):
+            value = value.model_copy(deep=True)
+            value.conditions[0].question_anchor = "an invented paraphrase of the conditions"
+            bad_request.append(rid)
+        elif schema is VerifierSpec:
+            data = json.loads(prompt.splitlines()[-1])
+            assert data["format_repair"]["exact_required_outputs"] == candidate.item.required_outputs
+            assert "FORMAT REPAIR ONLY" in data["format_repair"]["instruction"]
+        return value, rid, model
+
+    gateway.call = bad_anchor
+    assert asyncio.run(pipe.preflight(candidate))
+    assert len(bad_request) == 1 and len(candidate.verifier_assessment.versions) == 1
+    assert any(":draft-anchor-repair:" in s for _, _, s in gateway.calls)
 
 
 def test_initial_audit_ambiguity_can_enter_question_repair_but_not_skip_audit(tmp_path, settings, source, candidate):

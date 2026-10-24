@@ -53,7 +53,7 @@ def round_errors(result, item):
     errors = []
     oracle = result.oracle
     if any(getattr(oracle, name).verdict != "pass" for name in
-           ("question_complete", "golden_valid", "hidden_steps_recoverable")):
+           ("question_complete", "target_unambiguous", "golden_valid", "hidden_steps_recoverable")):
         errors.append("unresolved_question_or_golden")
     cases = {c.id: c for c in result.challenges.cases}
     outcomes = {o.case_id: o for o in result.observations}
@@ -115,11 +115,23 @@ class VerifierBuilder:
     async def draft(self, c, sources, index, feedback=None):
         packet = self.packet(c, sources)
         packet["feedback"] = feedback
-        spec, rid, model = await self.p.gateway.call("generator", self.p.prompts["verifier_draft"] + "\n" +
-            json.dumps(packet, ensure_ascii=False), self.salt(c, index, "draft"), VerifierSpec)
-        if spec_errors(spec, c.item):
-            raise ModelResponseError("generator", rid, "invalid_verifier_coverage_or_anchor")
-        return VerifierVersion(item=c.item.model_copy(deep=True), spec=spec, spec_request=rid, spec_actual_model=model)
+        for repair in range(self.p.settings.consistency_schema_repairs + 1):
+            stage = "draft" if repair == 0 else f"draft-anchor-repair:{repair}"
+            spec, rid, model = await self.p.gateway.call("generator", self.p.prompts["verifier_draft"] + "\n" +
+                json.dumps(packet, ensure_ascii=False), self.salt(c, index, stage), VerifierSpec)
+            errors = spec_errors(spec, c.item)
+            if not errors:
+                return VerifierVersion(item=c.item.model_copy(deep=True), spec=spec,
+                                       spec_request=rid, spec_actual_model=model)
+            if repair == self.p.settings.consistency_schema_repairs:
+                raise ModelResponseError("generator", rid, "invalid_verifier_coverage_or_anchor")
+            # 原输出已有收据，续跑只读复用；锚点格式修复不得改数学验收语义。
+            packet["format_repair"] = {"errors": errors, "untrusted_previous": spec.model_dump(),
+                "exact_required_outputs": c.item.required_outputs,
+                "instruction": "FORMAT REPAIR ONLY: copy target_output exactly from required_outputs and "
+                    "question_anchor exactly from the literal question. Do not change any acceptance semantics, "
+                    "question or golden. Return the complete verifier."}
+        raise AssertionError("Unreachable bounded anchor repair")
 
     def salt(self, c, index, stage):
         return f"{c.id}:verifier:{c.authoring_repairs_completed}:{digest(c.item.model_dump())}:{index}:{stage}"
@@ -221,6 +233,7 @@ class VerifierBuilder:
                 return self.reject(c, "two_revision_limit_or_configured_limit:" + ";".join(errors))
             action = result.review.action
             question_issue = (result.oracle.question_complete.verdict == "fail"
+                              or result.oracle.target_unambiguous.verdict == "fail"
                               or result.oracle.hidden_steps_recoverable.verdict == "fail")
             if action == "repair_question" and not question_issue:
                 return self.reject(c, "question_repair_without_concrete_question_defect")
