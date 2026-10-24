@@ -1,6 +1,7 @@
 """预先读取整篇PDF并存入独立论文库；程序检查不等于科学正确性认证。"""
 import asyncio
 import hashlib
+import importlib.metadata
 import json
 import os
 import subprocess
@@ -11,6 +12,7 @@ import httpx
 from psycopg.types.json import Jsonb
 from pydantic import Field, model_validator
 from pypdf import PdfReader
+from pypdf.errors import PyPdfError
 
 from .costs import MeteredGateway, measure_cost
 from .llm import CacheIntegrityError
@@ -225,6 +227,21 @@ class LibraryRepository:
         return "\n\n".join(blocks)
 
 
+def native_hints(pdf, numbers):
+    """同一PDF的文本层只作符号消歧提示，原页图像仍是版面依据。"""
+    reader = PdfReader(pdf)
+    hints = []
+    for number in numbers:
+        try:
+            text = reader.pages[number-1].extract_text() or ""
+        except (PyPdfError, UnicodeError, ValueError, KeyError):
+            # 扫描页/损坏文本层不阻止图像读取，也不伪装成可靠空页。
+            text = ""
+        hints.append({"physical_page": number, "native_text_hint": text[:20000],
+                      "hint_truncated": len(text) > 20000})
+    return hints
+
+
 def reader_profile(settings, prompt, renderer, pages_per_call):
     # 渲染器和本模块变动都使旧转录失效；不热改正在执行的快照。
     version = subprocess.run([renderer, "-v"], capture_output=True, check=True, timeout=10)
@@ -232,6 +249,7 @@ def reader_profile(settings, prompt, renderer, pages_per_call):
         "endpoint_sha256": digest(os.environ.get(settings.generator.base_url_env, "")), "prompt_sha256": digest(prompt),
         "renderer_version": (version.stdout + version.stderr).decode(errors="replace"),
         "pages_per_call": pages_per_call, "scale_to": 2200,
+        "native_hint_engine": "pypdf/" + importlib.metadata.version("pypdf"),
         "implementation_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "render_sha256": hashlib.sha256(Path(__file__).with_name("pdf_review.py").read_bytes()).hexdigest(),
         "gateway_sha256": hashlib.sha256(Path(__file__).with_name("llm.py").read_bytes()).hexdigest(),
@@ -293,8 +311,10 @@ async def ingest_library(store, plan, settings, pricing, directory, run_id, *, p
                         raise CacheIntegrityError("Corrupt rendered-page checkpoint")
                     seal_path.write_text(seal)
                     images.append(image)
+                hints = await asyncio.to_thread(native_hints, local, numbers)
                 content = prompt + "\nInput map (images in this order): " + json.dumps(
-                    {"pdf_sha256": sha, "physical_pages": numbers, "total_pages": total})
+                    {"pdf_sha256": sha, "physical_pages": numbers, "total_pages": total,
+                     "native_hints": hints}, ensure_ascii=False)
                 try:
                     batch, rid, model = await gateway.call("generator", content,
                         f"library:{parse_id}:pages:{','.join(map(str, numbers))}", ReadBatch, images=images)

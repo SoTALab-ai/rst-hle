@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import json
 import os
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from diamond_factory.paper_ingest import (
     ReadPage,
     ingest_library,
     inventory_directory,
+    native_hints,
     validate_pages,
 )
 from diamond_factory.postgres import PostgresStore
@@ -84,6 +86,13 @@ def test_inventory_deduplicates_files_and_preserves_missing_count(tmp_path):
         LibraryPlan(expected_papers=200, papers=plan.papers*2)
 
 
+def test_native_hint_is_same_physical_page_and_blank_layer_is_not_transcript(tmp_path):
+    make_pdf(tmp_path/"paper.pdf")
+    assert native_hints(tmp_path/"paper.pdf", [2, 1]) == [
+        {"physical_page": 2, "native_text_hint": "", "hint_truncated": False},
+        {"physical_page": 1, "native_text_hint": "", "hint_truncated": False}]
+
+
 def test_page_contract_rejects_missing_duplicate_reordered_and_hidden_uncertainty():
     for numbers in ([1], [1, 1], [2, 1], [2, 3]):
         with pytest.raises(ValueError, match="physical page"):
@@ -131,7 +140,9 @@ def test_pg_library_resume_export_input_change_and_corruption(pg, tmp_path, sett
 
     def handler(request):
         calls.append(request)
-        return response(len(calls))
+        text = json.loads(request.content)["messages"][1]["content"][0]["text"]
+        page = json.JSONDecoder().raw_decode(text.split("Input map (images in this order): ")[1])[0]["physical_pages"][0]
+        return response(page)
 
     plan, settings = prepare(tmp_path, monkeypatch, settings, handler)
     directory = tmp_path/"run"
@@ -164,7 +175,9 @@ def test_pg_library_unreadable_and_wrong_page_never_ready(pg, tmp_path, settings
 
     def handler(request):
         calls.append(request)
-        return response(1, unreadable=True) if len(calls) == 1 else response(999)
+        text = json.loads(request.content)["messages"][1]["content"][0]["text"]
+        page = json.JSONDecoder().raw_decode(text.split("Input map (images in this order): ")[1])[0]["physical_pages"][0]
+        return response(1, unreadable=True) if page == 1 else response(999)
 
     plan, settings = prepare(tmp_path, monkeypatch, settings, handler)
     result = asyncio.run(ingest_library(pg, plan, settings, rates(), tmp_path/"run", "library"))
