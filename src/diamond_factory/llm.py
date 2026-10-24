@@ -82,22 +82,38 @@ class Gateway:
                              "deadline_seconds": self.settings.request_deadline_seconds})
         return config, payload, request_id, base, key
 
-    def deadline_outcome(self, sample_id, question, salt, request_id, *, system_prompt):
-        """只接受同题同盐同端点、完整性有效且实际达到时限的解题失败收据。"""
-        from .models import DeadlineOutcome
-        _, payload, expected, _, _ = self._prepare("solver", question, salt, system_prompt=system_prompt)
-        if request_id != expected:
-            raise CacheIntegrityError("Deadline request identity mismatch")
+    def _stored_trace(self, request_id, payload, salt):
         trace = self.store.get_request(request_id) if self.store else None
         local = trace is None
         path = self.directory / (request_id + ".json")
         if trace is None and path.is_file():
             trace = json.loads(path.read_text())
         if trace is None:
-            raise CacheIntegrityError("Missing deadline receipt; refusing to fabricate a scored outcome")
+            raise CacheIntegrityError("Missing deadline receipt or answer journal; refusing to fabricate an outcome")
         self._check(trace, request_id, payload, salt, local=local)
         if not trace.get("integrity_sha256"):
-            raise CacheIntegrityError("Unsealed deadline receipt")
+            raise CacheIntegrityError("Unsealed request receipt")
+        return trace
+
+    def verify_saved_answer(self, question, salt, request_id, response, actual_model, *, system_prompt):
+        """重判前只读验收原解题收据，不调用solver，也不信任外部拷贝的答卷。"""
+        config, payload, expected, _, _ = self._prepare("solver", question, salt, system_prompt=system_prompt)
+        if expected != request_id:
+            raise CacheIntegrityError("Saved solver request identity mismatch")
+        trace = self._stored_trace(request_id, payload, salt)
+        if (trace.get("role") != "solver" or trace.get("response_error") or trace.get("content") != response
+                or trace.get("actual_model") != actual_model
+                or actual_model not in (config.accepted_response_models or [config.model])):
+            raise CacheIntegrityError("Saved solver answer differs from its verified response journal")
+        return trace["integrity_sha256"]
+
+    def deadline_outcome(self, sample_id, question, salt, request_id, *, system_prompt):
+        """只接受同题同盐同端点、完整性有效且实际达到时限的解题失败收据。"""
+        from .models import DeadlineOutcome
+        _, payload, expected, _, _ = self._prepare("solver", question, salt, system_prompt=system_prompt)
+        if request_id != expected:
+            raise CacheIntegrityError("Deadline request identity mismatch")
+        trace = self._stored_trace(request_id, payload, salt)
         if (trace.get("role") != "solver" or trace.get("response_error") != "deadline_exceeded"
                 or not trace.get("attempts") or self.settings.request_deadline_seconds is None):
             raise CacheIntegrityError("Only a completed solver deadline may count as incorrect")

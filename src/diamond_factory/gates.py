@@ -106,6 +106,10 @@ def production_blockers(settings, quotas: dict) -> list[str]:
     prompt = Path(settings.prompts_dir, "judge.txt").read_text()
     if not contract.get("approved") or contract.get("prompt_sha256") != digest(prompt):
         errors.append("official_hle_judge_contract_mismatch")
+    system = Path(settings.prompts_dir, "judge_system.txt")
+    if ((system.exists() and contract.get("system_prompt_sha256") != digest(system.read_text()))
+            or (not system.exists() and contract.get("system_prompt_sha256"))):
+        errors.append("judge_system_contract_mismatch")
     for key in ("evaluation_code_revision", "extraction_rule", "semantic_equivalence_rule", "numeric_tolerance_rule"):
         if not contract.get(key):
             errors.append("judge_contract_missing:" + key)

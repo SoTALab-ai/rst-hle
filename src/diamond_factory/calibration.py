@@ -66,6 +66,8 @@ class Calibration:
         self.gateway = gateway or Gateway(settings, self.directory / "requests", store=store, run_id=run_id)
         self.solver_system = Path(settings.prompts_dir, "solver_hle_system.txt").read_text().strip()
         self.judge_prompt = Path(settings.prompts_dir, "judge.txt").read_text()
+        system = Path(settings.prompts_dir, "judge_system.txt")
+        self.judge_system = system.read_text() if system.exists() else None
         self.reuse_run = reuse_run
 
     async def run(self, questions, max_new_samples=None):
@@ -86,13 +88,14 @@ class Calibration:
                 raise ValueError("Reuse requires a different existing reference calibration run")
             if (source["settings"] != self.settings.model_dump() or
                     source["solver_system_sha256"] != digest(self.solver_system) or
-                    source["judge_prompt_sha256"] != digest(self.judge_prompt)):
+                    source["judge_prompt_sha256"] != digest(self.judge_prompt) or
+                    source.get("judge_system_sha256") != digest(self.judge_system)):
                 raise ValueError("Reuse requires identical model, time, sampling and prompt settings")
             namespace = source.get("request_namespace", reuse_run)
         fingerprint = digest({"questions": [q.model_dump() for q in questions],
                               "settings": self.settings.model_dump(), "solver_system": self.solver_system,
                               "request_namespace": namespace,
-                              "judge_prompt": self.judge_prompt,
+                              "judge_prompt": self.judge_prompt, "judge_system": self.judge_system,
                               "code": {p.name: digest(p.read_text()) for p in
                                        sorted(Path(__file__).parent.glob("*.py"))}})
         if previous and previous["fingerprint"] != fingerprint:
@@ -105,6 +108,7 @@ class Calibration:
                 "source_origins": sorted({q.origin for q in questions}),
                 "question_manifest_sha256": digest([q.model_dump() for q in questions]),
                 "solver_system_sha256": digest(self.solver_system), "judge_prompt_sha256": digest(self.judge_prompt),
+                "judge_system_sha256": digest(self.judge_system),
                 "reuse_run": reuse_run, "request_namespace": namespace,
                 "reference_only": True, "trial_records": trial_rows}
         self.store.run(self.run_id, meta)
@@ -128,7 +132,8 @@ class Calibration:
                     judgment, jid, jmodel = await judge_answer(
                         self.gateway, self.judge_prompt.format(question=q.question, correct_answer=q.answer,
                                                               response=response),
-                        f"{namespace}:{q.id}:judge:{sample_id}", self.settings.judge_schema_repairs)
+                        f"{namespace}:{q.id}:judge:{sample_id}", self.settings.judge_schema_repairs,
+                        system_prompt=self.judge_system)
                     record = {"question_id": q.id, "sample_id": sample_id, "correct": judgment.correct == "yes",
                               "solver_request": sid, "judge_request": jid,
                               "solver_actual_model": smodel, "judge_actual_model": jmodel,

@@ -191,11 +191,13 @@ def test_assessment_defect_found_after_sampling_prevents_retention_and_descendan
 
     class DefectGateway(PatternGateway):
         async def call(self,role,prompt,salt,schema=None,**kwargs):
-            if ':post-evaluation-audit-v2' in salt:
+            if ':post-evaluation-audit-v3' in salt:
                 self.calls.append((role,prompt,salt))
                 payload=json.loads(prompt[prompt.index('\n')+1:])
-                examples=payload['allegedly_incorrect_responses']
-                assert len(examples)==4 and all(x['response']=='Final Answer: 37' for x in examples)
+                examples=payload['graded_responses']
+                assert {x['sample_id'] for x in examples}==set(range(16))
+                assert sum(x['response']=='Final Answer: 37' for x in examples)==12
+                assert payload['initial_golden']['reference_solution']['answer']==candidate.solution.answer
                 audit=candidate.audit.model_copy(update={'valid':False,
                     'reason':'Controlled counterexample: the question leaves the ratio convention undefined.'})
                 return audit,digest(salt),'fixture-model'

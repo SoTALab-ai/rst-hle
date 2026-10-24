@@ -506,7 +506,8 @@ class Pipeline:
                 judgment, jid, jmodel = await judge_answer(
                     self.gateway, self.prompts["judge"].format(question=candidate.item.question,
                                                                correct_answer=candidate.item.answer, response=response),
-                    f"{candidate.id}:judge:{i}", self.settings.judge_schema_repairs)
+                    f"{candidate.id}:judge:{i}", self.settings.judge_schema_repairs,
+                    system_prompt=self.prompts.get("judge_system"))
             except ModelResponseError as error:
                 if (phase == "solver" and error.reason == "deadline_exceeded"
                         and self.settings.solver_deadline_counts_as_incorrect):
