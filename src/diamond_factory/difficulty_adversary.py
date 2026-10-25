@@ -265,6 +265,11 @@ class DifficultyAdversary:
         p = self.p
         if existing and existing.authoring_complete:
             return existing
+        if existing and (existing.trials or existing.deadline_outcomes):
+            # 即使在authoring_complete落盘前中断，已有付费样本也禁止重新进入首题构造。
+            existing.authoring_complete = True
+            p.store.save(existing)
+            return existing
         if existing and existing.status == "rejected" and (existing.difficulty_rounds or existing.verifier_assessment
                 or (existing.preflight_repair and existing.preflight_repair.owner == "certificate")):
             existing.authoring_complete = True

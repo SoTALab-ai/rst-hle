@@ -307,3 +307,15 @@ def test_actual_first_four_correct_remains_closed_without_post_sampling_hardenin
     before = len(gateway.calls)
     assert generate(pipe, source).id == result.id
     assert len(gateway.calls) == before
+
+
+def test_incomplete_author_flag_cannot_reopen_a_measured_root(tmp_path, source, candidate):
+    pipe, store, gateway = prepared(tmp_path, source, candidate)
+    result = generate(pipe, source)
+    result.trials = trials(4)[:4]
+    result.authoring_complete = False
+    store.save(result)
+    before = len(gateway.calls)
+    resumed = generate(pipe, source)
+    assert resumed.authoring_complete and resumed.trials == result.trials
+    assert len(gateway.calls) == before

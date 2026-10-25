@@ -79,7 +79,8 @@ class Settings(StrictModel):
         if self.require_difficulty_adversary and not (
                 self.source_fidelity == "advisory" and self.use_locked_proof_draft
                 and self.require_bottleneck_mask and self.require_verifier_adversary
-                and self.freeze_question_at_verifier and self.difficulty_references_path):
+                and self.freeze_question_at_verifier and self.difficulty_references_path
+                and self.difficulty_policy == "ease_only"):
             raise ValueError("Difficulty adversary requires advisory construction, locked proof, masking, references and frozen verifier")
         if self.use_locked_proof_draft and not self.require_known_result:
             raise ValueError("Locked proof drafts require a locked known result")
