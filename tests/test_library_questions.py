@@ -234,3 +234,33 @@ def test_material_versions_cannot_inflate_trigger_count():
     revision = first.model_copy(update={"id": "different-metadata-version", "doi": "10.1000/FIXTURE"})
     with pytest.raises(ValidationError, match="distinct materials"):
         MaterialMilestone(library_run_id="library", required_materials=2, papers=[first, revision])
+
+
+def test_excluded_cohort_selects_new_materials_and_is_frozen(tmp_path, monkeypatch):
+    import diamond_factory.library_questions as module
+
+    fresh = paper().model_copy(deep=True)
+    fresh.id = 'fresh-paper'
+    fresh.doi = '10.1000/fresh'
+    fresh.documents[0].pdf_sha256 = 'b'*64
+    monkeypatch.setattr(module, 'complete_paper_ids', lambda *args: ['already-used','fresh-paper'])
+    monkeypatch.setattr(module, 'snapshot_paper', lambda store, run, pid: fresh)
+    path = tmp_path/'remaining.json'
+    selected = freeze_milestone(None, 'library', 1, path, exclude=['already-used'])
+    assert [p.id for p in selected.papers] == ['fresh-paper']
+    assert selected.excluded_paper_ids == ['already-used']
+    assert freeze_milestone(None, 'library', 1, path, exclude=['already-used']) == selected
+    with pytest.raises(ValueError, match='Frozen'):
+        freeze_milestone(None, 'library', 1, path, exclude=[])
+    with pytest.raises(ValidationError, match='disjoint'):
+        MaterialMilestone(library_run_id='library',required_materials=1,papers=[fresh],
+                          excluded_paper_ids=['fresh-paper'])
+
+
+def test_pg_exclusion_does_not_treat_registered_material_as_another_complete_paper(pg, tmp_path):
+    repo, pid, parse = setup_registered(pg, tmp_path, 'exclude-library')
+    save_pages(pg, repo, parse, 'exclude-library', [1,2])
+    path = tmp_path/'remaining.json'
+    assert freeze_milestone(pg, 'exclude-library', 1, path, exclude=[pid]) is None
+    assert not path.exists()
+    assert freeze_milestone(pg, 'exclude-library', 1, path).papers[0].id == pid

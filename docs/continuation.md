@@ -42,3 +42,23 @@ uv run python scripts/continue_library_question_campaign.py \
 ```
 
 数据库先在新的个人库显式初始化，环境变量只提供该库和独立内容寻址目录；密钥不进入参数。源码/提示、种子和材料变化必须新run。恢复同一冻结批次复用已成功请求；损坏缓存拒绝恢复。实际运行身份、最终结果和费用另存到验证记录。
+
+## 排除旧材料的新批次
+
+PR #12已按用户授权合入其原目标分支，提交`66445a2d16910f05ab1d0c5c2d9cb9110021b10b`；没有另行合入PR #11或其他上游。后续30篇使用原50份完整材料排除首20份，数学17、物理13，不重新读取PDF。
+
+正式入口`run_library_question_campaign.py`支持`--exclude-milestone`，排除集存入新的`MaterialMilestone`并与选中集分离。恢复时不得改变排除集或自动更换已冻结材料。`--reuse-evidence`与`--reuse-manifest-sha256`必须同时提供；封印导出包括严格的`SolverHistory`及原solver/judge收据。元数据也必须列在清单内被哈希核对。新库导入收据时保持原付款run，不复制科学通过资格；题目/样本相同但协议不兼容时拒绝重购，不静默当作缓存未命中。
+
+仅solver已成功而judge未完成的答卷也可复用，再补新的合法判分；不能因缺配对判分重买GLM。不同题面按新题测量，旧答卷不能移植为新题样本。整轮仍使用原规划、作者、蓝图、挖空、自洽/验算、冻结verifier、逐题并行4→16、后审与去重阶段，不手工代替模型产题。
+
+```bash
+uv run python scripts/run_library_question_campaign.py \
+  --library-run-id FROZEN_LIBRARY_READ_RUN --materials 30 \
+  --exclude-milestone PRIVATE_FIRST20_MILESTONE \
+  --reuse-evidence PRIVATE_SEALED_RESPONSES \
+  --reuse-manifest-sha256 EXPECTED_MANIFEST_SHA256 \
+  --run-prefix NEW_30_PAPER_RUN --directory PRIVATE_OUTPUT \
+  --rates PRIVATE_FROZEN_PRICES --config configs/library-source-inspired.toml
+```
+
+该轮累计API基线为$13.90634528，包含之前论文库、20份试产及全部独立诊断；另加本轮规划、作者修复、质量拒绝、模型失败重试、解题及判分费用。VM/磁盘/网络未知，不计零。历史36份不同GLM答卷为可复用池，不代表新批次已复用36份或已通过难度验收；实际命中数另报。

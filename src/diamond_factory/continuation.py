@@ -11,7 +11,16 @@ from .experiment import ExperimentPlan, QuestionExperiment, RootPlan
 from .gates import correct_count, sample_outcomes
 from .library_questions import MaterialMilestone, OutlineReview, PaperOutline, admit_lines
 from .llm import CacheIntegrityError, ModelResponseError
-from .models import AuthoringSeed, Candidate, ResultSelection, Solution, Source, VerifierSpec, digest
+from .models import (
+    AuthoringSeed,
+    Candidate,
+    ResultSelection,
+    Solution,
+    Source,
+    StrictModel,
+    VerifierSpec,
+    digest,
+)
 from .rejection_replay import load_sealed_evidence, replay_rejections
 from .runtime import atomic_json
 
@@ -92,6 +101,25 @@ class ContinuationGateway(MeteredGateway):
                         or json.loads(judge["content"]) != trial.judgment.model_dump()):
                     raise CacheIntegrityError("Historical solver/judge receipt mismatch")
                 self.historical[key] = (solver, judge)
+        # judge失败之前已成功返回的GLM也可复用；只在字面题面、样本和完整协议相同时接纳。
+        for trace in historical_traces.values():
+            if trace.get("role") != "solver" or trace.get("response_error") or not trace.get("content"):
+                continue
+            try:
+                if not isinstance(trace["content"], str):
+                    raise TypeError("Solver answer must be text")
+                if ":solver:" not in trace["salt"]:
+                    raise ValueError("Missing solver sample namespace")
+                sample = int(trace["salt"].rsplit(":", 1)[1])
+                prompt = trace["request"]["messages"][1]["content"]
+                if not isinstance(prompt, str) or not 0 <= sample < self.settings.samples:
+                    raise ValueError("Invalid solver sample")
+            except (KeyError, IndexError, TypeError, ValueError) as error:
+                raise CacheIntegrityError("Malformed historical solver receipt") from error
+            key = (prompt, sample)
+            if key in self.historical and self.historical[key][0]["request_id"] != trace["request_id"]:
+                raise CacheIntegrityError("Ambiguous historical solver sample")
+            self.historical.setdefault(key, (trace, None))
 
     def _reuse(self, role, prompt, salt, trace, schema, system_prompt, images):
         config, payload, _, _, _ = self._prepare(role, prompt, salt, schema, system_prompt, images)
@@ -119,12 +147,41 @@ class ContinuationGateway(MeteredGateway):
         if role == "judge" and ":judge:" in salt:
             key = (salt.split(":")[0], int(salt.rsplit(":", 1)[1]))
             pair = self.reused_solver_pairs.get(key)
-            if pair:
+            if pair and pair[1] is not None:
                 # 金标/判分提示变化时原答卷仍复用，但judge按新问题合法重审。
                 _, payload, _, _, _ = self._prepare(role, prompt, salt, schema, system_prompt, images)
                 if pair[1]["request"] == payload:
                     return self._reuse(role, prompt, salt, pair[1], schema, system_prompt, images)
         return await super().call(role, prompt, salt, schema, system_prompt=system_prompt, images=images)
+
+
+class SolverHistory(StrictModel):
+    origins: dict[str, str]
+    candidates: list[Candidate]
+
+
+def import_solver_history(store, directory, manifest_sha256, run_prefix):
+    """新库导入已封印答卷；旧HTTP仍归原run，不复制任何科学通过资格。"""
+    manifest, traces = load_sealed_evidence(directory, manifest_sha256)
+    if "solver-history.json" not in manifest["files"]:
+        raise CacheIntegrityError("Historical ownership metadata is not sealed")
+    history = SolverHistory.model_validate_json((Path(directory)/"solver-history.json").read_text())
+    if set(history.origins) != set(traces) or any(t["role"] not in ("solver", "judge") for t in traces.values()):
+        raise CacheIntegrityError("Historical response ownership does not match the sealed export")
+    for origin in set(history.origins.values()):
+        if origin.startswith(run_prefix):
+            raise CacheIntegrityError("Historical paid run cannot be the new campaign")
+        prior = store.runs().get(origin)
+        if prior and prior["fingerprint"] != manifest_sha256:
+            raise CacheIntegrityError("Conflicting historical import")
+        store.run(origin, {"mode": "historical_import", "status": "sealed", "fingerprint": manifest_sha256})
+    for rid, trace in traces.items():
+        prior = store.get_request(rid)
+        if prior is not None and prior != trace:
+            raise CacheIntegrityError("Conflicting historical receipt")
+        if prior is None:
+            store.save_request(history.origins[rid], trace)
+    return history.candidates, traces
 
 
 async def prepare_continuation(store, settings, pricing, evidence, manifest_sha256, directory, run_prefix):
