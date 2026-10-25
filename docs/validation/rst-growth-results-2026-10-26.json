@@ -1,0 +1,1277 @@
+{
+  "schema_version": 1,
+  "experiment": "rst-solution-growth-2026-10-26",
+  "status": "completed_with_errors",
+  "pilot_only": true,
+  "delivery_items": 0,
+  "primary_source": "https://arxiv.org/html/2608.05466v3#S4",
+  "pull_request": "https://github.com/SoTALab-ai/rst-hle/pull/17",
+  "latest_source_code": "06e403f1f682d49b21b61a6ac4752fbd8c0697ac",
+  "local_validation": {
+    "passed": 380,
+    "skipped": 40
+  },
+  "personal_vm_postgres_validation": {
+    "passed": 420,
+    "skipped": 0,
+    "database": "rst_hle_rst_growth_20261026_v4_test",
+    "uid": 1031248789
+  },
+  "aggregate": {
+    "executed_run_count": 3,
+    "run_lineage_entries": 5,
+    "unique_original_seeds": 4,
+    "formed_candidate_versions": 7,
+    "internal_growth_proposal_attempts": 4,
+    "formed_children": 2,
+    "complete_prefilter_instances": 2,
+    "unique_complete_prefilter_questions": 1,
+    "retained_lineages": 0,
+    "maximum_reached_growth_generation": 1,
+    "measured_new_child_versions": 0,
+    "first_in_band_generation": null,
+    "historical_glm_reuse_observations": 8,
+    "unique_historical_glm_answers_used": 4,
+    "new_glm_requests": 0,
+    "solver_deadline_incorrect": 0
+  },
+  "prepared_not_executed": [
+    {
+      "snapshot": "~/Developer/rst-hle/work/rst-growth-20261026-cosmo-v3",
+      "http_attempts": 0,
+      "known_cost_usd": 0,
+      "explanation": "修正输出合同后改用v4；未启动模型，不作为科学失败"
+    }
+  ],
+  "cost": {
+    "http_attempts": 108,
+    "task_known_api_usd": 0.3679224,
+    "task_rmb_reference": 2.46508008,
+    "baseline_known_api_usd": 26.047399095,
+    "cumulative_known_api_usd": 26.415321495,
+    "exchange_rate_reference": 6.7,
+    "new_unknown_usage_attempts": 0,
+    "historical_unknown_usage_attempts": 1,
+    "inflight": 0,
+    "vm_disk_network_usd": null,
+    "note": "全部拒绝、修复和重试计入；历史答卷不重计。按2026-10-23个人网关价格快照，不是供应商账单。"
+  },
+  "limitations": [
+    "没有新子题GLM成绩，不能断言难度提高、单调增长或几轮命中",
+    "R2/R3未执行，不记为0%正确率",
+    "科学审查和对照判分来自同一6Luna的独立上下文，不是形式化证明",
+    "五条运行谱系条目包含同一数学种子两次复核，不能当五条独立材料",
+    "所有候选均为pilot；没有合格交付"
+  ],
+  "runs": [
+    {
+      "run_id": "rst-growth-20261026-v1",
+      "finished": true,
+      "status": "completed_with_errors",
+      "source_code": "10e8cb6",
+      "uid": 1031248789,
+      "owned_database": "rst_hle_rst_growth_20261026_v1",
+      "snapshot": "~/Developer/rst-hle/work/rst-growth-20261026-v1",
+      "finalized_at": "2026-10-25T17:53:35.053123+00:00",
+      "process_alive": false,
+      "worker_finished_marker": true,
+      "frozen_changed": [],
+      "pilot_only": true,
+      "delivery_items": 0,
+      "planned_lineages": 2,
+      "planned_growth_rounds": 3,
+      "maximum_generation_slots": 8,
+      "formed_versions": 3,
+      "retained_lineages": 0,
+      "inputs": [
+        {
+          "lineage": "math-gram",
+          "original_candidate_id": "f7c0264bf5ffd78c29925083",
+          "category": "Math",
+          "original_source_id": "library:b7045a95095b1a169de2ea6b01e114be252d33b5aa67a2a8613f8300dcb8c475",
+          "source_alias": "math-gram",
+          "source_sha256": "1e2ac6751225369cceb961d00eb17cc5bda4583f8514eca28ced38e613d69ffe",
+          "paper_id": "901f0b1e5204211edf1786074f73f766f3a5d07599eac61af7fb6aa716ac1dd6",
+          "main_pdf_sha256": "b44ef4cbe29970ebf894cf8fea3e029144bce7996b3ffaace640511fdc4ad796",
+          "full_material_chars": 82057,
+          "original_correct": 4,
+          "original_samples": 4,
+          "semantic_question_gold_full_proof_unchanged": true
+        },
+        {
+          "lineage": "physics-response",
+          "original_candidate_id": "4be2e3e3de4f910b70d62f1d",
+          "category": "Physics",
+          "original_source_id": "library:cd64f4153d537497f5703c10a7f397f7b440f7757b97173e2fc3703bb79bb3d4",
+          "source_alias": "physics-response",
+          "source_sha256": "1d9f8ce27a70c9e16974f742540f3890bece4e0f74b29bf350e4c46265770858",
+          "paper_id": "74d2a6d14084916247f354d96de33d70e5fdf52fc062fdb18ddd7fed3095285e",
+          "main_pdf_sha256": "d370f339b2398c1196941a240900fe4df0949c12d6649dfcdab5e7d4ed98be7c",
+          "full_material_chars": 70359,
+          "original_correct": 4,
+          "original_samples": 4,
+          "semantic_question_gold_full_proof_unchanged": true
+        }
+      ],
+      "lines": [
+        {
+          "lineage": "math-gram",
+          "category": "Math",
+          "rounds": [
+            {
+              "generation": 0,
+              "parent_id": null,
+              "candidate_id": "6903da2a058f3f3d7af2a407",
+              "disposition": "easy_research_seed",
+              "proposal_attempts": 0,
+              "proposal_errors": [],
+              "samples": 4,
+              "answered": 4,
+              "deadline_incorrect": 0,
+              "correct": 4,
+              "proof_entries": 11,
+              "scientific_prefilter_passed": true,
+              "status": "rejected",
+              "proposal_stages": [],
+              "final_checks": {
+                "id": "6903da2a058f3f3d7af2a407",
+                "parent_id": null,
+                "root_id": "6903da2a058f3f3d7af2a407",
+                "generation": 0,
+                "category": "Math",
+                "subtopic": "代数",
+                "operator": "rst_seed_recheck",
+                "status": "rejected",
+                "reason_classes": [
+                  "too_easy"
+                ],
+                "audit_flags": {
+                  "valid": true,
+                  "self_contained": true,
+                  "uniquely_answerable": true,
+                  "answer_supported": true,
+                  "substantive_delta": true,
+                  "category_correct": true,
+                  "no_shortcut": true
+                },
+                "origin_valid": true,
+                "full_scientific_checks_valid": true,
+                "correctness_verdicts": {
+                  "premises": "pass",
+                  "definitions": "pass",
+                  "parameter_domain": "pass",
+                  "reference_answer": "pass",
+                  "physical_regime": "not_applicable"
+                },
+                "certificate_faithful": true,
+                "substitution_verdict": "pass",
+                "repair_category": null,
+                "repair_owner": null,
+                "uncovered_output_count": 0,
+                "verifier_entered": true,
+                "verifier_status": "passed",
+                "proof_entries": 11,
+                "gold_sha256": "f3ce8417ecfaa800a7bc753897579c0e8833beb6afc222a0209e7c9210a555a0",
+                "question_sha256": "e8c5778dc9d6c8e4720c0163f708e1ecf782271326414c3f65c5630496fd82d4",
+                "answered": 4,
+                "deadline_incorrect": 0,
+                "correct": 4,
+                "reused_solver_ids": [
+                  "51cf6bbb7bdb2f97132dc1b64ff3b05c7e1d301d2c1a8939e20432c996eedf29",
+                  "82cae38c5eb4b24afb2f98cb28eccf39262dc0f037f18423ef4bb738e5c72316",
+                  "c2a537153f2579922974a62376aa54bb42fd8d729280a2b7f31fd9216c7f7626",
+                  "96f998a126abbd19bfb7ae4105f215c5c1fc86818286ca127ddeac9a00467fd2"
+                ],
+                "new_solver_ids": []
+              }
+            },
+            {
+              "generation": 1,
+              "parent_id": "6903da2a058f3f3d7af2a407",
+              "candidate_id": "90a9ec7584504f6e202f0b57",
+              "disposition": "quality_rejected_or_unverified",
+              "proposal_attempts": 2,
+              "proposal_errors": [
+                [
+                  "mask_does_not_target_selected_bottleneck"
+                ],
+                []
+              ],
+              "samples": 0,
+              "answered": 0,
+              "deadline_incorrect": 0,
+              "correct": 0,
+              "proof_entries": 7,
+              "scientific_prefilter_passed": false,
+              "status": "rejected",
+              "proposal_stages": [
+                {
+                  "proposal_request": "96a23218f02406c19c6225663564690559009948f67f374d21e939a04f98750d",
+                  "outcome": "proposed",
+                  "errors": [
+                    "mask_does_not_target_selected_bottleneck"
+                  ],
+                  "blueprint_passed": null,
+                  "blueprint_issue_parts": [],
+                  "growth_passed": false,
+                  "question_repairs": 0
+                },
+                {
+                  "proposal_request": "bcf56e6d317dbb228749ed691c0c0a4a35605109bcf0de5fb1f6eaa452c6d744",
+                  "outcome": "proposed",
+                  "errors": [],
+                  "blueprint_passed": true,
+                  "blueprint_issue_parts": [],
+                  "growth_passed": true,
+                  "question_repairs": 0
+                }
+              ],
+              "final_checks": {
+                "id": "90a9ec7584504f6e202f0b57",
+                "parent_id": "6903da2a058f3f3d7af2a407",
+                "root_id": "6903da2a058f3f3d7af2a407",
+                "generation": 1,
+                "category": "Math",
+                "subtopic": "代数",
+                "operator": "latent_representation",
+                "status": "rejected",
+                "reason_classes": [
+                  "consistency_failed",
+                  "consistency_failed"
+                ],
+                "audit_flags": {
+                  "valid": true,
+                  "self_contained": true,
+                  "uniquely_answerable": true,
+                  "answer_supported": true,
+                  "substantive_delta": true,
+                  "category_correct": true,
+                  "no_shortcut": true
+                },
+                "origin_valid": true,
+                "full_scientific_checks_valid": false,
+                "correctness_verdicts": {
+                  "premises": "pass",
+                  "definitions": "fail",
+                  "parameter_domain": "pass",
+                  "reference_answer": "fail",
+                  "physical_regime": "not_applicable"
+                },
+                "certificate_faithful": true,
+                "substitution_verdict": "pass",
+                "repair_category": "scientific_review",
+                "repair_owner": "author",
+                "uncovered_output_count": 0,
+                "verifier_entered": false,
+                "verifier_status": null,
+                "proof_entries": 7,
+                "gold_sha256": "cc11310c456c3690d5a74c23aa31cc25b4e74cdae146c71e54ad9dbc1d109fde",
+                "question_sha256": "279a01c3f3c2cb94457d02e88b3322690332c9e5be6e6ab3252cda53680e688e",
+                "answered": 0,
+                "deadline_incorrect": 0,
+                "correct": 0,
+                "reused_solver_ids": [],
+                "new_solver_ids": []
+              }
+            }
+          ],
+          "first_in_band_generation": null
+        },
+        {
+          "lineage": "physics-response",
+          "category": "Physics",
+          "rounds": [
+            {
+              "generation": 0,
+              "parent_id": null,
+              "candidate_id": "590fa0ee072135fcc6cbc0bc",
+              "disposition": "quality_rejected_or_unverified",
+              "proposal_attempts": 0,
+              "proposal_errors": [],
+              "samples": 0,
+              "answered": 0,
+              "deadline_incorrect": 0,
+              "correct": 0,
+              "proof_entries": 5,
+              "scientific_prefilter_passed": false,
+              "status": "rejected",
+              "proposal_stages": [],
+              "final_checks": {
+                "id": "590fa0ee072135fcc6cbc0bc",
+                "parent_id": null,
+                "root_id": "590fa0ee072135fcc6cbc0bc",
+                "generation": 0,
+                "category": "Physics",
+                "subtopic": "电磁学",
+                "operator": "rst_seed_recheck",
+                "status": "rejected",
+                "reason_classes": [
+                  "audit_failed"
+                ],
+                "audit_flags": {
+                  "valid": true,
+                  "self_contained": true,
+                  "uniquely_answerable": true,
+                  "answer_supported": true,
+                  "substantive_delta": true,
+                  "category_correct": false,
+                  "no_shortcut": true
+                },
+                "origin_valid": true,
+                "full_scientific_checks_valid": false,
+                "correctness_verdicts": {},
+                "certificate_faithful": null,
+                "substitution_verdict": null,
+                "repair_category": null,
+                "repair_owner": null,
+                "uncovered_output_count": 0,
+                "verifier_entered": false,
+                "verifier_status": null,
+                "proof_entries": 5,
+                "gold_sha256": "d6b0338fe98c35d662d163b74ca8e92f8d7a6def2f2029c3e9f8f5d66f937488",
+                "question_sha256": "f011856c52784e8897cdcd6b77e0f4ebf9d3c0937f702b082cc515b360e1f8fd",
+                "answered": 0,
+                "deadline_incorrect": 0,
+                "correct": 0,
+                "reused_solver_ids": [],
+                "new_solver_ids": []
+              }
+            }
+          ],
+          "first_in_band_generation": null
+        }
+      ],
+      "versions": [
+        {
+          "id": "590fa0ee072135fcc6cbc0bc",
+          "parent_id": null,
+          "root_id": "590fa0ee072135fcc6cbc0bc",
+          "generation": 0,
+          "category": "Physics",
+          "subtopic": "电磁学",
+          "operator": "rst_seed_recheck",
+          "status": "rejected",
+          "reason_classes": [
+            "audit_failed"
+          ],
+          "audit_flags": {
+            "valid": true,
+            "self_contained": true,
+            "uniquely_answerable": true,
+            "answer_supported": true,
+            "substantive_delta": true,
+            "category_correct": false,
+            "no_shortcut": true
+          },
+          "origin_valid": true,
+          "full_scientific_checks_valid": false,
+          "correctness_verdicts": {},
+          "certificate_faithful": null,
+          "substitution_verdict": null,
+          "repair_category": null,
+          "repair_owner": null,
+          "uncovered_output_count": 0,
+          "verifier_entered": false,
+          "verifier_status": null,
+          "proof_entries": 5,
+          "gold_sha256": "d6b0338fe98c35d662d163b74ca8e92f8d7a6def2f2029c3e9f8f5d66f937488",
+          "question_sha256": "f011856c52784e8897cdcd6b77e0f4ebf9d3c0937f702b082cc515b360e1f8fd",
+          "answered": 0,
+          "deadline_incorrect": 0,
+          "correct": 0,
+          "reused_solver_ids": [],
+          "new_solver_ids": []
+        },
+        {
+          "id": "6903da2a058f3f3d7af2a407",
+          "parent_id": null,
+          "root_id": "6903da2a058f3f3d7af2a407",
+          "generation": 0,
+          "category": "Math",
+          "subtopic": "代数",
+          "operator": "rst_seed_recheck",
+          "status": "rejected",
+          "reason_classes": [
+            "too_easy"
+          ],
+          "audit_flags": {
+            "valid": true,
+            "self_contained": true,
+            "uniquely_answerable": true,
+            "answer_supported": true,
+            "substantive_delta": true,
+            "category_correct": true,
+            "no_shortcut": true
+          },
+          "origin_valid": true,
+          "full_scientific_checks_valid": true,
+          "correctness_verdicts": {
+            "premises": "pass",
+            "definitions": "pass",
+            "parameter_domain": "pass",
+            "reference_answer": "pass",
+            "physical_regime": "not_applicable"
+          },
+          "certificate_faithful": true,
+          "substitution_verdict": "pass",
+          "repair_category": null,
+          "repair_owner": null,
+          "uncovered_output_count": 0,
+          "verifier_entered": true,
+          "verifier_status": "passed",
+          "proof_entries": 11,
+          "gold_sha256": "f3ce8417ecfaa800a7bc753897579c0e8833beb6afc222a0209e7c9210a555a0",
+          "question_sha256": "e8c5778dc9d6c8e4720c0163f708e1ecf782271326414c3f65c5630496fd82d4",
+          "answered": 4,
+          "deadline_incorrect": 0,
+          "correct": 4,
+          "reused_solver_ids": [
+            "51cf6bbb7bdb2f97132dc1b64ff3b05c7e1d301d2c1a8939e20432c996eedf29",
+            "82cae38c5eb4b24afb2f98cb28eccf39262dc0f037f18423ef4bb738e5c72316",
+            "c2a537153f2579922974a62376aa54bb42fd8d729280a2b7f31fd9216c7f7626",
+            "96f998a126abbd19bfb7ae4105f215c5c1fc86818286ca127ddeac9a00467fd2"
+          ],
+          "new_solver_ids": []
+        },
+        {
+          "id": "90a9ec7584504f6e202f0b57",
+          "parent_id": "6903da2a058f3f3d7af2a407",
+          "root_id": "6903da2a058f3f3d7af2a407",
+          "generation": 1,
+          "category": "Math",
+          "subtopic": "代数",
+          "operator": "latent_representation",
+          "status": "rejected",
+          "reason_classes": [
+            "consistency_failed",
+            "consistency_failed"
+          ],
+          "audit_flags": {
+            "valid": true,
+            "self_contained": true,
+            "uniquely_answerable": true,
+            "answer_supported": true,
+            "substantive_delta": true,
+            "category_correct": true,
+            "no_shortcut": true
+          },
+          "origin_valid": true,
+          "full_scientific_checks_valid": false,
+          "correctness_verdicts": {
+            "premises": "pass",
+            "definitions": "fail",
+            "parameter_domain": "pass",
+            "reference_answer": "fail",
+            "physical_regime": "not_applicable"
+          },
+          "certificate_faithful": true,
+          "substitution_verdict": "pass",
+          "repair_category": "scientific_review",
+          "repair_owner": "author",
+          "uncovered_output_count": 0,
+          "verifier_entered": false,
+          "verifier_status": null,
+          "proof_entries": 7,
+          "gold_sha256": "cc11310c456c3690d5a74c23aa31cc25b4e74cdae146c71e54ad9dbc1d109fde",
+          "question_sha256": "279a01c3f3c2cb94457d02e88b3322690332c9e5be6e6ab3252cda53680e688e",
+          "answered": 0,
+          "deadline_incorrect": 0,
+          "correct": 0,
+          "reused_solver_ids": [],
+          "new_solver_ids": []
+        }
+      ],
+      "new_glm_logical_requests": 0,
+      "historical_solver_pool": 279,
+      "historical_baseline_judges": 8,
+      "unique_old_solver_ids_used": [
+        "51cf6bbb7bdb2f97132dc1b64ff3b05c7e1d301d2c1a8939e20432c996eedf29",
+        "82cae38c5eb4b24afb2f98cb28eccf39262dc0f037f18423ef4bb738e5c72316",
+        "96f998a126abbd19bfb7ae4105f215c5c1fc86818286ca127ddeac9a00467fd2",
+        "c2a537153f2579922974a62376aa54bb42fd8d729280a2b7f31fd9216c7f7626"
+      ],
+      "new_solver_payload_rebuy_violations": 0,
+      "solver_payload_violations": 0,
+      "actual_models": {
+        "consistency / gpt-6-luna-2026-09-22": 23,
+        "judge / gpt-6-luna-2026-09-22": 8,
+        "auditor / gpt-6-luna-2026-09-22": 3,
+        "generator / gpt-6-luna-2026-09-22": 4
+      },
+      "cost": {
+        "unsettled_reserved_attempts": 0,
+        "known_cost_usd": 0.141723875,
+        "rmb_reference": 0.9495499625000002,
+        "http_attempts": 38,
+        "logical_request_receipts": 38,
+        "unknown_usage_attempts": 0,
+        "by_role": {
+          "consistency": {
+            "http_attempts": 23,
+            "known_cost_usd": 0.09231182499999999,
+            "unknown_usage_attempts": 0
+          },
+          "auditor": {
+            "http_attempts": 3,
+            "known_cost_usd": 0.01643965,
+            "unknown_usage_attempts": 0
+          },
+          "generator": {
+            "http_attempts": 4,
+            "known_cost_usd": 0.0314572,
+            "unknown_usage_attempts": 0
+          },
+          "judge": {
+            "http_attempts": 8,
+            "known_cost_usd": 0.0015152000000000002,
+            "unknown_usage_attempts": 0
+          }
+        },
+        "pricing_snapshot_date": "2026-10-23",
+        "note": "Returned usage only; unknown/cancelled usage is not zero. Excludes VM and human labor."
+      },
+      "baseline_known_api_usd": 26.047399095,
+      "cumulative_known_api_usd": 26.18912297,
+      "historical_unknown_usage_attempts": 1,
+      "vm_disk_network_usd": null,
+      "exchange_rate_reference": 6.7,
+      "reader": {
+        "complete_materials": 50,
+        "run_status": "stopped_at_material_limit",
+        "controls": [
+          {
+            "state": "stopped",
+            "limit": 50
+          }
+        ]
+      },
+      "evidence_hashes": {
+        "work/private/preparation.json": "dac4467661e75493164961170f88f02482ac29811a735b41aa717e981038eb65",
+        "work/private/freeze.json": "e828c97c84d0e7b6c1ee16f56644102b0110350338b002635b4acfc58446ba4b",
+        "work/private/rst-plan.json": "ac6048106efe80f3bf7125150374d90802650d7393e3c680861cb36a1b332a9d",
+        "work/private/final-evidence/candidates-private.json": "98342e77f3503cfb3622c8e2adcab221fac113ef19e62fa2b32969d3719b0b94",
+        "work/private/final-evidence/progress-private.json": "63ce6dde7e74e7baf0035573d0359e0147123d17f9ac19d47f3f31ad93ab548b",
+        "work/private/final-evidence/report-private.json": "58bf57191736337209a742b24c9d00790c38426dff358ad85839120c300eee3e",
+        "work/private/final-evidence/request-seals.json": "f537f1e8f5f774783354d3a7c64b6e7ef9c4b61d046cab44f1d02a31f600b0e8",
+        "work/private/final-evidence/run-private.json": "053557b6e354466e3f2f9ddf7e7aa2a7726d81e0f1b97d7480af166a84cba460"
+      }
+    },
+    {
+      "run_id": "rst-growth-20261026-physics-v2",
+      "finished": true,
+      "status": "completed_with_errors",
+      "source_code": "10e8cb6",
+      "uid": 1031248789,
+      "owned_database": "rst_hle_rst_growth_physics_20261026_v2",
+      "snapshot": "~/Developer/rst-hle/work/rst-growth-20261026-physics-v2",
+      "finalized_at": "2026-10-25T17:53:34.873805+00:00",
+      "process_alive": false,
+      "worker_finished_marker": true,
+      "frozen_changed": [],
+      "pilot_only": true,
+      "delivery_items": 0,
+      "planned_lineages": 1,
+      "planned_growth_rounds": 3,
+      "maximum_generation_slots": 4,
+      "formed_versions": 1,
+      "retained_lineages": 0,
+      "inputs": [
+        {
+          "lineage": "physics-bosons",
+          "original_candidate_id": "647ad126bf69ee858bf44cf2",
+          "category": "Physics",
+          "original_source_id": "library:5ac745c780f8376ff4c77b188a982a3a39a85ce85dc951aeeb8e0191e7689014",
+          "source_alias": "physics-bosons",
+          "source_sha256": "078527c25ef53372661ed0c1df09376920744ded9e4bc5e36cef6168da6a98ee",
+          "paper_id": "f3b61f53708514df520d1dbee13419da1c352d423b8e5e8707ef07e3d7c55e28",
+          "main_pdf_sha256": "1654cb84d3c7dff11dfef3154b3a6927c0e309b5e8b3d2278d2f6445439b3e18",
+          "full_material_chars": 86986,
+          "original_correct": 4,
+          "original_samples": 4,
+          "semantic_question_gold_full_proof_unchanged": true
+        }
+      ],
+      "lines": [
+        {
+          "lineage": "physics-bosons",
+          "category": "Physics",
+          "rounds": [
+            {
+              "generation": 0,
+              "parent_id": null,
+              "candidate_id": "daf09493ceba8fd282298a0e",
+              "disposition": "quality_rejected_or_unverified",
+              "proposal_attempts": 0,
+              "proposal_errors": [],
+              "samples": 0,
+              "answered": 0,
+              "deadline_incorrect": 0,
+              "correct": 0,
+              "proof_entries": 6,
+              "scientific_prefilter_passed": false,
+              "status": "rejected",
+              "proposal_stages": [],
+              "final_checks": {
+                "id": "daf09493ceba8fd282298a0e",
+                "parent_id": null,
+                "root_id": "daf09493ceba8fd282298a0e",
+                "generation": 0,
+                "category": "Physics",
+                "subtopic": "量子场论与粒子物理",
+                "operator": "rst_seed_recheck",
+                "status": "rejected",
+                "reason_classes": [
+                  "substitution_unsupported",
+                  "certificate_translation_unverified"
+                ],
+                "audit_flags": {
+                  "valid": true,
+                  "self_contained": true,
+                  "uniquely_answerable": true,
+                  "answer_supported": true,
+                  "substantive_delta": true,
+                  "category_correct": true,
+                  "no_shortcut": true
+                },
+                "origin_valid": true,
+                "full_scientific_checks_valid": false,
+                "correctness_verdicts": {
+                  "premises": "pass",
+                  "definitions": "pass",
+                  "parameter_domain": "pass",
+                  "reference_answer": "pass",
+                  "physical_regime": "pass"
+                },
+                "certificate_faithful": false,
+                "substitution_verdict": "unsupported",
+                "repair_category": "certificate_translation",
+                "repair_owner": "certificate",
+                "uncovered_output_count": 2,
+                "verifier_entered": false,
+                "verifier_status": null,
+                "proof_entries": 6,
+                "gold_sha256": "dac269109d23bf0ddb730be4c40da56267444f5fcd868f07587129f9ad6dfb49",
+                "question_sha256": "6ba82a159c8ad0a748b4a484e9315f02631a8b6d76b0e3fd2a65507fd83effa9",
+                "answered": 0,
+                "deadline_incorrect": 0,
+                "correct": 0,
+                "reused_solver_ids": [],
+                "new_solver_ids": []
+              }
+            }
+          ],
+          "first_in_band_generation": null
+        }
+      ],
+      "versions": [
+        {
+          "id": "daf09493ceba8fd282298a0e",
+          "parent_id": null,
+          "root_id": "daf09493ceba8fd282298a0e",
+          "generation": 0,
+          "category": "Physics",
+          "subtopic": "量子场论与粒子物理",
+          "operator": "rst_seed_recheck",
+          "status": "rejected",
+          "reason_classes": [
+            "substitution_unsupported",
+            "certificate_translation_unverified"
+          ],
+          "audit_flags": {
+            "valid": true,
+            "self_contained": true,
+            "uniquely_answerable": true,
+            "answer_supported": true,
+            "substantive_delta": true,
+            "category_correct": true,
+            "no_shortcut": true
+          },
+          "origin_valid": true,
+          "full_scientific_checks_valid": false,
+          "correctness_verdicts": {
+            "premises": "pass",
+            "definitions": "pass",
+            "parameter_domain": "pass",
+            "reference_answer": "pass",
+            "physical_regime": "pass"
+          },
+          "certificate_faithful": false,
+          "substitution_verdict": "unsupported",
+          "repair_category": "certificate_translation",
+          "repair_owner": "certificate",
+          "uncovered_output_count": 2,
+          "verifier_entered": false,
+          "verifier_status": null,
+          "proof_entries": 6,
+          "gold_sha256": "dac269109d23bf0ddb730be4c40da56267444f5fcd868f07587129f9ad6dfb49",
+          "question_sha256": "6ba82a159c8ad0a748b4a484e9315f02631a8b6d76b0e3fd2a65507fd83effa9",
+          "answered": 0,
+          "deadline_incorrect": 0,
+          "correct": 0,
+          "reused_solver_ids": [],
+          "new_solver_ids": []
+        }
+      ],
+      "new_glm_logical_requests": 0,
+      "historical_solver_pool": 279,
+      "historical_baseline_judges": 4,
+      "unique_old_solver_ids_used": [],
+      "new_solver_payload_rebuy_violations": 0,
+      "solver_payload_violations": 0,
+      "actual_models": {
+        "consistency / gpt-6-luna-2026-09-22": 6,
+        "auditor / gpt-6-luna-2026-09-22": 1
+      },
+      "cost": {
+        "unsettled_reserved_attempts": 0,
+        "known_cost_usd": 0.02852395,
+        "rmb_reference": 0.191110465,
+        "http_attempts": 7,
+        "logical_request_receipts": 7,
+        "unknown_usage_attempts": 0,
+        "by_role": {
+          "consistency": {
+            "http_attempts": 6,
+            "known_cost_usd": 0.023069899999999997,
+            "unknown_usage_attempts": 0
+          },
+          "auditor": {
+            "http_attempts": 1,
+            "known_cost_usd": 0.00545405,
+            "unknown_usage_attempts": 0
+          }
+        },
+        "pricing_snapshot_date": "2026-10-23",
+        "note": "Returned usage only; unknown/cancelled usage is not zero. Excludes VM and human labor."
+      },
+      "baseline_known_api_usd": 26.047399095,
+      "cumulative_known_api_usd": 26.075923045,
+      "historical_unknown_usage_attempts": 1,
+      "vm_disk_network_usd": null,
+      "exchange_rate_reference": 6.7,
+      "reader": {
+        "complete_materials": 50,
+        "run_status": "stopped_at_material_limit",
+        "controls": [
+          {
+            "state": "stopped",
+            "limit": 50
+          }
+        ]
+      },
+      "evidence_hashes": {
+        "work/private/preparation.json": "d1542ed67c64ea70fc288006d5997c4726c4b7806e055736ffbe47374e350fc0",
+        "work/private/freeze.json": "696d91547c19b5a5d73ca0b389c6ff52126d85bfe45743e6a3a351c6de9b990b",
+        "work/private/rst-plan.json": "f252b311e0b40c9883d83ecedaf1d0019edaff919c675909f97b9f8fdbdae9cf",
+        "work/private/final-evidence/candidates-private.json": "b12a001b6d3c331091f09ee796eecbd42486befe94820f8df11104d9151c286c",
+        "work/private/final-evidence/progress-private.json": "0377c09e133bc64f6ecb9322278bea0becd97f92e09bdcef77a1758701d6b802",
+        "work/private/final-evidence/report-private.json": "44fdbd9ca57bf567f20c4c6ac9b5ee45bd79ccb2d060e93b98ebe581ff3c4c16",
+        "work/private/final-evidence/request-seals.json": "341fbd9352138a17532ba16cb67afdc5d4371396bea3e96be71b942c470b771c",
+        "work/private/final-evidence/run-private.json": "5a0c6ba863addd69dc44bde976a52bdb0f2f5662e6477c07f67fa02c52587a3e"
+      }
+    },
+    {
+      "run_id": "rst-growth-20261026-v4",
+      "finished": true,
+      "status": "completed_with_errors",
+      "source_code": "06e403f1f682d49b21b61a6ac4752fbd8c0697ac",
+      "uid": 1031248789,
+      "owned_database": "rst_hle_rst_growth_20261026_v4",
+      "snapshot": "~/Developer/rst-hle/work/rst-growth-20261026-v4",
+      "finalized_at": "2026-10-25T18:03:10.176053+00:00",
+      "process_alive": false,
+      "worker_finished_marker": true,
+      "frozen_changed": [],
+      "pilot_only": true,
+      "delivery_items": 0,
+      "planned_lineages": 2,
+      "planned_growth_rounds": 3,
+      "maximum_generation_slots": 8,
+      "formed_versions": 3,
+      "retained_lineages": 0,
+      "inputs": [
+        {
+          "lineage": "math-gram",
+          "original_candidate_id": "f7c0264bf5ffd78c29925083",
+          "category": "Math",
+          "original_source_id": "library:b7045a95095b1a169de2ea6b01e114be252d33b5aa67a2a8613f8300dcb8c475",
+          "source_alias": "math-gram",
+          "source_sha256": "1e2ac6751225369cceb961d00eb17cc5bda4583f8514eca28ced38e613d69ffe",
+          "paper_id": "901f0b1e5204211edf1786074f73f766f3a5d07599eac61af7fb6aa716ac1dd6",
+          "main_pdf_sha256": "b44ef4cbe29970ebf894cf8fea3e029144bce7996b3ffaace640511fdc4ad796",
+          "full_material_chars": 82057,
+          "original_correct": 4,
+          "original_samples": 4,
+          "semantic_question_gold_full_proof_unchanged": true
+        },
+        {
+          "lineage": "physics-cosmography",
+          "original_candidate_id": "23ec3e80a881c571c3219abb",
+          "category": "Physics",
+          "original_source_id": "library:b49894a922fdd575d04ba6eb5ecaee719c409262ea2408f76e736268214a7ca8",
+          "source_alias": "physics-cosmography",
+          "source_sha256": "f691118441294e5bb4659c3c3ddaf6d4f56fc217d9e45b295f9ce30d9d204289",
+          "paper_id": "e9430ce1bed08dff65ffef762dae1823bba6e6dc2af918de7c8464cb6ceb8b50",
+          "main_pdf_sha256": "4e3dbfdfacdd15b3456e0db01afe43b3c1381f674ee2afbc980d5f20cc0c6361",
+          "full_material_chars": 113541,
+          "original_correct": 4,
+          "original_samples": 4,
+          "semantic_question_gold_full_proof_unchanged": true
+        }
+      ],
+      "lines": [
+        {
+          "lineage": "math-gram",
+          "category": "Math",
+          "rounds": [
+            {
+              "generation": 0,
+              "parent_id": null,
+              "candidate_id": "6064f6875dcc6c1b3751293b",
+              "disposition": "easy_research_seed",
+              "proposal_attempts": 0,
+              "proposal_errors": [],
+              "question_repairs": 0,
+              "samples": 4,
+              "answered": 4,
+              "deadline_incorrect": 0,
+              "correct": 4,
+              "proof_entries": 11,
+              "scientific_prefilter_passed": true,
+              "status": "rejected",
+              "proposal_stages": [],
+              "final_checks": {
+                "id": "6064f6875dcc6c1b3751293b",
+                "parent_id": null,
+                "root_id": "6064f6875dcc6c1b3751293b",
+                "generation": 0,
+                "category": "Math",
+                "subtopic": "代数",
+                "operator": "rst_seed_recheck",
+                "status": "rejected",
+                "reason_classes": [
+                  "too_easy"
+                ],
+                "audit_flags": {
+                  "valid": true,
+                  "self_contained": true,
+                  "uniquely_answerable": true,
+                  "answer_supported": true,
+                  "substantive_delta": true,
+                  "category_correct": true,
+                  "no_shortcut": true
+                },
+                "origin_valid": true,
+                "full_scientific_checks_valid": true,
+                "correctness_verdicts": {
+                  "premises": "pass",
+                  "definitions": "pass",
+                  "parameter_domain": "pass",
+                  "reference_answer": "pass",
+                  "physical_regime": "not_applicable"
+                },
+                "certificate_faithful": true,
+                "substitution_verdict": "pass",
+                "repair_category": null,
+                "repair_owner": null,
+                "uncovered_output_count": 0,
+                "verifier_entered": true,
+                "verifier_status": "passed",
+                "proof_entries": 11,
+                "gold_sha256": "f3ce8417ecfaa800a7bc753897579c0e8833beb6afc222a0209e7c9210a555a0",
+                "question_sha256": "e8c5778dc9d6c8e4720c0163f708e1ecf782271326414c3f65c5630496fd82d4",
+                "answered": 4,
+                "deadline_incorrect": 0,
+                "correct": 4,
+                "reused_solver_ids": [
+                  "51cf6bbb7bdb2f97132dc1b64ff3b05c7e1d301d2c1a8939e20432c996eedf29",
+                  "82cae38c5eb4b24afb2f98cb28eccf39262dc0f037f18423ef4bb738e5c72316",
+                  "c2a537153f2579922974a62376aa54bb42fd8d729280a2b7f31fd9216c7f7626",
+                  "96f998a126abbd19bfb7ae4105f215c5c1fc86818286ca127ddeac9a00467fd2"
+                ],
+                "new_solver_ids": []
+              }
+            },
+            {
+              "generation": 1,
+              "parent_id": "6064f6875dcc6c1b3751293b",
+              "candidate_id": "93a01fac671033fb18078d40",
+              "disposition": "unverified:ModelResponseError",
+              "proposal_attempts": 2,
+              "proposal_errors": [
+                [
+                  "child_science_rejected"
+                ],
+                []
+              ],
+              "question_repairs": 0,
+              "samples": 0,
+              "answered": 0,
+              "deadline_incorrect": 0,
+              "correct": 0,
+              "proof_entries": 7,
+              "scientific_prefilter_passed": false,
+              "status": "quality_seed",
+              "proposal_stages": [
+                {
+                  "proposal_request": "a81580834dc04f226a8cfe9e7afe7bf5a158f480f129cf6b703b41bfeb7ccbe6",
+                  "outcome": "proposed",
+                  "errors": [
+                    "child_science_rejected"
+                  ],
+                  "blueprint_passed": false,
+                  "blueprint_issue_parts": [
+                    "derivation"
+                  ],
+                  "growth_passed": false,
+                  "question_repairs": 0
+                },
+                {
+                  "proposal_request": "b6126fc49aa375e74dee9cc299ce1c82ffe024b8dd1811fef4df4fd030312637",
+                  "outcome": "proposed",
+                  "errors": [],
+                  "blueprint_passed": true,
+                  "blueprint_issue_parts": [],
+                  "growth_passed": true,
+                  "question_repairs": 0
+                }
+              ],
+              "final_checks": {
+                "id": "93a01fac671033fb18078d40",
+                "parent_id": "6064f6875dcc6c1b3751293b",
+                "root_id": "6064f6875dcc6c1b3751293b",
+                "generation": 1,
+                "category": "Math",
+                "subtopic": "代数",
+                "operator": "latent_representation",
+                "status": "quality_seed",
+                "reason_classes": [],
+                "audit_flags": {
+                  "valid": true,
+                  "self_contained": true,
+                  "uniquely_answerable": true,
+                  "answer_supported": true,
+                  "substantive_delta": true,
+                  "category_correct": true,
+                  "no_shortcut": true
+                },
+                "origin_valid": true,
+                "full_scientific_checks_valid": false,
+                "correctness_verdicts": {
+                  "premises": "pass",
+                  "definitions": "pass",
+                  "parameter_domain": "pass",
+                  "reference_answer": "pass",
+                  "physical_regime": "not_applicable"
+                },
+                "certificate_faithful": true,
+                "substitution_verdict": "pass",
+                "repair_category": null,
+                "repair_owner": null,
+                "uncovered_output_count": 0,
+                "verifier_entered": true,
+                "verifier_status": "pending",
+                "proof_entries": 7,
+                "gold_sha256": "a4aab3f1f08004e907d2357fafe74cab56359bcb32e23f52e7eb1d3a9c0a2ad3",
+                "question_sha256": "d2a457cf8bfba5961158684b3b7000de44b781473d7c18c54deea8968a3e1220",
+                "answered": 0,
+                "deadline_incorrect": 0,
+                "correct": 0,
+                "reused_solver_ids": [],
+                "new_solver_ids": []
+              }
+            }
+          ],
+          "first_in_band_generation": null
+        },
+        {
+          "lineage": "physics-cosmography",
+          "category": "Physics",
+          "rounds": [
+            {
+              "generation": 0,
+              "parent_id": null,
+              "candidate_id": "6972eb9eaa954e864050b0fa",
+              "disposition": "quality_rejected_or_unverified",
+              "proposal_attempts": 0,
+              "proposal_errors": [],
+              "question_repairs": 0,
+              "samples": 0,
+              "answered": 0,
+              "deadline_incorrect": 0,
+              "correct": 0,
+              "proof_entries": 6,
+              "scientific_prefilter_passed": false,
+              "status": "rejected",
+              "proposal_stages": [],
+              "final_checks": {
+                "id": "6972eb9eaa954e864050b0fa",
+                "parent_id": null,
+                "root_id": "6972eb9eaa954e864050b0fa",
+                "generation": 0,
+                "category": "Physics",
+                "subtopic": "天文学、天体物理与宇宙学",
+                "operator": "rst_seed_recheck",
+                "status": "rejected",
+                "reason_classes": [
+                  "verifier_adversary"
+                ],
+                "audit_flags": {
+                  "valid": true,
+                  "self_contained": true,
+                  "uniquely_answerable": true,
+                  "answer_supported": true,
+                  "substantive_delta": true,
+                  "category_correct": true,
+                  "no_shortcut": true
+                },
+                "origin_valid": true,
+                "full_scientific_checks_valid": false,
+                "correctness_verdicts": {
+                  "premises": "pass",
+                  "definitions": "pass",
+                  "parameter_domain": "pass",
+                  "reference_answer": "pass",
+                  "physical_regime": "pass"
+                },
+                "certificate_faithful": true,
+                "substitution_verdict": "pass",
+                "repair_category": null,
+                "repair_owner": null,
+                "uncovered_output_count": 0,
+                "verifier_entered": true,
+                "verifier_status": "rejected",
+                "proof_entries": 6,
+                "gold_sha256": "a0ad3a9e678e30d1dc9a836aa965cd6116be20d8860d909c96f5aefc1df5927c",
+                "question_sha256": "fe95ff46ceeab0ded34501bf2dd0d19df309d317ef3b8ca513c162e0965985db",
+                "answered": 0,
+                "deadline_incorrect": 0,
+                "correct": 0,
+                "reused_solver_ids": [],
+                "new_solver_ids": []
+              }
+            }
+          ],
+          "first_in_band_generation": null
+        }
+      ],
+      "versions": [
+        {
+          "id": "6972eb9eaa954e864050b0fa",
+          "parent_id": null,
+          "root_id": "6972eb9eaa954e864050b0fa",
+          "generation": 0,
+          "category": "Physics",
+          "subtopic": "天文学、天体物理与宇宙学",
+          "operator": "rst_seed_recheck",
+          "status": "rejected",
+          "reason_classes": [
+            "verifier_adversary"
+          ],
+          "audit_flags": {
+            "valid": true,
+            "self_contained": true,
+            "uniquely_answerable": true,
+            "answer_supported": true,
+            "substantive_delta": true,
+            "category_correct": true,
+            "no_shortcut": true
+          },
+          "origin_valid": true,
+          "full_scientific_checks_valid": false,
+          "correctness_verdicts": {
+            "premises": "pass",
+            "definitions": "pass",
+            "parameter_domain": "pass",
+            "reference_answer": "pass",
+            "physical_regime": "pass"
+          },
+          "certificate_faithful": true,
+          "substitution_verdict": "pass",
+          "repair_category": null,
+          "repair_owner": null,
+          "uncovered_output_count": 0,
+          "verifier_entered": true,
+          "verifier_status": "rejected",
+          "proof_entries": 6,
+          "gold_sha256": "a0ad3a9e678e30d1dc9a836aa965cd6116be20d8860d909c96f5aefc1df5927c",
+          "question_sha256": "fe95ff46ceeab0ded34501bf2dd0d19df309d317ef3b8ca513c162e0965985db",
+          "answered": 0,
+          "deadline_incorrect": 0,
+          "correct": 0,
+          "reused_solver_ids": [],
+          "new_solver_ids": []
+        },
+        {
+          "id": "6064f6875dcc6c1b3751293b",
+          "parent_id": null,
+          "root_id": "6064f6875dcc6c1b3751293b",
+          "generation": 0,
+          "category": "Math",
+          "subtopic": "代数",
+          "operator": "rst_seed_recheck",
+          "status": "rejected",
+          "reason_classes": [
+            "too_easy"
+          ],
+          "audit_flags": {
+            "valid": true,
+            "self_contained": true,
+            "uniquely_answerable": true,
+            "answer_supported": true,
+            "substantive_delta": true,
+            "category_correct": true,
+            "no_shortcut": true
+          },
+          "origin_valid": true,
+          "full_scientific_checks_valid": true,
+          "correctness_verdicts": {
+            "premises": "pass",
+            "definitions": "pass",
+            "parameter_domain": "pass",
+            "reference_answer": "pass",
+            "physical_regime": "not_applicable"
+          },
+          "certificate_faithful": true,
+          "substitution_verdict": "pass",
+          "repair_category": null,
+          "repair_owner": null,
+          "uncovered_output_count": 0,
+          "verifier_entered": true,
+          "verifier_status": "passed",
+          "proof_entries": 11,
+          "gold_sha256": "f3ce8417ecfaa800a7bc753897579c0e8833beb6afc222a0209e7c9210a555a0",
+          "question_sha256": "e8c5778dc9d6c8e4720c0163f708e1ecf782271326414c3f65c5630496fd82d4",
+          "answered": 4,
+          "deadline_incorrect": 0,
+          "correct": 4,
+          "reused_solver_ids": [
+            "51cf6bbb7bdb2f97132dc1b64ff3b05c7e1d301d2c1a8939e20432c996eedf29",
+            "82cae38c5eb4b24afb2f98cb28eccf39262dc0f037f18423ef4bb738e5c72316",
+            "c2a537153f2579922974a62376aa54bb42fd8d729280a2b7f31fd9216c7f7626",
+            "96f998a126abbd19bfb7ae4105f215c5c1fc86818286ca127ddeac9a00467fd2"
+          ],
+          "new_solver_ids": []
+        },
+        {
+          "id": "93a01fac671033fb18078d40",
+          "parent_id": "6064f6875dcc6c1b3751293b",
+          "root_id": "6064f6875dcc6c1b3751293b",
+          "generation": 1,
+          "category": "Math",
+          "subtopic": "代数",
+          "operator": "latent_representation",
+          "status": "quality_seed",
+          "reason_classes": [],
+          "audit_flags": {
+            "valid": true,
+            "self_contained": true,
+            "uniquely_answerable": true,
+            "answer_supported": true,
+            "substantive_delta": true,
+            "category_correct": true,
+            "no_shortcut": true
+          },
+          "origin_valid": true,
+          "full_scientific_checks_valid": false,
+          "correctness_verdicts": {
+            "premises": "pass",
+            "definitions": "pass",
+            "parameter_domain": "pass",
+            "reference_answer": "pass",
+            "physical_regime": "not_applicable"
+          },
+          "certificate_faithful": true,
+          "substitution_verdict": "pass",
+          "repair_category": null,
+          "repair_owner": null,
+          "uncovered_output_count": 0,
+          "verifier_entered": true,
+          "verifier_status": "pending",
+          "proof_entries": 7,
+          "gold_sha256": "a4aab3f1f08004e907d2357fafe74cab56359bcb32e23f52e7eb1d3a9c0a2ad3",
+          "question_sha256": "d2a457cf8bfba5961158684b3b7000de44b781473d7c18c54deea8968a3e1220",
+          "answered": 0,
+          "deadline_incorrect": 0,
+          "correct": 0,
+          "reused_solver_ids": [],
+          "new_solver_ids": []
+        }
+      ],
+      "new_glm_logical_requests": 0,
+      "historical_solver_pool": 279,
+      "historical_baseline_judges": 8,
+      "unique_old_solver_ids_used": [
+        "51cf6bbb7bdb2f97132dc1b64ff3b05c7e1d301d2c1a8939e20432c996eedf29",
+        "82cae38c5eb4b24afb2f98cb28eccf39262dc0f037f18423ef4bb738e5c72316",
+        "96f998a126abbd19bfb7ae4105f215c5c1fc86818286ca127ddeac9a00467fd2",
+        "c2a537153f2579922974a62376aa54bb42fd8d729280a2b7f31fd9216c7f7626"
+      ],
+      "new_solver_payload_rebuy_violations": 0,
+      "solver_payload_violations": 0,
+      "actual_models": {
+        "consistency / gpt-6-luna-2026-09-22": 39,
+        "generator / gpt-6-luna-2026-09-22": 6,
+        "auditor / gpt-6-luna-2026-09-22": 3,
+        "judge / gpt-6-luna-2026-09-22": 15
+      },
+      "cost": {
+        "unsettled_reserved_attempts": 0,
+        "known_cost_usd": 0.197674575,
+        "rmb_reference": 1.3244196525,
+        "http_attempts": 63,
+        "logical_request_receipts": 63,
+        "unknown_usage_attempts": 0,
+        "by_role": {
+          "consistency": {
+            "http_attempts": 39,
+            "known_cost_usd": 0.136685925,
+            "unknown_usage_attempts": 0
+          },
+          "auditor": {
+            "http_attempts": 3,
+            "known_cost_usd": 0.016345275,
+            "unknown_usage_attempts": 0
+          },
+          "generator": {
+            "http_attempts": 6,
+            "known_cost_usd": 0.042332675,
+            "unknown_usage_attempts": 0
+          },
+          "judge": {
+            "http_attempts": 15,
+            "known_cost_usd": 0.0023106999999999997,
+            "unknown_usage_attempts": 0
+          }
+        },
+        "pricing_snapshot_date": "2026-10-23",
+        "note": "Returned usage only; unknown/cancelled usage is not zero. Excludes VM and human labor."
+      },
+      "baseline_known_api_usd": 26.21764692,
+      "cumulative_known_api_usd": 26.415321495,
+      "historical_unknown_usage_attempts": 1,
+      "vm_disk_network_usd": null,
+      "exchange_rate_reference": 6.7,
+      "reader": {
+        "complete_materials": 50,
+        "run_status": "stopped_at_material_limit",
+        "controls": [
+          {
+            "state": "stopped",
+            "limit": 50
+          }
+        ]
+      },
+      "evidence_hashes": {
+        "work/private/preparation.json": "c919694144850ed83194ed4e7a490e370ddfeefd0d8ccb9e5eb61acbb43048ac",
+        "work/private/freeze.json": "42fe2b8dd7b0269adccf0d417cb0d8348ef9953cf524a8c4836387052f1545fc",
+        "work/private/rst-plan.json": "8798600b2484a677b589536275ff36d42d685185ea33e9df4c906df4c4c94d8b",
+        "work/private/final-evidence/candidates-private.json": "f0e4c2d72f3407fa78b2ef1f81809760c156cc1d2095fb23be518705c58c593e",
+        "work/private/final-evidence/progress-private.json": "416761147e8013d29c28e9619fe313afa84b7b73b478e92ede5fa7d9d9866822",
+        "work/private/final-evidence/report-private.json": "a55dd244bf51071a722e3c1e3ae2e41596ec9fe563b8737f85f20abeae01ea70",
+        "work/private/final-evidence/request-seals.json": "2a0c9ee2f3f75eb0a90bc8efbaf8f525091616675133eb87d0bb7030a58c9d2b",
+        "work/private/final-evidence/run-private.json": "f140c16f33b181e5eb3eaff37891cdf9559199d94a7ea75fe9cad31da3285aa6"
+      }
+    }
+  ]
+}

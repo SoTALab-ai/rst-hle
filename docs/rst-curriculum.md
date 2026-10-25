@@ -61,3 +61,5 @@ uv run --frozen python scripts/run_rst_curriculum.py \
 ```
 
 plan中的reuse_manifest_sha256必须与封印历史清单匹配。`rst-report.json`分谱系列每轮提案数、科学门禁覆盖、实际答卷/超时数、正确数、停止原因、总成本与首次命中轮数。规划上限不是成功题数，后轮缺失不是0%正确率。真实结果另存验证索引。
+
+2026-10-26[真实试跑结果](validation/rst-growth-2026-10-26.md)：数学到R1并通过相对增量、自洽及反代，随后被verifier对照合同阻断；物理未取得完整门禁通过的父题。新增子题GLM采样0，不能据此断言难度提升或几轮命中。
