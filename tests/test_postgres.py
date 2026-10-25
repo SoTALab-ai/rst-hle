@@ -64,7 +64,8 @@ def test_pg_difficulty_checkpoints_and_two_stage_history_roundtrip(pg, tmp_path,
     target = {"category": "Math", "subtopic": "组合与图论"}
     result = asyncio.run(pipe.generate(source, None, target, 0, 0))
     stored = pg.candidates()[0]
-    assert stored == result and len(stored.difficulty_rounds) == 2
+    # StepwiseBlueprintAudit回读为声明的BlueprintAudit基类；比较完整持久化值，不比较Python子类身份。
+    assert stored.model_dump() == result.model_dump() and len(stored.difficulty_rounds) == 2
     assert pg.runs()["depth-test"]["difficulty_checkpoints"]
     resumed = Pipeline(settings, pg, "depth-test", "pilot", tmp_path / "run", gateway)
     count = len(gateway.calls)
