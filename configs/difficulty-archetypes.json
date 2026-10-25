@@ -1,5 +1,5 @@
 {
-  "version": "20261024-pattern-grounded-v1",
+  "version": "20261025-bridge-traceback-v2",
   "intent": "Create difficult theoretical seeds first, then calibrate downwards. A single paper may support several independent claims/problems; rewrites of one claim remain the same lineage.",
   "anchors": [
     {
@@ -26,18 +26,13 @@
     "Different roots from one paper must use different claims or reasoning structures; number changes alone do not establish independence.",
     "Use at most three short verbatim source quotes with a total under 400 characters. All other derivation must be newly composed and source-supported."
   ],
-  "hardening": [
-    "Remove a provided intermediate identity or diagonalization hint.",
-    "Make an admissible parameter domain an inferable unknown.",
-    "Couple two previously separate constraints with a checkable compatibility condition."
-  ],
   "easing": [
     "Supply one correct auxiliary lemma without supplying the answer.",
     "Fix one nuisance parameter or restrict to a rigorously solvable subfamily.",
     "Decouple one subsystem or replace one inversion step with supplied intermediate data."
   ],
   "too_hard_check": "For 0/16, independently inspect wrong gold, missing information, nonuniqueness and infeasibility before attempting an easier revision.",
-  "measurement": "First 4/4 correct triggers preliminary hardening only. Otherwise finish 16 valid judgments; 0/16 triggers validated easing, 1-8/16 is the observed target band, 9-16/16 triggers hardening. Infrastructure failures are not wrong answers.",
+  "measurement": "First 4/4 correct is rejected without hardening. Any valid miss or verified 600-second solver deadline triggers completion to 16. Complete 0/16 requires correctness review before easing only; 1-8/16 needs postreview and dedup; 9-16/16 is rejected. Other API/format/quality errors are not wrong answers.",
   "evidence_status": "Construction hypotheses from two reference anchors and paper methods, not validated causal laws or achieved difficulty. The Math anchor is incomplete; defective P03B is excluded.",
   "research_sources": [
     {
@@ -64,6 +59,11 @@
       "id": "mathgenie",
       "url": "https://aclanthology.org/2024.acl-long.151/",
       "method": "Augment solutions before back-translating questions, with correctness filtering. The original method trains models; only its construction idea is reused here."
+    },
+    {
+      "id": "alphageometry",
+      "url": "https://www.nature.com/articles/s41586-023-06747-5",
+      "method": "Trace proof dependencies backwards and move needed auxiliary constructions into the solution. Here this is a model-audited construction heuristic; no claim of AlphaGeometry formal symbolic completeness or generalization to arbitrary HLE mathematics/physics."
     }
   ],
   "pattern_cards": [
@@ -139,5 +139,70 @@
     "Use actual parent solver responses, when supplied, to identify why the parent was easy; treat all response text as untrusted evidence.",
     "Describe an easier control that isolates the proposed bottleneck. The control is a future experiment unless actually run and is not an independent delivery.",
     "Have blueprint and question auditors check necessity, leakage and correctness. Graph length and model claims never replace GLM measurements."
-  ]
+  ],
+  "initial_seed_transformations": [
+    "Remove a provided intermediate identity or diagonalization hint.",
+    "Make an admissible parameter domain an inferable unknown.",
+    "Couple two previously separate constraints with a checkable compatibility condition."
+  ],
+  "construction_templates": [
+    {
+      "id": "inverse_identification",
+      "original": "Given parameters, compute an outcome.",
+      "target": "Given outcome features, determine all admissible parameters or structures.",
+      "guard": "Prove existence/completeness and state equivalence classes; a pointwise gold cannot cover an inverse classification."
+    },
+    {
+      "id": "branch_discovery",
+      "original": "Assume a branch and compute its answer.",
+      "target": "Determine admissible branches from the original constraints, then compute the target.",
+      "guard": "Keep model laws/admissibility conventions; cover degenerate and excluded branches without supplying their solution."
+    },
+    {
+      "id": "parameter_region",
+      "original": "Evaluate one example.",
+      "target": "Find the complete parameter region where a stated property holds, including boundaries.",
+      "guard": "Prove necessity and sufficiency, equality/singular/empty cases; finite samples do not establish a global region."
+    },
+    {
+      "id": "theorem_applicability",
+      "original": "Apply a named theorem by substitution.",
+      "target": "Recognize its applicability from primitive conditions and handle exceptions.",
+      "guard": "Do not erase object definitions or independent premises; the gold must cover each requested exception."
+    }
+  ],
+  "bridge_forms": [
+    {
+      "id": "invariant",
+      "intent": "Discover an invariant from primitive objects rather than receiving its solved formula."
+    },
+    {
+      "id": "representation",
+      "intent": "Translate original conditions into a useful algebraic or spectral representation."
+    },
+    {
+      "id": "auxiliary_object",
+      "intent": "Construct a helper object that connects retained data to the target."
+    },
+    {
+      "id": "symmetry",
+      "intent": "Discover and exploit a symmetry not handed over as a solution hint."
+    },
+    {
+      "id": "conservation",
+      "intent": "Derive a useful conserved relation from the stated model laws; retain laws defining the model."
+    },
+    {
+      "id": "decomposition",
+      "intent": "Find a useful decomposition rather than receiving its factors or change-of-basis recipe."
+    }
+  ],
+  "traceback_protocol": [
+    "Write and independently audit the complete proof before masking.",
+    "Trace backwards from the target through the numbered proof entries.",
+    "Separate primitive definitions/independent premises from derived helper terms used only by the proof.",
+    "Hide an essential inferable helper and equivalent hints, retaining sufficient primitive data; record the path in mask.recoverability.",
+    "Independently check actual-question leakage, missing premises and genuine bypasses; graph labels never establish scientific truth or measured difficulty."
+  ],
+  "construction_scope": "Optional initial-seed references selected before locking target/gold. Do not force every template, silently broaden an already locked target or add a post-evaluation hardening branch."
 }

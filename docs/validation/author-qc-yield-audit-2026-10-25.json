@@ -1,0 +1,94 @@
+{
+  "scope": "对原47条活跃线逐条归因，不改原统计；分类为末次主要阻断项，不代表全部已证伪或已恢复。",
+  "source_run_id": "library20-continue-20261025-v1-part01",
+  "evidence_sha256": "6d45fcb91c423b12138526d9b6ab26f6d983285a94e9d1eb222c59074c32b8c8",
+  "unformed_roots": 22,
+  "first_stage_terminal_groups": {
+    "private_gold_format_only": {
+      "count": 7,
+      "roots": [
+        "L50_004_q1",
+        "L50_008_q1",
+        "L50_011_q1",
+        "L50_012_q2",
+        "L50_015_q2",
+        "L50_018_q3",
+        "L50_018_q4"
+      ]
+    },
+    "locked_answer_copy_only": {
+      "count": 1,
+      "roots": [
+        "L50_005_q1"
+      ]
+    },
+    "difficulty_bridge_or_bypass": {
+      "count": 2,
+      "roots": [
+        "L50_002_q2",
+        "L50_002_q3"
+      ]
+    },
+    "derivation_gap_reported": {
+      "count": 8,
+      "roots": [
+        "L50_008_q3",
+        "L50_008_q4",
+        "L50_010_q1",
+        "L50_012_q3",
+        "L50_014_q2",
+        "L50_014_q3",
+        "L50_016_q2",
+        "L50_017_q1"
+      ]
+    },
+    "locked_result_contradiction_or_map": {
+      "count": 3,
+      "roots": [
+        "L50_009_q1",
+        "L50_019_q3",
+        "L50_020_q2"
+      ]
+    },
+    "gold_result_not_explicit": {
+      "count": 1,
+      "roots": [
+        "L50_018_q1"
+      ]
+    }
+  },
+  "candidate_gate": {
+    "entered": 25,
+    "pre_quality_passed": 3,
+    "quality_rejected": 17,
+    "validation_incomplete": 5,
+    "verifier_rejected": 11,
+    "verifier_failure_groups": {
+      "sound_item_insufficient_validated_positive_controls": 2,
+      "bound_target_or_failed_question_repair": 5,
+      "gold_or_essential_premise_issue": 2,
+      "hle_grading_dispute": 2
+    }
+  },
+  "deterministic_replay": {
+    "component": "scalar power range",
+    "original_unsupported_checks": 3,
+    "replayed_checks": 6,
+    "passed_checks": 6,
+    "covered_outputs": 4,
+    "question_changed": false,
+    "gold_changed": false,
+    "certificate_changed": false,
+    "new_model_http": 0,
+    "full_qc_passed": 0
+  },
+  "new_protocol": {
+    "freeze_question_at_verifier": true,
+    "outer_author_retry_after_verifier_rejection": false,
+    "verifier_max_revisions": 2,
+    "question_or_gold_defect": "reject_current_version_and_report_upstream",
+    "control_repairs": "bounded append only, preserve prior cases and oracle decisions"
+  },
+  "new_full_batch_quality_yield": null,
+  "new_difficulty_samples": 0
+}

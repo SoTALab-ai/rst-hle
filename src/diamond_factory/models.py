@@ -127,6 +127,8 @@ class TaskDesign(StrictModel):
     inverse_construction: str = Field(min_length=20)
     answer_check: str = Field(min_length=20)
     difficulty: DifficultyDesign | None = None
+    construction_type: Literal["inverse_identification", "branch_discovery", "parameter_region", "theorem_applicability"] | None = None
+    bridge_type: Literal["invariant", "representation", "auxiliary_object", "symmetry", "conservation", "decomposition"] | None = None
 
 
 class Solution(StrictModel):
@@ -138,6 +140,37 @@ class Solution(StrictModel):
     evidence: list[Evidence] = Field(min_length=1)
     reasoning_delta: str = Field(min_length=20)
     design: TaskDesign | None = None
+
+
+class LockedTaskDesign(StrictModel):
+    """作者只填写构造设计；目标由锁定提案提供，不能再次生成。"""
+    source_claim: str = Field(min_length=20)
+    claim_locator: str = Field(min_length=3)
+    underlying_conditions: list[str] = Field(min_length=1)
+    hidden_steps: list[str] = Field(min_length=1)
+    inferable_conditions: list[str]
+    preserved_invariants: list[str] = Field(min_length=1)
+    inverse_construction: str = Field(min_length=20)
+    answer_check: str = Field(min_length=20)
+    difficulty: DifficultyDesign | None = None
+    construction_type: Literal["inverse_identification", "branch_discovery", "parameter_region", "theorem_applicability"] | None = None
+    bridge_type: Literal["invariant", "representation", "auxiliary_object", "symmetry", "conservation", "decomposition"] | None = None
+
+
+class LockedProofDraft(StrictModel):
+    """模型不输出金标/目标/锁定前提；绑定后仍须独立审查完整推导。"""
+    topic: str
+    additional_assumptions: list[str]
+    derivation: list[str] = Field(min_length=2)
+    evidence: list[Evidence] = Field(min_length=1)
+    reasoning_delta: str = Field(min_length=20)
+    design: LockedTaskDesign
+
+    def bind(self, result: KnownResult) -> Solution:
+        return Solution(topic=self.topic, assumptions=list(dict.fromkeys(
+            [*result.assumptions, *self.additional_assumptions])), derivation=self.derivation,
+            answer=result.answer, evidence=self.evidence, reasoning_delta=self.reasoning_delta,
+            design=TaskDesign(target=result.target, **self.design.model_dump()))
 
 
 class BlueprintIssue(StrictModel):
@@ -344,6 +377,24 @@ class CertificateAnchors(StrictModel):
     patches: list[CertificateAnchorPatch] = Field(min_length=1, max_length=64)
 
 
+class PreflightRepairAdvice(StrictModel):
+    category: Literal["scientific_review", "gold_counterexample", "certificate_translation", "certificate_execution"]
+    owner: Literal["author", "certificate"]
+    findings: list[str] = Field(min_length=1)
+    failed_cases: list[str]
+    uncovered_outputs: list[str]
+    instruction: str = Field(min_length=20)
+
+
+class CertificateAttempt(StrictModel):
+    certificate: CertificateAudit
+    substitution: SubstitutionReport
+    request_id: str
+    actual_model: str
+    anchor_request: str
+    anchor_actual_model: str
+
+
 class ConsistencyAssessment(StrictModel):
     protocol: Literal["preflight-v1"] = "preflight-v1"
     input_sha256: str
@@ -364,8 +415,17 @@ class ConsistencyAssessment(StrictModel):
     certificate_anchor_actual_model: str = ""
     certificate_anchor_prompt_sha256: str = ""
     verifier_sha256: str = ""
+    certificate_attempts: list[CertificateAttempt] = Field(default_factory=list, max_length=3)
+    certificate_repair_protocol_sha256: str = ""
 
     def passed(self):
+        if self.certificate_attempts:
+            final = self.certificate_attempts[-1]
+            if (final.certificate != self.certificate_audit or final.substitution != self.substitution
+                    or final.request_id != self.certificate_request
+                    or any(a.certificate.faithful_translation and a.substitution.verdict == "fail"
+                           for a in self.certificate_attempts[:-1])):
+                return False
         return (self.audit.passed() and self.substitution.passed()
                 and self.certificate_audit is not None and self.certificate_audit.faithful_translation)
 
@@ -502,6 +562,16 @@ class VerifierReview(StrictModel):
     feedback: str = Field(min_length=20)
 
 
+class VerifierControlAttempt(StrictModel):
+    challenges: VerifierChallenges
+    oracle: VerifierOracle
+    challenge_request: str
+    oracle_request: str
+    challenge_actual_model: str
+    oracle_actual_model: str
+    coverage_errors: list[str]
+
+
 class VerifierRound(StrictModel):
     challenges: VerifierChallenges
     oracle: VerifierOracle
@@ -509,6 +579,8 @@ class VerifierRound(StrictModel):
     review: VerifierReview
     requests: dict[str, str]
     actual_models: dict[str, str]
+    # 生成失败的对照套件也保留，不据此放行或覆盖原费用。
+    control_attempts: list[VerifierControlAttempt] = Field(default_factory=list, max_length=3)
 
 
 class VerifierAnchorRepair(StrictModel):
@@ -519,6 +591,17 @@ class VerifierAnchorRepair(StrictModel):
     start: int = Field(ge=0)
     end: int = Field(gt=0)
     method: str
+    request_id: str = ""
+
+
+class VerifierLocatorPatch(StrictModel):
+    group: Literal["requirements", "conditions"]
+    index: int = Field(ge=0)
+    question_anchor: str = Field(min_length=5)
+
+
+class VerifierLocatorPatches(StrictModel):
+    patches: list[VerifierLocatorPatch] = Field(min_length=1, max_length=60)
 
 
 class VerifierVersion(StrictModel):
@@ -542,6 +625,7 @@ class VerifierAssessment(StrictModel):
     versions: list[VerifierVersion] = Field(min_length=1, max_length=3)
     status: Literal["pending", "passed", "rejected"] = "pending"
     reason: str = ""
+    frozen_item_sha256: str = ""
 
 
 class VerifierQuestionRepair(StrictModel):
@@ -581,6 +665,7 @@ class Candidate(StrictModel):
     item: Question
     audit: Audit
     consistency: ConsistencyAssessment | None = None
+    preflight_repair: PreflightRepairAdvice | None = None
     verifier_assessment: VerifierAssessment | None = None
     verifier_history: list[VerifierAssessment] = Field(default_factory=list)
     blueprint_audit: BlueprintAudit | None = None

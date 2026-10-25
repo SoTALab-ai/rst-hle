@@ -35,11 +35,13 @@ from .models import (
     BottleneckReview,
     Candidate,
     CertificateAnchors,
+    CertificateAttempt,
     CertificateAudit,
     ConsistencyAssessment,
     ConsistencyAudit,
     DedupVerdict,
     IndependentSolution,
+    LockedProofDraft,
     Question,
     Record,
     ResultSelection,
@@ -49,6 +51,7 @@ from .models import (
     Trial,
     digest,
 )
+from .preflight_repairs import certificate_repair_protocol, classify_preflight
 from .routing import read_routes
 from .runtime import gather_cancel_on_error
 from .substitution import verify_substitutions
@@ -150,13 +153,19 @@ class Pipeline:
         return [i for i, case in enumerate(certificate.checks) if case.question_anchor not in item.question
                 or case.answer_anchor not in item.answer or case.target_output not in item.required_outputs]
 
-    async def certificate(self, candidate, review, input_hash):
+    async def certificate(self, candidate, review, input_hash, *, repair=0, feedback=None):
+        packet = {"question": candidate.item.question, "gold_answer": candidate.item.answer,
+                  "required_outputs": candidate.item.required_outputs,
+                  "proposed_checks": [case.model_dump() for case in review.substitution_checks]}
+        prompt = self.prompts["consistency_certificate"]
+        stage = "certificate"
+        if feedback is not None:
+            packet["repair_feedback"] = feedback
+            prompt += "\n" + self.prompts["consistency_certificate_repair"]
+            stage += f"-repair:{repair}:{digest(feedback)}"
         certificate, cid, model = await self.consistency_call(
-            self.prompts["consistency_certificate"] + "\n" + json.dumps({
-                "question": candidate.item.question, "gold_answer": candidate.item.answer,
-                "required_outputs": candidate.item.required_outputs, "proposed_checks":
-                [case.model_dump() for case in review.substitution_checks]}, ensure_ascii=False),
-            f"{candidate.id}:consistency:{input_hash}:certificate", CertificateAudit)
+            prompt + "\n" + json.dumps(packet, ensure_ascii=False),
+            f"{candidate.id}:consistency:{input_hash}:{stage}", CertificateAudit)
         bad = self.certificate_anchor_errors(certificate, candidate.item)
         aid, amodel = "", ""
         if review.passed() and certificate.faithful_translation and bad and self.settings.consistency_schema_repairs:
@@ -165,7 +174,7 @@ class Pipeline:
                     "question": candidate.item.question, "golden": candidate.item.answer,
                     "output_index_map": dict(enumerate(candidate.item.required_outputs)),
                     "bad_check_indices": bad, "checks": [case.model_dump() for case in certificate.checks]},
-                    ensure_ascii=False), f"{candidate.id}:consistency:{input_hash}:certificate-literal-anchors",
+                    ensure_ascii=False), f"{candidate.id}:consistency:{input_hash}:{stage}-literal-anchors",
                 CertificateAnchors)
             indices = [patch.check_index for patch in patches.patches]
             if sorted(indices) != bad or any(p.target_output_index >= len(candidate.item.required_outputs)
@@ -189,6 +198,8 @@ class Pipeline:
             return False
         base_passed = pending or await self._preflight_correctness(candidate)
         if not base_passed:
+            if self.settings.freeze_question_at_verifier:
+                return False
             # 对抗可以澄清题面语义；不能绕过来源、结构、蓝图或精确反代失败。
             if (not self.settings.require_verifier_adversary or candidate.trials or candidate.deadline_outcomes
                     or not candidate.reasons or any(not reason.startswith("audit_failed:")
@@ -219,6 +230,7 @@ class Pipeline:
         """解题之前失败即拦截，仅复用输入完全相同的审查。"""
         if candidate.status == "rejected":
             return False
+        candidate.preflight_repair = None
         sources = {s.id: s for s in self.store.sources()}
         errors = static_errors(candidate, sources, self.quotas)
         if candidate.source_fidelity != self.settings.source_fidelity:
@@ -272,11 +284,18 @@ class Pipeline:
         reusable = (assessment and assessment.input_sha256 == input_hash and assessment.prompt_hashes == hashes
                     and assessment.model_config_sha256 == model_hash)
         certificate_hash = digest(self.prompts["consistency_certificate"])
+        repair_protocol = certificate_repair_protocol(self.settings, self.prompts)
         if (reusable and assessment.certificate_audit and assessment.certificate_prompt_sha256 == certificate_hash
+                and assessment.certificate_repair_protocol_sha256 == repair_protocol
                 and not self.certificate_anchor_errors(assessment.certificate_audit, candidate.item)
                 and (not assessment.certificate_anchor_request or assessment.certificate_anchor_prompt_sha256
                      == digest(self.prompts["consistency_certificate_anchors"]))
                 and assessment.verifier_sha256 == verifier_fingerprint()):
+            candidate.preflight_repair = classify_preflight(assessment.audit, assessment.certificate_audit,
+                                                          assessment.substitution)
+            if not assessment.passed():
+                candidate.status = "rejected"
+                self.store.save(candidate)
             return assessment.passed()
         if reusable:
             independent, sid, smodel = (assessment.independent_solution, assessment.independent_request,
@@ -295,12 +314,24 @@ class Pipeline:
                     "sources": [{**sources[s].model_dump(), "text": sources[s].text[:self.settings.max_source_chars]}
                                 for s in candidate.source_ids]}, ensure_ascii=False),
                 f"{candidate.id}:consistency:{input_hash}:review", ConsistencyAudit)
-        certificate, cid, cmodel, aid, amodel = await self.certificate(candidate, review, input_hash)
-        executable_review = review.model_copy(update={"substitution_checks": certificate.checks})
-        substitution = (verify_substitutions(executable_review, candidate.item)
-                        if certificate.faithful_translation else SubstitutionReport(
-                            verdict="unsupported", results=[], uncovered_outputs=list(candidate.item.required_outputs),
-                            reason="Formula translation was not verified; no scientific counterexample is established."))
+        attempts, feedback = [], None
+        for repair in range(self.settings.certificate_max_repairs + 1):
+            certificate, cid, cmodel, aid, amodel = await self.certificate(
+                candidate, review, input_hash, repair=repair, feedback=feedback)
+            executable_review = review.model_copy(update={"substitution_checks": certificate.checks})
+            substitution = (verify_substitutions(executable_review, candidate.item)
+                            if certificate.faithful_translation else SubstitutionReport(
+                                verdict="unsupported", results=[], uncovered_outputs=list(candidate.item.required_outputs),
+                                reason="Formula translation was not verified; no scientific counterexample is established."))
+            attempts.append(CertificateAttempt(certificate=certificate, substitution=substitution,
+                request_id=cid, actual_model=cmodel, anchor_request=aid, anchor_actual_model=amodel))
+            advice = classify_preflight(review, certificate, substitution)
+            if advice is None or advice.owner != "certificate" or repair == self.settings.certificate_max_repairs:
+                break
+            self.log("certificate_targeted_repair", candidate=candidate.id, repair=repair+1,
+                     category=advice.category, question_changed=False, golden_changed=False)
+            feedback = {"classification": advice.model_dump(), "previous_certificate": certificate.model_dump(),
+                        "execution": substitution.model_dump()}
         candidate.consistency = ConsistencyAssessment(
             input_sha256=input_hash, prompt_hashes=hashes, model_config_sha256=model_hash,
             independent_solution=independent, audit=review, independent_request=sid, review_request=rid,
@@ -313,6 +344,9 @@ class Pipeline:
         candidate.consistency.certificate_anchor_actual_model = amodel
         candidate.consistency.certificate_anchor_prompt_sha256 = digest(self.prompts["consistency_certificate_anchors"])
         candidate.consistency.verifier_sha256 = verifier_fingerprint()
+        candidate.consistency.certificate_attempts = attempts
+        candidate.consistency.certificate_repair_protocol_sha256 = repair_protocol
+        candidate.preflight_repair = advice
         passed = candidate.consistency.passed()
         if not passed:
             candidate.status = "rejected"
@@ -338,6 +372,8 @@ class Pipeline:
         """只从来源抽取已有结果；完整证明复核前不把抽取当作真值。"""
         data = {"source": source_data, "target": target, "research_brief": brief,
                 "source_fidelity": self.settings.source_fidelity}
+        if self.difficulty_profile:
+            data["construction_reference"] = profile_for_category(self.difficulty_profile, target["category"])
         for repair in range(self.settings.max_repairs + 1):
             selection, rid, model = await self.gateway.call("generator", self.prompts["known_result"] + "\n" +
                 json.dumps(data, ensure_ascii=False), f"{identity}:known-result:{repair}", ResultSelection)
@@ -436,6 +472,11 @@ class Pipeline:
                 existing.authoring_complete = True
                 self.store.save(existing)
                 return existing
+            if ((self.settings.freeze_question_at_verifier and existing.verifier_assessment)
+                    or (existing.preflight_repair and existing.preflight_repair.owner == "certificate")):
+                existing.authoring_complete = True
+                self.store.save(existing)
+                return existing
             existing.authoring_repairs_completed += 1
             existing.authoring_complete = existing.authoring_repairs_completed > self.settings.max_repairs
             self.store.save(existing)
@@ -473,19 +514,34 @@ class Pipeline:
                                 "verifier_assessment": (existing.verifier_assessment.model_dump()
                                                         if existing.verifier_assessment else None),
                                 "consistency_assessment": (existing.consistency.model_dump()
-                                                           if existing.consistency else None)}
+                                                           if existing.consistency else None),
+                                "preflight_repair": existing.preflight_repair.model_dump() if existing.preflight_repair else None}
         result = None
         for repair in range(first_repair,self.settings.max_repairs + 1):
             salt = f"{identity}:repair:{repair}"
+            reusable = result or existing
+            blueprint, bid, bmodel = None, "", ""
             if repair == 0 and seed and seed.solution is not None:
                 plan = seed.solution.model_copy(deep=True)
                 self.log("authoring_seed_reused", candidate=identity, seed_sha256=digest(seed.model_dump()),
                          origin_candidate=seed.original_candidate_id, original_requests=seed.original_request_ids,
                          prior_authoring_repairs=seed.prior_authoring_repairs, scientific_pass=False)
             else:
-                plan, _, _ = await self.gateway.call("generator", self.prompts["solution"] + "\n" +
-                    json.dumps(data, ensure_ascii=False), salt + ":solution", Solution)
-            blueprint, bid, bmodel = None, "", ""
+                if self.settings.use_locked_proof_draft:
+                    instruction = ("\nOUTPUT CONTRACT: return LockedProofDraft only. Do NOT emit answer, "
+                        "design.target or the locked assumptions. They are immutable program inputs. "
+                        "additional_assumptions contains only explicitly justified consequences, not new "
+                        "restrictions. Prove the supplied locked gold, including every case; if false, "
+                        "expose its contradiction in derivation instead of substituting another answer.")
+                    draft, rid, model = await self.gateway.call("generator", self.prompts["solution"] + instruction + "\n" +
+                        json.dumps(data, ensure_ascii=False), salt + ":locked-proof", LockedProofDraft)
+                    plan = draft.bind(known_result)
+                    self.log("locked_proof_bound", candidate=identity, repair=repair, request_id=rid,
+                        actual_model=model, draft_sha256=digest(draft.model_dump()),
+                        solution_sha256=digest(plan.model_dump()), golden_changed=False)
+                else:
+                    plan, _, _ = await self.gateway.call("generator", self.prompts["solution"] + "\n" +
+                        json.dumps(data, ensure_ascii=False), salt + ":solution", Solution)
             blueprint_errors = []
             if self.settings.require_solution_design and plan.design is None:
                 blueprint_errors.append("missing_solution_design")
@@ -526,6 +582,8 @@ class Pipeline:
             else:
                 item, align_request, _ = await self.gateway.call("generator", self.prompts["align"] + "\n" +
                                                 json.dumps({"solution": plan.model_dump(), "target": target,
+                                                            "repair_feedback": data.get("feedback"),
+                                                            "previous_question": reusable.item.model_dump() if reusable else None,
                                                             "source_fidelity": self.settings.source_fidelity},
                                                            ensure_ascii=False), salt + ":align", Question)
             if item.answer != plan.answer:
@@ -569,6 +627,14 @@ class Pipeline:
                     self.store.save(result)
                     return result
                 errors.extend(result.reasons)
+                if ((self.settings.freeze_question_at_verifier and result.verifier_assessment)
+                        or (result.preflight_repair and result.preflight_repair.owner == "certificate")):
+                    # verifier输入已冻结；证书修复耗尽也不能落入整包作者重写。
+                    result.authoring_complete = True
+                    self.store.save(result)
+                    self.log("preflight_terminal_no_author_rewrite", candidate=identity, reasons=result.reasons,
+                             repair_owner=result.preflight_repair.owner if result.preflight_repair else "verifier")
+                    return result
             result.status, result.reasons = "rejected", errors
             result.authoring_repairs_completed = repair+1
             result.authoring_complete = repair == self.settings.max_repairs
@@ -582,7 +648,8 @@ class Pipeline:
                                 "verifier_assessment": (result.verifier_assessment.model_dump()
                                                         if result.verifier_assessment else None),
                                 "consistency_assessment": (result.consistency.model_dump()
-                                                           if result.consistency else None)}
+                                                           if result.consistency else None),
+                                "preflight_repair": result.preflight_repair.model_dump() if result.preflight_repair else None}
         return result
 
     def validate_deadlines(self, candidate):

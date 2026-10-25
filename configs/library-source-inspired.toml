@@ -1,10 +1,13 @@
 source_fidelity = "advisory"
+certificate_max_repairs = 1
 require_verifier_adversary = true
+freeze_question_at_verifier = true
 verifier_max_revisions = 2
 require_solution_design = true
 preverify_blueprint = true
 require_stepwise_blueprint_review = true
 require_known_result = true
+use_locked_proof_draft = true
 require_bottleneck_mask = true
 require_difficulty_design = true
 samples = 16

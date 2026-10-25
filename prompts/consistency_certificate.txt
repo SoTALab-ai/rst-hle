@@ -12,7 +12,7 @@ task and answer and the domain conditions are sufficient for their chosen points
 a faithful translation use false; never declare an unverified translation faithful. Copy short anchors
 EXACTLY from the supplied strings, with identical case/spacing/symbols. Every target_output must match an
 exact required_outputs entry. Keep nontrivial boundary/exception/cross-output checks where relevant.
-Use integers/rational fractions, I, + - * /, scalar ** integer exponents -8..8, mat, vec, eye, transpose,
+Use integers/rational fractions, I, + - * /, scalar ** integer exponents -16..16, mat, vec, eye, transpose,
 conj, adjoint, inverse, norm2 only. No decimals, attributes, generated code or extra functions. Each case
 has ordered bindings and nonempty domain_conditions. For noncomputational tasks an empty list is allowed.
 Bindings are local to each case. Matrix dimensions must match and cannot exceed 8. Check all proposed

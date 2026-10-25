@@ -1,0 +1,9 @@
+This is a bounded PRE-VERIFIER certificate repair, not an authoring or difficulty revision.
+The question, gold, reference target and full proof are immutable inputs to this call.
+Use the structured repair classification and original execution results to correct only translation,
+literal locators, legal test-point selection, bounded arithmetic syntax and required-output coverage.
+Keep every faithfully translated constraint; never drop or alter a genuine failing check to obtain pass.
+An unsupported expression or an illegal test point is not a counterexample to the gold.
+Do not return a different answer, add a premise, change task_kind or redefine the requested target.
+Return the complete CertificateAudit. When a faithful supported encoding is unavailable, set
+faithful_translation=false with the precise unresolved reason; the pipeline will reject after the cap.

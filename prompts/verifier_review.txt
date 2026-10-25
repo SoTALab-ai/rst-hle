@@ -13,3 +13,7 @@ will undergo fresh blind derivation, source/bottleneck, consistency and exact-su
 An invalid golden is reject, never replaced by an alternative answer. Unresolved oracle/science issues
 are reject. HLE disagreement without a concrete question ambiguity is reject and a grading dispute;
 changing a local verifier cannot silently change the official HLE score. Give actionable feedback.
+When mutation_policy is FROZEN, never choose repair_question. Question, golden and full proof are
+immutable at this stage. A genuine ambiguity, missing premise or proof/golden defect requires reject
+with precise upstream feedback; it cannot be excused by changing acceptance rules. For a sound task,
+repair_verifier may fix false rejections or missed invalid answers, within the existing revision limit.

@@ -1,0 +1,100 @@
+{
+  "run_id": "author-qc-yield-components-20261025-v1",
+  "frozen_code": "2155a1a",
+  "scope": "固定组件回放，不是整题质检或整批重跑",
+  "components": [
+    {
+      "root": "L50_018_q3",
+      "component": "blueprint_only",
+      "expected": true,
+      "passed": true,
+      "request": "d531a93d3fbb920aac2ab21218fca4b1c5f2ae385b0d5c39798a2e4e961a2b71",
+      "actual_model": "gpt-6-luna-2026-09-22",
+      "question_generated": false,
+      "golden_changed": false,
+      "full_qc_passed": false,
+      "executed_model_review": true
+    },
+    {
+      "root": "L50_018_q4",
+      "component": "blueprint_only",
+      "full_qc_passed": false,
+      "executed_model_review": false,
+      "input_block": "locked_gold_identity_mismatch"
+    },
+    {
+      "root": "L50_009_q1",
+      "component": "blueprint_only",
+      "full_qc_passed": false,
+      "executed_model_review": false,
+      "input_block": "diagnostic_seed_lookup_missing"
+    },
+    {
+      "component": "verifier_controls_only",
+      "origin": "0302b98ae3c2112e97cb248e",
+      "passed": true,
+      "errors": [],
+      "original_challenge_as_input": "c5aa966da1c3d94d076a685bead3e00cd519bd17a4bacfaf8bdcbe5f96bc25d4",
+      "question_changed": false,
+      "golden_changed": false,
+      "proof_changed": false,
+      "full_qc_passed": false,
+      "executed_model_review": true,
+      "control_attempts": 2,
+      "case_count": 10,
+      "observations": 11,
+      "initial_coverage_errors": [
+        "insufficient_positive_controls"
+      ],
+      "actual_models": {
+        "challenge": "gpt-6-luna-2026-09-22",
+        "oracle": "gpt-6-luna-2026-09-22",
+        "review": "gpt-6-luna-2026-09-22"
+      }
+    }
+  ],
+  "cost": {
+    "known_cost_usd": 0.021834850000000003,
+    "http_attempts": 27,
+    "unknown_usage_attempts": 0,
+    "unsettled_reserved_attempts": 0
+  },
+  "difficulty_samples": 0,
+  "full_quality_passed": 0,
+  "retained": 0,
+  "negative_control": {
+    "run_id": "author-qc-yield-negative-20261025-v1",
+    "root": "L50_009_q1",
+    "component": "negative_blueprint_only",
+    "passed": false,
+    "golden_changed": false,
+    "proof_changed": false,
+    "actual_model": "gpt-6-luna-2026-09-22",
+    "request": "9b32de3ccff16ddb1fffc73d02dd0e894489782e838401a524c7702f0f2fac94",
+    "full_quality_passed": 0,
+    "difficulty_samples": 0,
+    "issue_parts": [
+      "known_result",
+      "answer",
+      "derivation",
+      "difficulty_design"
+    ],
+    "cost": {
+      "known_cost_usd": 0.0043378,
+      "http_attempts": 1,
+      "unknown_usage_attempts": 0,
+      "unsettled_reserved_attempts": 0
+    }
+  },
+  "all_diagnostic_cost": {
+    "incremental_known_api_usd": 0.02617265,
+    "http_attempts": 28,
+    "unknown_usage_attempts": 0,
+    "unsettled_reserved_attempts": 0,
+    "original_batch_cumulative_usd": 13.87146808,
+    "cumulative_including_this_diagnostic_usd": 13.89764073,
+    "rmb_reference_exchange_rate": 6.7,
+    "cumulative_rmb_reference": 93.114192891,
+    "vm_disk_network_usd": null
+  }
+}
