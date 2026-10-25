@@ -698,6 +698,14 @@ class DifficultyProposalVersion(StrictModel):
     challenge_request: str = ""
     challenge_actual_model: str = ""
     errors: list[str] = Field(default_factory=list)
+    graph_repair_request: str = ""
+    graph_repair_actual_model: str = ""
+    original_author_response_sha256: str = ""
+
+
+class DifficultyGraphPatch(StrictModel):
+    difficulty: DifficultyDesign
+    explanation: str = Field(min_length=20)
 
 
 class DifficultyCampaign(StrictModel):

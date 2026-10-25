@@ -16,6 +16,7 @@ from diamond_factory.llm import ModelResponseError
 from diamond_factory.models import (
     BottleneckReview,
     DifficultyChallenge,
+    DifficultyGraphPatch,
     DifficultyMaskRevision,
     DifficultyProposal,
     LockedProofDraft,
@@ -319,3 +320,70 @@ def test_incomplete_author_flag_cannot_reopen_a_measured_root(tmp_path, source, 
     resumed = generate(pipe, source)
     assert resumed.authoring_complete and resumed.trials == result.trials
     assert len(gateway.calls) == before
+
+
+def test_invalid_graph_is_patched_without_rebuying_author_or_mutating_truth(tmp_path, source, candidate):
+    from types import SimpleNamespace
+
+    from diamond_factory.models import DifficultyDesign
+
+    pipe, _, gateway = prepared(tmp_path, source, candidate)
+    original = gateway.call
+    author_count = 0
+    original_truth = None
+
+    async def call(role, prompt, salt, schema=None, **kwargs):
+        nonlocal author_count, original_truth
+        if schema is DifficultyProposal:
+            value, rid, model = await original(role, prompt, salt, schema, **kwargs)
+            raw = value.model_dump()
+            original_truth = json.loads(json.dumps(raw))
+            raw["proof"]["design"]["difficulty"]["steps"][1]["depends_on"] = []
+            trace = {"request_id": rid, "content": json.dumps(raw), "actual_model": model}
+            trace["integrity_sha256"] = digest(trace)
+            gateway.store = SimpleNamespace(get_request=lambda request: trace if request == rid else None)
+            author_count += 1
+            raise ModelResponseError(role, rid, "invalid_schema")
+        if schema is DifficultyGraphPatch:
+            gateway.calls.append((role, prompt, salt))
+            data = json.loads(prompt.splitlines()[-1])
+            assert data["errors"][0]["location"][:3] == ["proof", "design", "difficulty"]
+            value = DifficultyGraphPatch(difficulty=DifficultyDesign.model_validate(
+                original_truth["proof"]["design"]["difficulty"]), explanation="Restore the actual preceding-step dependency.")
+            return value, digest(salt), "gpt-6-luna"
+        return await original(role, prompt, salt, schema, **kwargs)
+
+    gateway.call = call
+    result = generate(pipe, source)
+    version = result.difficulty_origin.selected
+    assert version.graph_repair_request and version.original_author_response_sha256
+    assert version.proposal.model_dump() == original_truth
+    assert author_count == 1 and result.known_result == candidate.known_result
+    assert result.status == "quality_seed"
+
+
+@pytest.mark.parametrize("defect", ["other_field", "corrupt_trace"])
+def test_graph_patch_cannot_repair_truth_fields_or_read_corrupt_author_response(tmp_path, source, candidate, defect):
+    from types import SimpleNamespace
+
+    from diamond_factory.llm import CacheIntegrityError
+
+    pipe, _, gateway = prepared(tmp_path, source, candidate)
+    original = gateway.call
+
+    async def call(role, prompt, salt, schema=None, **kwargs):
+        if schema is DifficultyProposal:
+            value, rid, model = await original(role, prompt, salt, schema, **kwargs)
+            raw = value.model_dump()
+            if defect == "other_field":
+                raw["result"]["answer"] = 36
+            trace = {"request_id": rid, "content": json.dumps(raw), "actual_model": model}
+            trace["integrity_sha256"] = "corrupt" if defect == "corrupt_trace" else digest(trace)
+            gateway.store = SimpleNamespace(get_request=lambda request: trace)
+            raise ModelResponseError(role, rid, "invalid_schema")
+        assert schema is not DifficultyGraphPatch
+        return await original(role, prompt, salt, schema, **kwargs)
+
+    gateway.call = call
+    with pytest.raises((ModelResponseError, CacheIntegrityError)):
+        generate(pipe, source)

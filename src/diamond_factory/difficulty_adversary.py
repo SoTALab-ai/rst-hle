@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, ValidationError, model_validator
 
 from .artifacts import LocalObjects
 from .difficulty import bottleneck_mask_errors, difficulty_design_errors, known_result_errors
@@ -14,6 +14,7 @@ from .models import (
     Candidate,
     DifficultyCampaign,
     DifficultyChallenge,
+    DifficultyGraphPatch,
     DifficultyMaskRevision,
     DifficultyOrigin,
     DifficultyProposal,
@@ -180,6 +181,50 @@ class DifficultyAdversary:
             parent = version.proposal_id
         return campaign
 
+    async def proposal(self, packet, salt):
+        prompt = self.p.prompts["difficulty_proposal"] + "\n" + json.dumps(packet, ensure_ascii=False)
+        try:
+            value, rid, model = await self.p.gateway.call("generator", prompt, salt, DifficultyProposal)
+            return value, rid, model, None
+        except ModelResponseError as error:
+            if error.reason != "invalid_schema":
+                raise
+            repository = getattr(self.p.gateway, "store", None)
+            trace = repository.get_request(error.request_id) if repository else None
+            directory = getattr(self.p.gateway, "directory", None)
+            if trace is None and directory is not None and (directory / (error.request_id + ".json")).is_file():
+                trace = json.loads((directory / (error.request_id + ".json")).read_text())
+            if trace is None:
+                raise
+            if (trace.get("request_id") != error.request_id or trace.get("integrity_sha256") != digest(
+                    {k: v for k, v in trace.items() if k != "integrity_sha256"})):
+                raise CacheIntegrityError("Invalid author response cannot be used for graph repair")
+            try:
+                raw = json.loads(trace["content"])
+            except (ValueError, TypeError):
+                raise error from None
+            try:
+                DifficultyProposal.model_validate(raw)
+            except ValidationError as invalid:
+                errors = invalid.errors(include_input=False, include_url=False)
+                if not all(tuple(e["loc"][:3]) == ("proof", "design", "difficulty") for e in errors):
+                    raise error from None
+            else:
+                raise error
+            patch, rid, model = await self.p.consistency_call(self.p.prompts["difficulty_graph_repair"] + "\n" +
+                json.dumps({"unchanged_result": raw["result"], "unchanged_derivation": raw["proof"]["derivation"],
+                    "graph": raw["proof"]["design"]["difficulty"], "errors": [
+                        {"location": list(e["loc"]), "type": e["type"], "message": e["msg"]} for e in errors]},
+                    ensure_ascii=False),
+                salt + ":graph-repair", DifficultyGraphPatch)
+            before = digest(raw)
+            # 只替换图摘要，原答案、目标、前提、完整推导及其余设计字段逐字保持。
+            raw["proof"]["design"]["difficulty"] = patch.difficulty.model_dump()
+            value = DifficultyProposal.model_validate(raw)
+            self.p.log("difficulty_graph_repair", original_request=error.request_id, repair_request=rid,
+                       actual_model=model, golden_changed=False, proof_changed=False)
+            return value, error.request_id, trace["actual_model"], (rid, model, before)
+
     async def design(self, source, target, identity, brief):
         p = self.p
         source_data = {**source.model_dump(), "text": source.text[:p.settings.max_source_chars]}
@@ -193,14 +238,16 @@ class DifficultyAdversary:
         for index in range(p.settings.difficulty_design_max_revisions + 1):
             prior = campaign.versions[index - 1] if index else None
             if index >= len(campaign.versions):
-                proposal, rid, model = await p.gateway.call("generator", p.prompts["difficulty_proposal"] + "\n" +
-                    json.dumps({**packet, "previous_proposal": prior.model_dump() if prior else None,
-                                "revision": index}, ensure_ascii=False), f"{identity}:depth-design:{index}:author",
-                    DifficultyProposal)
+                proposal, rid, model, graph_repair = await self.proposal(
+                    {**packet, "previous_proposal": prior.model_dump() if prior else None, "revision": index},
+                    f"{identity}:depth-design:{index}:author")
                 campaign.versions.append(DifficultyProposalVersion(
                     proposal_id=digest({"identity": identity, "proposal": index})[:24],
                     parent_proposal_id=prior.proposal_id if prior else None, proposal=proposal,
                     author_request=rid, author_actual_model=model))
+                if graph_repair:
+                    (campaign.versions[-1].graph_repair_request, campaign.versions[-1].graph_repair_actual_model,
+                     campaign.versions[-1].original_author_response_sha256) = graph_repair
                 self.save_campaign(campaign)
             version = campaign.versions[index]
             if version.proposal.outcome == "unavailable":
