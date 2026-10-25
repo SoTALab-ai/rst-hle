@@ -40,9 +40,13 @@ class MaterialMilestone(StrictModel):
     library_run_id: str
     required_materials: int = Field(ge=1, le=200)
     papers: list[SnapshotPaper] = Field(min_length=1, max_length=200)
+    excluded_paper_ids: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def complete_cohort(self):
+        if (len(set(self.excluded_paper_ids)) != len(self.excluded_paper_ids)
+                or set(self.excluded_paper_ids) & {p.id for p in self.papers}):
+            raise ValueError("Excluded materials must be unique and disjoint from the selected cohort")
         if len(self.papers) != self.required_materials or len({p.id for p in self.papers}) != len(self.papers):
             raise ValueError("Milestone must contain exactly the required distinct complete materials")
         main_hashes = []
@@ -168,22 +172,25 @@ def snapshot_paper(store, library_run_id, paper_id):
                          supplement_status=row[4]["supplement_status"], documents=docs)
 
 
-def freeze_milestone(store, library_run_id, required, path):
+def freeze_milestone(store, library_run_id, required, path, *, exclude=()):
     path = Path(path)
+    excluded = sorted(set(exclude))
     if path.exists():
         milestone = MaterialMilestone.model_validate_json(path.read_text())
-        if milestone.library_run_id != library_run_id or milestone.required_materials != required:
+        if (milestone.library_run_id != library_run_id or milestone.required_materials != required
+                or sorted(milestone.excluded_paper_ids) != excluded):
             raise ValueError("Frozen milestone changed; use a new run-id and directory")
         # 续跑验证同一批材料，不因更多论文完成而重选另一批。
         for paper in milestone.papers:
             if snapshot_paper(store, library_run_id, paper.id) != paper:
                 raise CacheIntegrityError("Frozen paper parse or objects changed")
         return milestone
-    ids = complete_paper_ids(store, library_run_id, required)
+    ids = [pid for pid in complete_paper_ids(store, library_run_id, 200) if pid not in excluded][:required]
     if len(ids) < required:
         return None
     result = MaterialMilestone(library_run_id=library_run_id, required_materials=required,
-                              papers=[snapshot_paper(store, library_run_id, pid) for pid in ids])
+                              papers=[snapshot_paper(store, library_run_id, pid) for pid in ids],
+                              excluded_paper_ids=excluded)
     atomic_json(path, result.model_dump())
     return result
 
@@ -346,12 +353,12 @@ async def plan_questions(store, milestone, settings, pricing, directory, run_id)
     return plans, report
 
 
-async def run_question_shards(store, settings, pricing, plans, directory, run_prefix):
+async def run_question_shards(store, settings, pricing, plans, directory, run_prefix, *, gateway_factory=None):
     reports = []
     for i, plan in enumerate(plans):
         run_id = f"{run_prefix}-part{i+1:02d}"
         path = Path(directory)/run_id
-        gateway = MeteredGateway(settings, path/"requests", store, run_id,
+        gateway = (gateway_factory or MeteredGateway)(settings, path/"requests", store, run_id,
                                  pricing=pricing, visible_cost_limit_usd=None)
         report = await QuestionExperiment(settings, store, run_id, "pilot", path, gateway,
             plan=plan, pricing=pricing).run_experiment()

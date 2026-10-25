@@ -1,0 +1,305 @@
+{
+  "protocol": "library30-bridge-pilot-results-v1",
+  "observed_at": "2026-10-25T11:08:46.590453+00:00",
+  "run_prefix": "library30-bridge-20261025-v1",
+  "run_statuses": {
+    "library30-bridge-20261025-v1-planning": "planned",
+    "library30-bridge-20261025-v1-part01": "completed_with_errors"
+  },
+  "pilot_only": true,
+  "delivery_items": 0,
+  "frozen_identity": {
+    "code": "9cc717b1e285785554ed51d3eb3434c0423cdafa",
+    "archive_sha256": "ae10fbd863d9037f7dcb5ba715b60bc31c8c55d8ad5c8d9dc5cb78b1bb1144ef",
+    "vm": "liaojunteng-vm",
+    "uid": 1031248789,
+    "database": "rst_hle_library30_bridge_20261025",
+    "config": "configs/library-source-inspired.toml"
+  },
+  "materials": {
+    "selected": 30,
+    "by_material_domain": {
+      "Math": 17,
+      "Physics": 13
+    },
+    "excluded_first_batch": 20,
+    "library_complete": 50,
+    "reader_state": "stopped",
+    "reader_restarted": false,
+    "cross_cohort_pdf_overlap": 0,
+    "cross_cohort_doi_overlap": 0
+  },
+  "planning": {
+    "attempted_materials": 30,
+    "planned_materials": 29,
+    "technical_failures": {
+      "invalid_schema": 1
+    },
+    "raw_proposals": 101,
+    "entry_invalid_v3_rejected": 3,
+    "independent_review_rejected": 0,
+    "admitted_root_lines": 98
+  },
+  "stages": {
+    "blueprint_approved_initial_lines": 94,
+    "formed_initial_roots": 94,
+    "formed_versions": 94,
+    "internal_author_repairs": 72,
+    "candidates_with_author_repairs": 43,
+    "ever_full_prefilter_roots": 55,
+    "current_valid_quality_versions_after_postreview": 54,
+    "observed_band_before_postreview": 1,
+    "valid_band_after_science": 0,
+    "retained_roots": 0
+  },
+  "by_planned_question_category": {
+    "Math": {
+      "planned_lines": 79,
+      "formed_initial_roots": 76,
+      "formed_versions": 76,
+      "full_prefilter_roots": 43,
+      "actual_item_category_mismatches": 0,
+      "technical_root_states": {
+        "authoring_rejected": 5,
+        "finished": 43,
+        "pending": 27,
+        "prefix_failed": 4
+      },
+      "paired_glm_answers": 184,
+      "deadline_incorrect": 0,
+      "first4_all_correct_rejected": 42,
+      "full16_versions": 1,
+      "full16_above_band_rejected": 0,
+      "observed_band_versions": 1,
+      "valid_band_versions": 0,
+      "retained_roots": 0
+    },
+    "Physics": {
+      "planned_lines": 19,
+      "formed_initial_roots": 18,
+      "formed_versions": 18,
+      "full_prefilter_roots": 12,
+      "actual_item_category_mismatches": 0,
+      "technical_root_states": {
+        "pending": 5,
+        "finished": 12,
+        "authoring_rejected": 1,
+        "prefix_failed": 1
+      },
+      "paired_glm_answers": 59,
+      "deadline_incorrect": 1,
+      "first4_all_correct_rejected": 11,
+      "full16_versions": 1,
+      "full16_above_band_rejected": 1,
+      "observed_band_versions": 0,
+      "valid_band_versions": 0,
+      "retained_roots": 0
+    }
+  },
+  "rates": {
+    "formed_per_planned": 0.9591836734693877,
+    "full_qc_per_formed": 0.5851063829787234,
+    "full_qc_per_planned": 0.5612244897959183,
+    "valid_difficulty_per_full_qc": 0,
+    "retained_per_planned": 0
+  },
+  "disjoint_root_dispositions": {
+    "first4_all_correct_rejected": 53,
+    "complete16_above_band_rejected": 1,
+    "postreview_scoring_dispute_rejected": 1,
+    "formed_pre_qc_rejected": 36,
+    "unformed_locked_result_rejected": 2,
+    "technical_validation_incomplete": 5
+  },
+  "pre_qc_gate_rejections": {
+    "locked_result": 2,
+    "verifier": 21,
+    "composite_audit": 9,
+    "bottleneck_mask": 3,
+    "unregistered_evidence_source": 2,
+    "certificate_uncovered": 1
+  },
+  "technical_validation_incomplete": {
+    "generator_invalid_schema_before_question": 2,
+    "consistency_length": 1,
+    "verifier_locator_nonliteral_or_ambiguous": 2
+  },
+  "verifier_rejection_analysis": {
+    "terminal_verifier_rejections": {
+      "unresolved_adversarial_review": 10,
+      "upstream_defect_requires_new_version": 10,
+      "invalid_or_uncertain_golden": 1
+    },
+    "terminal_oracle_nonpass": {
+      "target_unambiguous:fail": 10,
+      "golden_valid:fail": 1
+    },
+    "terminal_error_tags_multi_count": {
+      "hle_disagreement": 26,
+      "verifier_semantic_review_failed": 21,
+      "review_requested": 21,
+      "unresolved_question_or_golden": 11,
+      "false_rejection": 4,
+      "false_acceptance": 6,
+      "insufficient_validated_controls": 1,
+      "golden_not_validated": 1
+    },
+    "verifier_revision_counts": {
+      "0": 74,
+      "1": 3
+    },
+    "control_attempt_coverage_error_tags": {
+      "insufficient_positive_controls": 1
+    },
+    "composite_audit_false_flags_multi_count": {
+      "no_shortcut": 7,
+      "valid": 2,
+      "category_correct": 2,
+      "substantive_delta": 1
+    },
+    "bottleneck_nonpass": {
+      "hidden:fail": 1,
+      "selection_supported:fail": 2
+    },
+    "api_calls_in_this_readonly_analysis": 0
+  },
+  "difficulty": {
+    "first4_all_correct": 53,
+    "complete16_versions": [
+      {
+        "candidate": "9cd5931a739ad821f0c35b76",
+        "root": "L50_007_q4",
+        "category": "Math",
+        "original_correct": 3,
+        "outcomes": 16,
+        "answered": 16,
+        "deadline_incorrect": 0,
+        "disposition": "postreview_scoring_dispute_rejected",
+        "readonly_correct_lower_bound": 9,
+        "confirmed_false_negative_samples": 6,
+        "original_grades_overwritten": false,
+        "additional_api_calls": 0
+      },
+      {
+        "candidate": "053e6a79527d9350b81f5045",
+        "root": "L50_022_q2",
+        "category": "Physics",
+        "original_correct": 15,
+        "outcomes": 16,
+        "answered": 15,
+        "deadline_incorrect": 1,
+        "disposition": "too_easy_rejected"
+      }
+    ],
+    "actual_glm_answers": 243,
+    "solver_deadline_outcomes": 1,
+    "easing_versions": 0,
+    "valid_band_versions": 0,
+    "retained_roots": 0,
+    "retained_cost_per_root_usd": null
+  },
+  "reuse": {
+    "verified_historical_answer_pool": 36,
+    "actual_old_solver_hits": 0,
+    "new_successful_solver_answers": 243,
+    "new_solver_http_attempts": 244,
+    "duplicate_successful_payload_sample_groups": 0,
+    "cache_verification_http_calls": 0,
+    "old_payments_recounted": false,
+    "old_new_full_payload_sample_overlap": 0
+  },
+  "cost": {
+    "baseline_api_usd": 13.90634528,
+    "incremental_known_api_usd": 11.392248965000048,
+    "cumulative_known_api_usd": 25.298594245000046,
+    "http_attempts": 3042,
+    "unknown_usage": 1,
+    "inflight": 0,
+    "vm_disk_network_usd": null,
+    "fx_reference": 6.7,
+    "by_role": {
+      "generator": {
+        "http_attempts": 499,
+        "known_cost_usd": 1.9445965749999998,
+        "unknown_usage_attempts": 0
+      },
+      "auditor": {
+        "http_attempts": 154,
+        "known_cost_usd": 0.23241314999999999,
+        "unknown_usage_attempts": 0
+      },
+      "solver": {
+        "http_attempts": 244,
+        "known_cost_usd": 6.784279740000001,
+        "unknown_usage_attempts": 1
+      },
+      "consistency": {
+        "http_attempts": 1329,
+        "known_cost_usd": 2.263733580000003,
+        "unknown_usage_attempts": 0
+      },
+      "judge": {
+        "http_attempts": 816,
+        "known_cost_usd": 0.16722591999999972,
+        "unknown_usage_attempts": 0
+      }
+    },
+    "by_run": {
+      "library30-bridge-20261025-v1-planning": {
+        "known_cost_usd": 0.2785589,
+        "http_attempts": 59,
+        "unknown_usage_attempts": 0,
+        "unsettled_reserved_attempts": 0
+      },
+      "library30-bridge-20261025-v1-part01": {
+        "known_cost_usd": 11.113690065000048,
+        "http_attempts": 2983,
+        "unknown_usage_attempts": 1,
+        "unsettled_reserved_attempts": 0
+      }
+    },
+    "pricing_snapshot_date": "2026-10-23",
+    "incremental_known_rmb_reference": 76.32806806550033,
+    "cumulative_known_rmb_reference": 169.50058144150032,
+    "readonly_diagnostics_http": 0,
+    "scope": "本论文库、首20份相关试产与诊断的旧基线，加本轮全部HTTP；不是项目所有历史试验总账或供应商账单。未知usage与VM/磁盘/网络费用另列。"
+  },
+  "verification": {
+    "code_freeze_verified": true,
+    "verifier_item_violations": 0,
+    "proof_context_violations": 0,
+    "solver_token_cap_or_tool_payload_violations": 0,
+    "copied_private_evidence_hashes_verified": 7,
+    "local_tests_passed": 323,
+    "local_pg_tests_skipped": 37,
+    "vm_real_synthetic_pg_tests_passed": 360,
+    "ruff": "passed",
+    "doctor": "passed",
+    "readonly_final_export_http_calls": 0,
+    "old_new_solver_full_payload_sample_overlap": 0
+  },
+  "design_metadata": {
+    "construction_types": {
+      "None": 85,
+      "branch_discovery": 4,
+      "inverse_identification": 2,
+      "parameter_region": 3
+    },
+    "bridge_types": {
+      "None": 8,
+      "invariant": 6,
+      "representation": 34,
+      "auxiliary_object": 22,
+      "decomposition": 16,
+      "conservation": 5,
+      "symmetry": 3
+    },
+    "note": "标签是可选元数据，缺失标签不证明未使用该构造；标签存在也不证明题目困难。"
+  },
+  "limitations": [
+    "同论文多题相关，分阶段筛选不能直接估计GLM总体正确率。",
+    "本轮与旧20份材料不同，留存率前后差异不能归因于提示改动。",
+    "独立调用主要使用同一6Luna模型，机器审查不是专家审查或形式化证明。",
+    "0道最终留存，没有可交付合格题包；未知usage不计零。"
+  ]
+}

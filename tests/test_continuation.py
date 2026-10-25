@@ -6,7 +6,7 @@ from test_paper_ingest import pg as pg_fixture
 from test_paper_ingest import rates
 from test_qc import setup_pipeline
 
-from diamond_factory.continuation import ContinuationGateway
+from diamond_factory.continuation import ContinuationGateway, SolverHistory, import_solver_history
 from diamond_factory.costs import measure_cost
 from diamond_factory.llm import CacheIntegrityError
 from diamond_factory.models import AuthoringSeed, Judgment, Trial, digest
@@ -85,6 +85,48 @@ def test_changed_question_can_buy_only_its_missing_sample(tmp_path, settings, ca
     gateway._fetch = fetch
     answer = asyncio.run(gateway.call('solver', candidate.item.question+' A new condition.', 'new:solver:0'))
     assert answer[0] == 'new response' and len(fetched) == 1
+
+
+def test_successful_solver_without_judge_is_reused_and_only_judge_is_bought(
+        tmp_path, settings, candidate, monkeypatch):
+    _, solver, judge = answered_gateway(tmp_path, settings, candidate, monkeypatch)
+    gateway = ContinuationGateway(settings, tmp_path/'orphan', None, 'new-orphan', pricing=rates(),
+        visible_cost_limit_usd=None, historical_candidates=[], historical_traces={solver['request_id']:solver})
+    fetched = []
+
+    async def fetch(role, config, *args):
+        fetched.append(role)
+        assert role == 'judge'
+        return {'actual_model': config.model, 'content': judge['content'], 'usage': {}}
+
+    gateway._fetch = fetch
+    answer = asyncio.run(gateway.call('solver', candidate.item.question, 'new:solver:0'))
+    asyncio.run(gateway.call('judge', 'A new grade for the saved answer', 'new:judge:0', Judgment))
+    assert answer[1] == solver['request_id'] and fetched == ['judge']
+
+
+def test_pg_sealed_history_import_preserves_original_ownership_and_rejects_unsealed_metadata(
+        tmp_path, settings, candidate, monkeypatch, pg):
+    import hashlib
+
+    _, solver, _ = answered_gateway(tmp_path, settings, candidate, monkeypatch)
+    folder = tmp_path/'history'
+    (folder/'traces').mkdir(parents=True)
+    (folder/'traces'/f"{solver['request_id']}.json").write_text(json.dumps(solver))
+    (folder/'solver-history.json').write_text(SolverHistory(
+        origins={solver['request_id']:'original-paid'},candidates=[]).model_dump_json())
+    files = {str(p.relative_to(folder)):hashlib.sha256(p.read_bytes()).hexdigest() for p in folder.rglob('*.json')}
+    manifest = folder/'manifest.json'
+    manifest.write_text(json.dumps({'files':files}))
+    sha = hashlib.sha256(manifest.read_bytes()).hexdigest()
+    candidates, traces = import_solver_history(pg, folder, sha, 'new-campaign')
+    assert not candidates and traces[solver['request_id']] == solver
+    assert pg.db.execute('SELECT run_id FROM diamond.model_requests WHERE id=%s',
+                         (solver['request_id'],)).fetchone()[0] == 'original-paid'
+    del files['solver-history.json']
+    manifest.write_text(json.dumps({'files':files}))
+    with pytest.raises(CacheIntegrityError,match='not sealed'):
+        import_solver_history(pg, folder, hashlib.sha256(manifest.read_bytes()).hexdigest(), 'new-campaign')
 
 
 def test_changed_gold_reuses_solver_but_rejudges_instead_of_reusing_old_grade(
