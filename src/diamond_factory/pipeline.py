@@ -29,6 +29,7 @@ from .gates import (
 from .llm import BudgetExceeded, Gateway, ModelResponseError
 from .models import (
     Audit,
+    AuthoringSeed,
     BlueprintAudit,
     BottleneckAssessment,
     BottleneckReview,
@@ -90,6 +91,7 @@ class Pipeline:
                                             sorted(Path(__file__).parent.glob("*.py"))}})
         self.base_fingerprint = self.fingerprint
         self.invocation = None
+        self.authoring_seeds: dict[str, AuthoringSeed] = {}
 
     def log(self, event: str, **data):
         self.run_dir.mkdir(parents=True, exist_ok=True)
@@ -405,7 +407,9 @@ class Pipeline:
                        + ". Map every issue to the actual proof entries; do not change the proof or gold.")
         raise ModelResponseError("consistency", rid, "invalid_blueprint_step_mapping")
 
-    async def generate(self, source, parent, target, generation, attempt, brief=None):
+    async def generate(self, source, parent, target, generation, attempt, brief=None, seed=None):
+        if seed and (generation != 0 or parent is not None or seed.source_id != source.id):
+            raise ValueError("Authoring seed must belong to this initial source/version")
         if (parent and self.settings.difficulty_policy == "ease_only" and (
                 len(sample_outcomes(parent)) != self.settings.samples or correct_count(sample_outcomes(parent), self.settings.samples) != 0)):
             raise QualityRejected("Only a complete zero-correct parent may enter easing; no hardening is allowed")
@@ -453,7 +457,8 @@ class Pipeline:
             data["research_brief"] = brief
         known_result = None
         if self.settings.require_known_result:
-            known_result = (existing.known_result if existing else parent.known_result if parent else None)
+            known_result = (existing.known_result if existing else parent.known_result if parent else
+                            seed.known_result if seed else None)
             if known_result is None:
                 known_result = await self.select_known_result(source, source_data, target, identity, brief)
             data["known_result"] = known_result.model_dump()
@@ -472,8 +477,14 @@ class Pipeline:
         result = None
         for repair in range(first_repair,self.settings.max_repairs + 1):
             salt = f"{identity}:repair:{repair}"
-            plan, _, _ = await self.gateway.call("generator", self.prompts["solution"] + "\n" +
-                                                json.dumps(data, ensure_ascii=False), salt + ":solution", Solution)
+            if repair == 0 and seed and seed.solution is not None:
+                plan = seed.solution.model_copy(deep=True)
+                self.log("authoring_seed_reused", candidate=identity, seed_sha256=digest(seed.model_dump()),
+                         origin_candidate=seed.original_candidate_id, original_requests=seed.original_request_ids,
+                         prior_authoring_repairs=seed.prior_authoring_repairs, scientific_pass=False)
+            else:
+                plan, _, _ = await self.gateway.call("generator", self.prompts["solution"] + "\n" +
+                    json.dumps(data, ensure_ascii=False), salt + ":solution", Solution)
             blueprint, bid, bmodel = None, "", ""
             blueprint_errors = []
             if self.settings.require_solution_design and plan.design is None:
@@ -510,7 +521,10 @@ class Pipeline:
                 if repair == self.settings.max_repairs:
                     raise AuthoringRejected("; ".join(blueprint_errors))
                 continue
-            item, align_request, _ = await self.gateway.call("generator", self.prompts["align"] + "\n" +
+            if repair == 0 and seed and seed.item is not None and plan == seed.solution:
+                item, align_request = seed.item.model_copy(deep=True), "imported-seed"
+            else:
+                item, align_request, _ = await self.gateway.call("generator", self.prompts["align"] + "\n" +
                                                 json.dumps({"solution": plan.model_dump(), "target": target,
                                                             "source_fidelity": self.settings.source_fidelity},
                                                            ensure_ascii=False), salt + ":align", Question)
@@ -534,6 +548,9 @@ class Pipeline:
                                root_id=parent.root_id if parent else identity, generation=generation,
                                operator=operator, source_ids=[source.id], solution=plan, item=item, audit=audit,
                                source_fidelity=self.settings.source_fidelity,
+                               origin_seed_sha256=digest(seed.model_dump()) if seed else "",
+                               origin_candidate_id=seed.original_candidate_id if seed else None,
+                               origin_request_ids=seed.original_request_ids if seed else [],
                                blueprint_audit=blueprint, blueprint_request=bid, blueprint_actual_model=bmodel,
                                known_result=known_result,
                                blueprint_fingerprint=self.blueprint_stamp(plan, source_data, target, known_result),

@@ -178,8 +178,14 @@ class VerifierBuilder:
         packet["feedback"] = feedback
         for repair in range(self.p.settings.consistency_schema_repairs + 1):
             stage = "draft" if repair == 0 else f"draft-anchor-repair:{repair}"
-            spec, rid, model = await self.p.gateway.call("generator", self.p.prompts["verifier_draft"] + "\n" +
-                json.dumps(packet, ensure_ascii=False), self.salt(c, index, stage), VerifierSpec)
+            seed = self.p.authoring_seeds.get(c.origin_seed_sha256)
+            if (index == 0 and repair == 0 and c.authoring_repairs_completed == 0 and seed
+                    and seed.verifier_spec and seed.item == c.item and seed.solution == c.solution):
+                spec, rid, model = seed.verifier_spec.model_copy(deep=True), seed.verifier_request, seed.verifier_actual_model
+                self.p.log("verifier_draft_seed_reused", candidate=c.id, request_id=rid, scientific_pass=False)
+            else:
+                spec, rid, model = await self.p.gateway.call("generator", self.p.prompts["verifier_draft"] + "\n" +
+                    json.dumps(packet, ensure_ascii=False), self.salt(c, index, stage), VerifierSpec)
             raw_sha256 = digest(spec.model_dump())
             spec, anchor_repairs = repair_spec_anchors(spec, c.item)
             errors = spec_errors(spec, c.item)

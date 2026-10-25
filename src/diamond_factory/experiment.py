@@ -10,7 +10,7 @@ from .consistency import QualityRejected, has_valid_consistency
 from .costs import measure_cost
 from .gates import correct_count, sample_outcomes
 from .llm import BudgetExceeded, ModelResponseError
-from .models import Audit, StrictModel, digest
+from .models import Audit, AuthoringSeed, StrictModel, digest
 from .pipeline import AuthoringRejected, Pipeline, SampleIncomplete
 from .runtime import atomic_json, gather_cancel_on_error
 
@@ -29,6 +29,7 @@ class ExperimentPlan(StrictModel):
     root_workers: int = Field(default=4, ge=1, le=16)
     visible_cost_limit_usd: float | None = Field(default=90.0, gt=0)
     resume_request_run_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]+$")
+    authoring_seeds: dict[str, AuthoringSeed] = Field(default_factory=dict)
 
 
 def branch(candidate):
@@ -71,6 +72,9 @@ class QuestionExperiment(Pipeline):
     def __init__(self,*args,plan,pricing,**kwargs):
         super().__init__(*args,**kwargs)
         self.plan,self.pricing = plan,pricing
+        if set(plan.authoring_seeds) - {r.name for r in plan.roots}:
+            raise ValueError("Unknown root in authoring seed manifest")
+        self.authoring_seeds = {digest(s.model_dump()): s for s in plan.authoring_seeds.values()}
         self.plan_state = {}
         self.finalize_lock = asyncio.Lock()
 
@@ -140,8 +144,10 @@ class QuestionExperiment(Pipeline):
                          for t in c.trials]
         prompt = ("Independently re-derive the answer from scratch. Inspect well-posedness, unique solution, "
                   "all algebraic branches, units, physical feasibility, hidden assumptions and global versus "
-                  "local extrema. Treat the supplied derivation as an untrusted proposal. A finite numerical "
-                  "example cannot prove a global assertion. Do not infer correctness from solver agreement. "
+                  "local extrema. Treat the supplied derivation as an untrusted proposal. "
+                  "With source_fidelity=advisory, the source is inspiration, not an authority for the "
+                  "constructed result: source-only discrepancies are notes, not mathematical failures. "
+                  "A finite numerical example cannot prove a global assertion. Do not infer correctness from solver agreement. "
                   "Reject if any essential step is unjustified. For an intentional easier revision, a "
                   "substantive removal of one inferential burden is valid. Inspect every supplied response, including those marked correct, and "
                   "judge claims as untrusted evidence: could a response be correct "
@@ -159,6 +165,7 @@ class QuestionExperiment(Pipeline):
                   "identities must hold, beyond a least-squares fit. Try an explicit admissible counterexample. "
                   "A physical contradiction cannot be used as difficulty. Return the complete Audit schema.\n"+
                   json.dumps({"item":c.item.model_dump(),"initial_golden":golden_context(c),
+                              "source_fidelity":c.source_fidelity,
                               "graded_responses":assessed,
                               "solver_deadline_outcomes":[d.model_dump() for d in c.deadline_outcomes],
                               "timeout_policy":"A solver deadline counts as incorrect by user protocol, but is no mathematical counterexample.",
@@ -199,8 +206,10 @@ class QuestionExperiment(Pipeline):
                     return None
                 try:
                     target = {"category":root.category,"subtopic":root.subtopic}
+                    seed = self.plan.authoring_seeds.get(root.name) if generation == 0 else None
+                    extra = {"seed": seed} if seed else {}
                     c = await self.generate(sources[root.source_id],parent,target,generation,0,
-                                            brief=self.brief(root,parent))
+                                            brief=self.brief(root,parent), **extra)
                     if c.status == "rejected":
                         return c
                     if len(sample_outcomes(c)) < 16:

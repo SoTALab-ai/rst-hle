@@ -551,6 +551,20 @@ class VerifierQuestionRepair(StrictModel):
     change_reason: str = Field(min_length=20)
 
 
+class AuthoringSeed(StrictModel):
+    """旧付费输出作为待审输入复用；不挪用旧协议的通过资格。"""
+    source_id: str
+    known_result: KnownResult | None = None
+    solution: Solution | None = None
+    item: Question | None = None
+    original_candidate_id: str | None = None
+    original_request_ids: list[str] = Field(default_factory=list)
+    prior_authoring_repairs: int = Field(default=0, ge=0)
+    verifier_spec: VerifierSpec | None = None
+    verifier_request: str = ""
+    verifier_actual_model: str = ""
+
+
 class Candidate(StrictModel):
     id: str
     parent_id: str | None
@@ -560,6 +574,9 @@ class Candidate(StrictModel):
     source_ids: list[str]
     source_fidelity: Literal["strict", "advisory"] = "strict"
     source_notes: list[str] = Field(default_factory=list)
+    origin_seed_sha256: str = ""
+    origin_candidate_id: str | None = None
+    origin_request_ids: list[str] = Field(default_factory=list)
     solution: Solution
     item: Question
     audit: Audit
