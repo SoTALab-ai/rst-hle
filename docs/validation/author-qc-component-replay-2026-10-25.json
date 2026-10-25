@@ -1,0 +1,65 @@
+{
+  "run_id": "author-qc-yield-components-20261025-v1",
+  "frozen_code": "2155a1a",
+  "scope": "固定组件回放，不是整题质检或整批重跑",
+  "components": [
+    {
+      "root": "L50_018_q3",
+      "component": "blueprint_only",
+      "expected": true,
+      "passed": true,
+      "request": "d531a93d3fbb920aac2ab21218fca4b1c5f2ae385b0d5c39798a2e4e961a2b71",
+      "actual_model": "gpt-6-luna-2026-09-22",
+      "question_generated": false,
+      "golden_changed": false,
+      "full_qc_passed": false,
+      "executed_model_review": true
+    },
+    {
+      "root": "L50_018_q4",
+      "component": "blueprint_only",
+      "full_qc_passed": false,
+      "executed_model_review": false,
+      "input_block": "locked_gold_identity_mismatch"
+    },
+    {
+      "root": "L50_009_q1",
+      "component": "blueprint_only",
+      "full_qc_passed": false,
+      "executed_model_review": false,
+      "input_block": "diagnostic_seed_lookup_missing"
+    },
+    {
+      "component": "verifier_controls_only",
+      "origin": "0302b98ae3c2112e97cb248e",
+      "passed": true,
+      "errors": [],
+      "original_challenge_as_input": "c5aa966da1c3d94d076a685bead3e00cd519bd17a4bacfaf8bdcbe5f96bc25d4",
+      "question_changed": false,
+      "golden_changed": false,
+      "proof_changed": false,
+      "full_qc_passed": false,
+      "executed_model_review": true,
+      "control_attempts": 2,
+      "case_count": 10,
+      "observations": 11,
+      "initial_coverage_errors": [
+        "insufficient_positive_controls"
+      ],
+      "actual_models": {
+        "challenge": "gpt-6-luna-2026-09-22",
+        "oracle": "gpt-6-luna-2026-09-22",
+        "review": "gpt-6-luna-2026-09-22"
+      }
+    }
+  ],
+  "cost": {
+    "known_cost_usd": 0.021834850000000003,
+    "http_attempts": 27,
+    "unknown_usage_attempts": 0,
+    "unsettled_reserved_attempts": 0
+  },
+  "difficulty_samples": 0,
+  "full_quality_passed": 0,
+  "retained": 0
+}
