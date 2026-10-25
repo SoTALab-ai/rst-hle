@@ -23,6 +23,16 @@
 - verifier阶段：默认`freeze_question_at_verifier=true`，题面、golden与完整推导冻结，最多两次修verifier。合法对照不足只有限追加，不改删旧案例或翻转旧oracle判断。verifier失败不能触发外层作者重写；发现上游缺陷拒绝本版并返回具体反馈。
 - 引用定位修复只返回定位字段，不能重写验收语义；原spec与修复收据均保存，仍需独立对抗。HLE争议、错误golden和实质性证明缺口不会靠放宽标准消除。
 
-本地ruff、doctor及完整测试305 passed / 34 PG skipped。新增测试覆盖不可编辑金标、坏证明拦截、冻结题面与外层回退阻断、有限补对照及旧样本不变、oracle冲突阻断、定位修复不改规则、算术范围及恶意表达式拒绝。个人VM `liaojunteng-vm`、uid1031248789在新冻结快照`work/library20-yield-check-20261025-v1`、专用真实PG测试库`rst_hle_library20_continue_20261025_test`完成339 passed，ruff与doctor通过。验证代码`2155a1a`，源码包SHA256为`a11a90867dcfe0d4dad04071e5754fe48c55f6562e8e147ebaa16d1dab26308b`。测试的模型输出为受控合成响应；另行有限真实组件回放尚待记录，不宣称整批留存率已提高。
+本地ruff、doctor及完整测试305 passed / 34 PG skipped。新增测试覆盖不可编辑金标、坏证明拦截、冻结题面与外层回退阻断、有限补对照及旧样本不变、oracle冲突阻断、定位修复不改规则、算术范围及恶意表达式拒绝。个人VM `liaojunteng-vm`、uid1031248789在新冻结快照`work/library20-yield-check-20261025-v1`、专用真实PG测试库`rst_hle_library20_continue_20261025_test`完成339 passed，ruff与doctor通过。验证代码`2155a1a`，源码包SHA256为`a11a90867dcfe0d4dad04071e5754fe48c55f6562e8e147ebaa16d1dab26308b`。测试的模型输出为受控合成响应；另行真实组件回放如下，不宣称整批留存率已提高。
 
 逐条分类与确定性回放见[脱敏统计](author-qc-yield-audit-2026-10-25.json)。
+
+## 有限真实组件回放
+
+个人VM同一冻结代码、独立PG `rst_hle_author_qc_yield_probe_20261025`、独立CAS执行，真实模型为`gpt-6-luna-2026-09-22`。主回放run为`author-qc-yield-components-20261025-v1`，负例run为`author-qc-yield-negative-20261025-v1`；每个脚本及输入哈希写入新run清单，无在途改码、无旧GLM重购。
+
+- 原L50_018_q3的推导与golden不变，蓝图审查从表达形式拒绝恢复为通过。只完成蓝图组件，没有生成题面或认证整题。
+- 原物理题0302b98的题面/golden/推导/verifier规则保持。将原已封印的6个挑战作为不可信测试输入（不伪造新HTTP），新oracle再次核定后确认缺合法对照，追加到10个挑战；原案例逐项保留、旧oracle结论未翻转，连同golden共11份经实际verifier与HLE执行。该组件通过，不代表其他前置门槛或难度已通过。
+- 首次规划的另2项蓝图诊断未发审查请求：L50_018_q4的旧作者答案已不符合原锁定golden，程序拒绝替换后继续；L50_009_q1来自旧种子，首次诊断脚本未解析该路径。这些不是恢复成功。之后以独立负例run解析其原种子，保持错误严格不等式golden不变，真实蓝图审查仍拒绝，正确性门槛没有因修格式放行。
+
+主回放27 HTTP/$0.02183485，独立负例1 HTTP/$0.0043378，新增共28 HTTP/**$0.02617265**；未知usage与在途均0。加原累计$13.87146808后为**$13.89764073**（冻结FX6.7参考约¥93.11），VM/磁盘/网络未知，非供应商账单。新增GLM0、完整质检通过0、难度通过0；原批次50提案/47活跃的留存率不改写。[脱敏组件结果与费用](author-qc-component-replay-2026-10-25.json)。

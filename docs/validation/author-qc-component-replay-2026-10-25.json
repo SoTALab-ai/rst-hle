@@ -61,5 +61,40 @@
   },
   "difficulty_samples": 0,
   "full_quality_passed": 0,
-  "retained": 0
+  "retained": 0,
+  "negative_control": {
+    "run_id": "author-qc-yield-negative-20261025-v1",
+    "root": "L50_009_q1",
+    "component": "negative_blueprint_only",
+    "passed": false,
+    "golden_changed": false,
+    "proof_changed": false,
+    "actual_model": "gpt-6-luna-2026-09-22",
+    "request": "9b32de3ccff16ddb1fffc73d02dd0e894489782e838401a524c7702f0f2fac94",
+    "full_quality_passed": 0,
+    "difficulty_samples": 0,
+    "issue_parts": [
+      "known_result",
+      "answer",
+      "derivation",
+      "difficulty_design"
+    ],
+    "cost": {
+      "known_cost_usd": 0.0043378,
+      "http_attempts": 1,
+      "unknown_usage_attempts": 0,
+      "unsettled_reserved_attempts": 0
+    }
+  },
+  "all_diagnostic_cost": {
+    "incremental_known_api_usd": 0.02617265,
+    "http_attempts": 28,
+    "unknown_usage_attempts": 0,
+    "unsettled_reserved_attempts": 0,
+    "original_batch_cumulative_usd": 13.87146808,
+    "cumulative_including_this_diagnostic_usd": 13.89764073,
+    "rmb_reference_exchange_rate": 6.7,
+    "cumulative_rmb_reference": 93.114192891,
+    "vm_disk_network_usd": null
+  }
 }
