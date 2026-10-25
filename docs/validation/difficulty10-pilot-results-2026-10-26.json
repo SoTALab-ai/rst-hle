@@ -1,0 +1,1056 @@
+{
+  "protocol": "two-stage-difficulty-v1",
+  "pilot_only": true,
+  "delivery_items": 0,
+  "finalized_at": "2026-10-25T16:01:58.442749+00:00",
+  "code_commit": "ae544c305115fe891a1ae24f1f745e96171fbb85",
+  "run_id": "difficulty10-20261025-v1",
+  "database": "rst_hle_difficulty10_20261025_v1",
+  "snapshot": "~/Developer/rst-hle/work/difficulty10-20261025-v1",
+  "uid": 1031248789,
+  "finished": true,
+  "status": "completed_with_errors",
+  "process_alive": false,
+  "worker_finished_marker": true,
+  "frozen_changed": [],
+  "planned_lines": 10,
+  "materials": 10,
+  "full_paper_and_supplement_input": true,
+  "journals": {
+    "Journal of the American Mathematical Society": 1,
+    "Physical Review Letters": 1,
+    "Inventiones mathematicae": 2,
+    "Journal of High Energy Physics": 4,
+    "Annals of Mathematics": 1,
+    "Duke Mathematical Journal": 1
+  },
+  "target_planner": "new provisional target per line; prepaid topic route only; no imported old target/answer/seed",
+  "stage_summary": {
+    "pilot_only": true,
+    "empirical_difficulty_claim": false,
+    "design_campaigns": 10,
+    "provisional_versions": 27,
+    "design_passed": 1,
+    "design_exhausted": 8,
+    "design_pending_or_unverified": 1,
+    "question_reviewed_versions": 0,
+    "question_mask_revisions": 0,
+    "question_sufficient": 0,
+    "question_uncertain": 0,
+    "question_scientific_defects": 0,
+    "question_too_easy_reviews": 0
+  },
+  "by_domain": {
+    "Math": {
+      "planned_lines": 5,
+      "materials": 5,
+      "provisional_versions": 15,
+      "lines_with_blueprint_pass": 2,
+      "selected_targets": 1,
+      "lines_with_question": 1,
+      "formed_question_versions": 1,
+      "full_preflight_passed": 0,
+      "first4_rejected": 0,
+      "complete16": 0,
+      "in_band_before_postreview": 0,
+      "retained": 0
+    },
+    "Physics": {
+      "planned_lines": 5,
+      "materials": 5,
+      "provisional_versions": 12,
+      "lines_with_blueprint_pass": 0,
+      "selected_targets": 0,
+      "lines_with_question": 0,
+      "formed_question_versions": 0,
+      "full_preflight_passed": 0,
+      "first4_rejected": 0,
+      "complete16": 0,
+      "in_band_before_postreview": 0,
+      "retained": 0
+    }
+  },
+  "roots": [
+    {
+      "root": "D10_01",
+      "category": "Math",
+      "subtopic": "分析",
+      "source_sha256": "49199fe8cbd7bdd260db43fcae5d187bd89615ef1a5a550f15fb18bf50be8abf",
+      "source_chars": 232649,
+      "campaign_status": "rejected",
+      "provisional_versions": 3,
+      "author_proposal_responses": 3,
+      "graph_repairs": 0,
+      "blueprint_passed_versions": 0,
+      "blueprint_issue_classes": {
+        "derivation": 1,
+        "answer": 1,
+        "target_depth": 2
+      },
+      "proposal_error_classes": {
+        "blueprint_rejected": 2,
+        "proposal_unavailable": 1
+      },
+      "design_challenges": [],
+      "proposal_trace": [
+        {
+          "outcome": "proposed",
+          "proof_entries": 8,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": false,
+            "answer_correct": false,
+            "derivation_complete": false
+          },
+          "blueprint_issues": [
+            "derivation",
+            "answer",
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "proposed",
+          "proof_entries": 5,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "unavailable",
+          "proof_entries": 0,
+          "errors": [
+            "proposal_unavailable"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": null,
+          "blueprint_issues": [],
+          "difficulty_verdict": null
+        }
+      ],
+      "formed_question_versions": 0,
+      "full_preflight_passed": 0,
+      "actual_question_depth_reviews": [],
+      "samples": [],
+      "root_state": {
+        "phase": "authoring_rejected"
+      },
+      "final_disposition": "scientific_or_depth_rejected"
+    },
+    {
+      "root": "D10_02",
+      "category": "Physics",
+      "subtopic": "电磁学",
+      "source_sha256": "1d9f8ce27a70c9e16974f742540f3890bece4e0f74b29bf350e4c46265770858",
+      "source_chars": 70359,
+      "campaign_status": "rejected",
+      "provisional_versions": 2,
+      "author_proposal_responses": 2,
+      "graph_repairs": 1,
+      "blueprint_passed_versions": 0,
+      "blueprint_issue_classes": {
+        "target_depth": 1
+      },
+      "proposal_error_classes": {
+        "blueprint_rejected": 1,
+        "proposal_unavailable": 1
+      },
+      "design_challenges": [],
+      "proposal_trace": [
+        {
+          "outcome": "proposed",
+          "proof_entries": 8,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "unavailable",
+          "proof_entries": 0,
+          "errors": [
+            "proposal_unavailable"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": null,
+          "blueprint_issues": [],
+          "difficulty_verdict": null
+        }
+      ],
+      "formed_question_versions": 0,
+      "full_preflight_passed": 0,
+      "actual_question_depth_reviews": [],
+      "samples": [],
+      "root_state": {
+        "phase": "authoring_rejected"
+      },
+      "final_disposition": "scientific_or_depth_rejected"
+    },
+    {
+      "root": "D10_03",
+      "category": "Math",
+      "subtopic": "代数",
+      "source_sha256": "1e2ac6751225369cceb961d00eb17cc5bda4583f8514eca28ced38e613d69ffe",
+      "source_chars": 82057,
+      "campaign_status": "passed",
+      "provisional_versions": 3,
+      "author_proposal_responses": 3,
+      "graph_repairs": 1,
+      "blueprint_passed_versions": 1,
+      "blueprint_issue_classes": {
+        "target_depth": 2
+      },
+      "proposal_error_classes": {
+        "blueprint_rejected": 2
+      },
+      "design_challenges": [
+        "sufficient"
+      ],
+      "proposal_trace": [
+        {
+          "outcome": "proposed",
+          "proof_entries": 6,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "proposed",
+          "proof_entries": 7,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "proposed",
+          "proof_entries": 7,
+          "errors": [],
+          "blueprint_passed": true,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [],
+          "difficulty_verdict": "sufficient"
+        }
+      ],
+      "formed_question_versions": 1,
+      "full_preflight_passed": 0,
+      "actual_question_depth_reviews": [],
+      "samples": [
+        {
+          "candidate_id": "2b266c55a3c07f02b83c8eaa",
+          "correct": 0,
+          "answered": 0,
+          "deadline_incorrect": 0,
+          "status": "rejected",
+          "reason_classes": [
+            "audit_failed"
+          ]
+        }
+      ],
+      "root_state": {
+        "phase": "prefix_failed"
+      },
+      "final_disposition": "taxonomy_contract_uncovered"
+    },
+    {
+      "root": "D10_04",
+      "category": "Physics",
+      "subtopic": "量子场论与粒子物理",
+      "source_sha256": "f221e875f3dbf9ff6003638de997f7529233476a11d93064a918624fdc4a7998",
+      "source_chars": 231879,
+      "campaign_status": "rejected",
+      "provisional_versions": 3,
+      "author_proposal_responses": 3,
+      "graph_repairs": 0,
+      "blueprint_passed_versions": 0,
+      "blueprint_issue_classes": {},
+      "proposal_error_classes": {
+        "known_result_source_mismatch": 3
+      },
+      "design_challenges": [],
+      "proposal_trace": [
+        {
+          "outcome": "proposed",
+          "proof_entries": 8,
+          "errors": [
+            "known_result_source_mismatch"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": null,
+          "blueprint_issues": [],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "proposed",
+          "proof_entries": 8,
+          "errors": [
+            "known_result_source_mismatch"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": null,
+          "blueprint_issues": [],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "proposed",
+          "proof_entries": 7,
+          "errors": [
+            "known_result_source_mismatch"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": null,
+          "blueprint_issues": [],
+          "difficulty_verdict": null
+        }
+      ],
+      "formed_question_versions": 0,
+      "full_preflight_passed": 0,
+      "actual_question_depth_reviews": [],
+      "samples": [],
+      "root_state": {
+        "phase": "authoring_rejected"
+      },
+      "final_disposition": "source_identity_uncovered"
+    },
+    {
+      "root": "D10_05",
+      "category": "Math",
+      "subtopic": "代数",
+      "source_sha256": "893495e015a3dc0811a44f3ff304d69864ed7689864542080a0fcc84a4bffbe2",
+      "source_chars": 88868,
+      "campaign_status": "rejected",
+      "provisional_versions": 3,
+      "author_proposal_responses": 3,
+      "graph_repairs": 0,
+      "blueprint_passed_versions": 0,
+      "blueprint_issue_classes": {
+        "target_depth": 2,
+        "derivation": 7,
+        "assumptions": 1,
+        "answer": 1,
+        "known_result": 1,
+        "difficulty_design": 1
+      },
+      "proposal_error_classes": {
+        "blueprint_rejected": 3
+      },
+      "design_challenges": [],
+      "proposal_trace": [
+        {
+          "outcome": "proposed",
+          "proof_entries": 7,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "proposed",
+          "proof_entries": 8,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": false,
+            "answer_correct": false,
+            "derivation_complete": false
+          },
+          "blueprint_issues": [
+            "derivation",
+            "derivation",
+            "derivation",
+            "derivation",
+            "derivation",
+            "derivation",
+            "derivation",
+            "assumptions",
+            "answer",
+            "known_result",
+            "difficulty_design"
+          ],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "proposed",
+          "proof_entries": 8,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        }
+      ],
+      "formed_question_versions": 0,
+      "full_preflight_passed": 0,
+      "actual_question_depth_reviews": [],
+      "samples": [],
+      "root_state": {
+        "phase": "authoring_rejected"
+      },
+      "final_disposition": "scientific_or_depth_rejected"
+    },
+    {
+      "root": "D10_06",
+      "category": "Physics",
+      "subtopic": "量子场论与粒子物理",
+      "source_sha256": "f0eb63049e3a131207c0215418874c47f2cd0524fcbbb7429954c810be0123f4",
+      "source_chars": 82793,
+      "campaign_status": "pending",
+      "provisional_versions": 1,
+      "author_proposal_responses": 2,
+      "graph_repairs": 0,
+      "blueprint_passed_versions": 0,
+      "blueprint_issue_classes": {
+        "target_depth": 1
+      },
+      "proposal_error_classes": {
+        "blueprint_rejected": 1
+      },
+      "design_challenges": [],
+      "proposal_trace": [
+        {
+          "outcome": "proposed",
+          "proof_entries": 7,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        }
+      ],
+      "formed_question_versions": 0,
+      "full_preflight_passed": 0,
+      "actual_question_depth_reviews": [],
+      "samples": [],
+      "root_state": {
+        "phase": "prefix_failed"
+      },
+      "final_disposition": "author_schema_uncovered"
+    },
+    {
+      "root": "D10_07",
+      "category": "Math",
+      "subtopic": "代数",
+      "source_sha256": "71cbfccba51a48d18d662406cfdcfa8b4a05dca2d95a3bb2f54b104903bd2b5f",
+      "source_chars": 165883,
+      "campaign_status": "rejected",
+      "provisional_versions": 3,
+      "author_proposal_responses": 3,
+      "graph_repairs": 0,
+      "blueprint_passed_versions": 1,
+      "blueprint_issue_classes": {
+        "target_depth": 2
+      },
+      "proposal_error_classes": {
+        "blueprint_rejected": 2,
+        "depth_too_easy": 1
+      },
+      "design_challenges": [
+        "too_easy"
+      ],
+      "proposal_trace": [
+        {
+          "outcome": "proposed",
+          "proof_entries": 7,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "proposed",
+          "proof_entries": 9,
+          "errors": [
+            "depth_too_easy"
+          ],
+          "blueprint_passed": true,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [],
+          "difficulty_verdict": "too_easy"
+        },
+        {
+          "outcome": "proposed",
+          "proof_entries": 10,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        }
+      ],
+      "formed_question_versions": 0,
+      "full_preflight_passed": 0,
+      "actual_question_depth_reviews": [],
+      "samples": [],
+      "root_state": {
+        "phase": "authoring_rejected"
+      },
+      "final_disposition": "scientific_or_depth_rejected"
+    },
+    {
+      "root": "D10_08",
+      "category": "Physics",
+      "subtopic": "量子场论与粒子物理",
+      "source_sha256": "078527c25ef53372661ed0c1df09376920744ded9e4bc5e36cef6168da6a98ee",
+      "source_chars": 86986,
+      "campaign_status": "rejected",
+      "provisional_versions": 3,
+      "author_proposal_responses": 3,
+      "graph_repairs": 1,
+      "blueprint_passed_versions": 0,
+      "blueprint_issue_classes": {
+        "target_depth": 3,
+        "derivation": 1
+      },
+      "proposal_error_classes": {
+        "blueprint_rejected": 3
+      },
+      "design_challenges": [],
+      "proposal_trace": [
+        {
+          "outcome": "proposed",
+          "proof_entries": 11,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "proposed",
+          "proof_entries": 7,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "proposed",
+          "proof_entries": 9,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": false,
+            "answer_correct": true,
+            "derivation_complete": false
+          },
+          "blueprint_issues": [
+            "derivation",
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        }
+      ],
+      "formed_question_versions": 0,
+      "full_preflight_passed": 0,
+      "actual_question_depth_reviews": [],
+      "samples": [],
+      "root_state": {
+        "phase": "authoring_rejected"
+      },
+      "final_disposition": "scientific_or_depth_rejected"
+    },
+    {
+      "root": "D10_09",
+      "category": "Math",
+      "subtopic": "分析",
+      "source_sha256": "c387300855ad6e22e9b3854fe56fffc20c681b3fbc24c6bafa688656c36f1fa8",
+      "source_chars": 108044,
+      "campaign_status": "rejected",
+      "provisional_versions": 3,
+      "author_proposal_responses": 3,
+      "graph_repairs": 1,
+      "blueprint_passed_versions": 0,
+      "blueprint_issue_classes": {
+        "target_depth": 2
+      },
+      "proposal_error_classes": {
+        "blueprint_rejected": 2,
+        "proposal_unavailable": 1
+      },
+      "design_challenges": [],
+      "proposal_trace": [
+        {
+          "outcome": "proposed",
+          "proof_entries": 8,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "proposed",
+          "proof_entries": 8,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "unavailable",
+          "proof_entries": 0,
+          "errors": [
+            "proposal_unavailable"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": null,
+          "blueprint_issues": [],
+          "difficulty_verdict": null
+        }
+      ],
+      "formed_question_versions": 0,
+      "full_preflight_passed": 0,
+      "actual_question_depth_reviews": [],
+      "samples": [],
+      "root_state": {
+        "phase": "authoring_rejected"
+      },
+      "final_disposition": "scientific_or_depth_rejected"
+    },
+    {
+      "root": "D10_10",
+      "category": "Physics",
+      "subtopic": "量子场论与粒子物理",
+      "source_sha256": "31064a7c4c9473061c243a05159508ccc23dce46ffff0a699c7e1e9286d1634d",
+      "source_chars": 54594,
+      "campaign_status": "rejected",
+      "provisional_versions": 3,
+      "author_proposal_responses": 3,
+      "graph_repairs": 0,
+      "blueprint_passed_versions": 0,
+      "blueprint_issue_classes": {
+        "known_result": 1,
+        "derivation": 1,
+        "answer": 1,
+        "target_depth": 3
+      },
+      "proposal_error_classes": {
+        "blueprint_rejected": 3
+      },
+      "design_challenges": [],
+      "proposal_trace": [
+        {
+          "outcome": "proposed",
+          "proof_entries": 8,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": false,
+            "answer_correct": false,
+            "derivation_complete": false
+          },
+          "blueprint_issues": [
+            "known_result",
+            "derivation",
+            "answer",
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "proposed",
+          "proof_entries": 8,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        },
+        {
+          "outcome": "proposed",
+          "proof_entries": 11,
+          "errors": [
+            "blueprint_rejected"
+          ],
+          "blueprint_passed": false,
+          "blueprint_scientific_flags": {
+            "valid": true,
+            "answer_correct": true,
+            "derivation_complete": true
+          },
+          "blueprint_issues": [
+            "target_depth"
+          ],
+          "difficulty_verdict": null
+        }
+      ],
+      "formed_question_versions": 0,
+      "full_preflight_passed": 0,
+      "actual_question_depth_reviews": [],
+      "samples": [],
+      "root_state": {
+        "phase": "authoring_rejected"
+      },
+      "final_disposition": "scientific_or_depth_rejected"
+    }
+  ],
+  "full_preflight_passed": 0,
+  "formed_question_versions": 1,
+  "retained_roots": 0,
+  "new_glm_logical_requests": 0,
+  "historical_solver_pool": 279,
+  "historical_solver_response_reused": 0,
+  "historical_payment_counted_twice": false,
+  "models": {
+    "generator / gpt-6-luna-2026-09-22": 31,
+    "consistency / gpt-6-luna-2026-09-22": 27,
+    "auditor / gpt-6-luna-2026-09-22": 2
+  },
+  "response_errors": {},
+  "cost": {
+    "unsettled_reserved_attempts": 0,
+    "known_cost_usd": 0.67988,
+    "rmb_reference": 4.555196,
+    "http_attempts": 60,
+    "logical_request_receipts": 60,
+    "unknown_usage_attempts": 0,
+    "by_role": {
+      "generator": {
+        "http_attempts": 31,
+        "known_cost_usd": 0.45278655,
+        "unknown_usage_attempts": 0
+      },
+      "consistency": {
+        "http_attempts": 27,
+        "known_cost_usd": 0.214717475,
+        "unknown_usage_attempts": 0
+      },
+      "auditor": {
+        "http_attempts": 2,
+        "known_cost_usd": 0.012375975,
+        "unknown_usage_attempts": 0
+      }
+    },
+    "pricing_snapshot_date": "2026-10-23",
+    "note": "Returned usage only; unknown/cancelled usage is not zero. Excludes VM and human labor."
+  },
+  "baseline_known_api_usd": 25.367519095,
+  "cumulative_known_api_usd": 26.047399095,
+  "historical_unknown_usage_attempts": 1,
+  "vm_disk_network_usd": null,
+  "exchange_rate_reference": 6.7,
+  "reader": {
+    "complete_materials": 50,
+    "run_status": "stopped_at_material_limit",
+    "reader_limit_states": [
+      {
+        "state": "stopped",
+        "material_limit": 50
+      }
+    ],
+    "restart": false
+  },
+  "evidence_hashes": {
+    "work/private/preparation.json": "c94de84450126e8e89d079d164225c6cb22c1efb398e05083ed9e3e42288ec27",
+    "work/private/freeze.json": "2a9e4ca32bc90abd9136bb6b3f97bcb1a2d52789be1f00cb67ecf61bc8f1ff0c",
+    "work/private/plan.json": "c5011d7497d310a0dc5707831a534c58f421355270a48f85526992d1e2d07447",
+    "work/run_difficulty10_vm.py": "75efd7460d4d82b839af0787abc1ac686e718861aad5e3ed6f6873550f6d6128",
+    "work/private/final-evidence/campaigns-private.json": "9ac9a8f0253db4bb7ba6a042fdc8f9938dd684f677fb297a62d49cacda881b34",
+    "work/private/final-evidence/candidates-private.json": "65fa8e5f085363e859088c6ae7b94b76935913f4cb3558ef66b4e4b0d0ff5bf4",
+    "work/private/final-evidence/experiment-report-private.json": "7c11045508186429ddcb7d20a8ff92d7f3c262544e639a7d9ef2276db4dda1eb",
+    "work/private/final-evidence/request-seals.json": "9766671f9e68ea3406fa112a47c5e324735c21be4bd6194d7ffd1d93c3056484",
+    "work/private/final-evidence/run-private.json": "549d88b813e3a00cb401db9434bd1028b021ace410230fcf836f7d0d701d005a",
+    "work/private/difficulty10-final/schema-replay-only.json": "bf969a1352fb3f8ed8e802c4fc4b0dfa6bc90b0ca7e8c5c03dac952c682cdd19"
+  },
+  "interpretation": "Ten planned attempts including all rejections and technical failures; no empirical difficulty claim without valid GLM samples. Convenience cohort, not causal evidence of better yield.",
+  "author_schema_errors": [
+    {
+      "request_id": "0d6c810c894a1a88e3e315bad36c75a54489e328ef18748cca7410e8bc5ef224",
+      "repaired": true,
+      "errors": [
+        {
+          "location": [
+            "proof",
+            "design",
+            "difficulty"
+          ],
+          "type": "value_error",
+          "message": "Value error, All steps and the bottleneck must contribute to the final target"
+        }
+      ]
+    },
+    {
+      "request_id": "2560c252d55745671f62b4825c3c5d94b6630b19275790f4352bcff187f12c74",
+      "repaired": false,
+      "errors": [
+        {
+          "location": [
+            "proof",
+            "outcome"
+          ],
+          "type": "extra_forbidden",
+          "message": "Extra inputs are not permitted"
+        },
+        {
+          "location": [
+            "proof",
+            "reason"
+          ],
+          "type": "extra_forbidden",
+          "message": "Extra inputs are not permitted"
+        }
+      ]
+    },
+    {
+      "request_id": "95ddaf824cd83c7e1d16513bb9c7513d685f763549df0264f5c7f7e990f8e16f",
+      "repaired": true,
+      "errors": [
+        {
+          "location": [
+            "proof",
+            "design",
+            "difficulty",
+            "construction_type"
+          ],
+          "type": "extra_forbidden",
+          "message": "Extra inputs are not permitted"
+        },
+        {
+          "location": [
+            "proof",
+            "design",
+            "difficulty",
+            "bridge_type"
+          ],
+          "type": "extra_forbidden",
+          "message": "Extra inputs are not permitted"
+        }
+      ]
+    },
+    {
+      "request_id": "a1f29ef0e8d9d47ad64f242955d1a4e5bb0f659eb932625220d82c92b7820659",
+      "repaired": true,
+      "errors": [
+        {
+          "location": [
+            "proof",
+            "design",
+            "difficulty",
+            "construction_type"
+          ],
+          "type": "extra_forbidden",
+          "message": "Extra inputs are not permitted"
+        },
+        {
+          "location": [
+            "proof",
+            "design",
+            "difficulty",
+            "bridge_type"
+          ],
+          "type": "extra_forbidden",
+          "message": "Extra inputs are not permitted"
+        }
+      ]
+    },
+    {
+      "request_id": "b7b46027589dd67864ab72504851354677f34c76c949886c78d5449d899547a0",
+      "repaired": true,
+      "errors": [
+        {
+          "location": [
+            "proof",
+            "design",
+            "difficulty"
+          ],
+          "type": "value_error",
+          "message": "Value error, All steps and the bottleneck must contribute to the final target"
+        }
+      ]
+    }
+  ],
+  "primary_final_disposition_counts": {
+    "scientific_or_depth_rejected": 7,
+    "technical_or_contract_uncovered": 3
+  },
+  "raw_author_proposal_responses": 28,
+  "typed_proof_bearing_proposals": 24,
+  "typed_unavailable_responses": 3,
+  "author_graph_repairs": 4,
+  "question_alignment_http_calls": 3,
+  "new_independent_questions_delivered": 0,
+  "schema_only_replay": {
+    "original_request": "2560c252d55745671f62b4825c3c5d94b6630b19275790f4352bcff187f12c74",
+    "source_receipt_sealed": true,
+    "removed_extra_paths": [
+      [
+        "proof",
+        "outcome"
+      ],
+      [
+        "proof",
+        "reason"
+      ]
+    ],
+    "schema_valid_after_removing_extra_fields": true,
+    "all_supported_fields_unchanged": true,
+    "scientific_reaudit_performed": false,
+    "old_run_changed": false,
+    "model_calls": 0,
+    "glm_calls": 0,
+    "incremental_api_usd": 0
+  },
+  "cumulative_rmb_reference": 174.5175739365,
+  "rates": {
+    "target_selection_per_planned": {
+      "numerator": 1,
+      "denominator": 10,
+      "rate": 0.1
+    },
+    "question_formed_per_planned": {
+      "numerator": 1,
+      "denominator": 10,
+      "rate": 0.1
+    },
+    "full_qc_per_formed": {
+      "numerator": 0,
+      "denominator": 1,
+      "rate": 0
+    },
+    "retained_per_planned": {
+      "numerator": 0,
+      "denominator": 10,
+      "rate": 0
+    },
+    "glm_difficulty_pass_rate": null
+  }
+}
