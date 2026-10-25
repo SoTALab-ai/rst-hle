@@ -12,6 +12,7 @@ from diamond_factory.library_questions import (
     QuestionLine,
     SnapshotDocument,
     SnapshotPaper,
+    admit_lines,
     complete_paper_ids,
     freeze_milestone,
     plan_questions,
@@ -54,6 +55,19 @@ def test_one_to_five_lines_and_source_coverage_contract():
         source_for_line(paper(), bad, 10000)
     with pytest.raises(ValueError, match='context'):
         source_for_line(paper(), line(), 20)
+
+
+def test_aliases_and_per_line_failure_preserve_other_valid_lines():
+    good = line().model_copy(update={'category': 'Physics', 'subtopic': '量子場論與粒子物理'})
+    bad = line(2).model_copy(update={'source_quote': 'A fabricated source statement not present.'})
+    selected, receipts = admit_lines(paper(), [good, bad],
+        {('Physics', '量子场论与粒子物理'), ('Math', '组合与图论')}, 10000)
+    assert len(selected) == 1 and selected[0][0].subtopic == '量子场论与粒子物理'
+    assert good.subtopic == '量子場論與粒子物理'  # 原模型响应不改写。
+    assert receipts[0]['status'] == 'admitted' and receipts[1]['status'] == 'rejected'
+    assert not any(r['scientific_pass'] for r in receipts)
+    unsupported = good.model_copy(update={'subtopic': '凝聚态物理'})
+    assert not admit_lines(paper(), [unsupported], {('Physics', '量子场论与粒子物理')}, 10000)[0]
 
 
 def setup_registered(pg, tmp_path, name, count=2):
@@ -158,6 +172,34 @@ def test_pg_planning_independent_review_keeps_only_distinct_roots(pg, tmp_path, 
     assert report['planned_independent_roots'] == 1 and len(pg.sources()) == 1
     assert calls == [settings.generator.model, settings.auditor.model]
     assert pg.candidates() == []  # 规划通过不构造科学审查通过的候选。
+
+
+def test_pg_invalid_sibling_does_not_drop_valid_roots_or_skip_review(pg, tmp_path, settings, monkeypatch):
+    import httpx
+    from test_gateway import install_mock
+
+    calls = []
+    bad = line(3).model_copy(update={'source_quote': 'Unsupported quotation that must still fail.'})
+
+    def handler(request):
+        payload = json.loads(request.content)
+        calls.append(payload)
+        content = (PaperOutline(outcome='ready', lines=[line(1), bad, line(2)],
+            reason='One bad anchor must not discard two unrelated valid lines.').model_dump_json()
+            if len(calls) == 1 else json.dumps({'keep_ids': ['q1', 'q2'],
+                'reason': 'These two synthetic lines have different required inference structures.'}))
+        return httpx.Response(200, json={'model': payload['model'], 'choices': [
+            {'message': {'content': content}, 'finish_reason': 'stop'}],
+            'usage': {'prompt_tokens': 10, 'completion_tokens': 20}})
+
+    install_mock(monkeypatch, handler)
+    settings = settings.model_copy(update={'request_cap_enabled': False})
+    milestone = MaterialMilestone(library_run_id='library', required_materials=1, papers=[paper()])
+    plans, report = asyncio.run(plan_questions(pg, milestone, settings, rates(), tmp_path/'planning', 'plan'))
+    assert len(plans[0].roots) == 2 and len(pg.sources()) == 2 and not pg.candidates()
+    assert [r['status'] for r in report['papers'][0]['line_admission']] == ['admitted', 'rejected', 'admitted']
+    assert len(calls) == 2 and calls[1]['model'] == settings.auditor.model
+    assert 'Unsupported quotation' not in json.dumps(calls[1])
 
 
 def test_material_versions_cannot_inflate_trigger_count():

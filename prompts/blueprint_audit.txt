@@ -32,3 +32,18 @@ change of gold. Check any newly introduced restriction does not narrow the origi
 If a mask is supplied, map its one-based proof indices to the actual inference, compare its burden
 to other proof steps, and inspect bypasses and recoverability. Select the hardest supported actual
 bridge, not just the last answer line. Its proposed concealment must leave the original target intact.
+At this pre-question stage, the source and full reference proof are PRIVATE AUDITOR INPUTS, not
+automatically solver-visible data. Use inverse_construction and mask.retained_information to identify
+the proposed solver inputs. An underlying_conditions entry or an equation present in the paper is
+not by itself a statement that the final question will print that equation. A shortcut objection
+must identify a route using only the declared retained inputs, not import a source-only intermediate
+result. If the plan is ambiguous, identify that precise unresolved boundary; do not assert a proved
+shortcut. The later actual-question bottleneck audit must check what was really exposed. An alternate
+correct proof does not refute a necessary reasoning bridge merely because it uses different steps;
+show that it bypasses the bridge rather than re-expressing the same elimination or compatibility.
+For a known_result assumption absent verbatim from solution.assumptions, independently determine
+whether an actual listed solution assumption preserves it. Return assumption_correspondence entries
+with the exact source_assumption and solution_assumption strings, equivalent boolean and a concrete
+reason. Missing/stronger/weaker or uncertain premises are not equivalent and must block approval.
+Do not invent a mapping to bypass a real domain change. An empty list is sufficient when all locked
+assumptions are copied exactly. This mapping does not override any other proof/difficulty issue.

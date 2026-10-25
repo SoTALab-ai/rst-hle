@@ -13,6 +13,7 @@ from .llm import CacheIntegrityError, GatewayConfigurationError, ModelResponseEr
 from .models import Source, StrictModel, digest
 from .paper_ingest import LibraryRepository, ReadPage
 from .paper_metadata import canonical_doi
+from .provenance import match_quote
 from .runtime import atomic_json, gather_cancel_on_error
 
 
@@ -92,6 +93,38 @@ class PaperOutline(StrictModel):
 class OutlineReview(StrictModel):
     keep_ids: list[str]
     reason: str = Field(min_length=30)
+
+
+# 仅同一分类的已核定语言/字形别名；不把凝聚态等缺失分类猜成粒子物理。
+SUBTOPIC_ALIASES = {
+    ("Physics", "量子場論と粒子物理"): "量子场论与粒子物理",
+    ("Physics", "量子场论與粒子物理"): "量子场论与粒子物理",
+    ("Physics", "量子場論與粒子物理"): "量子场论与粒子物理",
+    ("Physics", "quantum field theory and particle physics"): "量子场论与粒子物理",
+    ("Physics", "電磁学"): "电磁学",
+}
+
+
+def admit_lines(paper, lines, allowed, max_chars):
+    """逐条登记入口结果；一条无效不能抹去同材料的其他有效规划。"""
+    selected, receipts = [], []
+    for original in lines:
+        line = original.model_copy(update={"subtopic": SUBTOPIC_ALIASES.get(
+            (original.category, original.subtopic), original.subtopic)})
+        receipt = {"line_id": line.id, "original_subtopic": original.subtopic,
+                   "canonical_subtopic": line.subtopic, "scientific_pass": False}
+        try:
+            if (line.category, line.subtopic) not in allowed:
+                raise ValueError("Invalid v3 category/subtopic")
+            source = source_for_line(paper, line, max_chars)
+            match = match_quote(line.source_quote, source.text)
+            receipt.update(status="admitted", source_sha256=source.sha256,
+                           anchor=vars(match))
+            selected.append((line, source))
+        except ValueError as error:
+            receipt.update(status="rejected", error=str(error))
+        receipts.append(receipt)
+    return selected, receipts
 
 
 def complete_paper_ids(store, library_run_id, limit=50):
@@ -177,8 +210,8 @@ def source_for_line(paper, line, max_chars):
         blocks.append(f"[PDF document {doc.ordinal}; SHA256 {doc.pdf_sha256}; "
                       f"physical page {page.page}; parse {doc.parse_id}]\n{page.text}")
     text = "\n\n".join(blocks)
-    if line.source_quote not in text:
-        raise ValueError("Source anchor must be copied verbatim from selected original pages")
+    if match_quote(line.source_quote, text) is None:
+        raise ValueError("Source anchor must match selected original pages without semantic rewriting")
     if len(text) > max_chars:
         raise ValueError("Complete selected proof exceeds model context; no silent truncation")
     identity = digest({"paper": paper.id, "line": line.model_dump(), "text": digest(text)})
@@ -230,11 +263,11 @@ async def plan_questions(store, milestone, settings, pricing, directory, run_id)
                 if not outline.lines:
                     row["status"] = "source_unavailable"
                     return row
-                selected = []
-                for line in outline.lines:
-                    if (line.category, line.subtopic) not in allowed:
-                        raise ValueError("Invalid v3 category/subtopic")
-                    selected.append((line, source_for_line(paper, line, settings.max_source_chars)))
+                selected, receipts = admit_lines(paper, outline.lines, allowed, settings.max_source_chars)
+                row["line_admission"] = receipts
+                if not selected:
+                    row.update(status="planning_failed", error_type="LineAdmissionError")
+                    return row
                 keep = [line.id for line, _ in selected]
                 if len(selected) > 1:
                     review, rid, model = await gateway.call("auditor",
@@ -270,7 +303,8 @@ async def plan_questions(store, milestone, settings, pricing, directory, run_id)
             except (CacheIntegrityError, GatewayConfigurationError):
                 raise
             except (ValueError, ModelResponseError) as error:
-                row.update(status="planning_failed", error_type=type(error).__name__, roots=[], planned_roots=0)
+                row.update(status="planning_failed", error_type=type(error).__name__, error=str(error),
+                           roots=[], planned_roots=0)
             finally:
                 atomic_json(directory/"papers"/(paper.id+".json"), row)
             return row

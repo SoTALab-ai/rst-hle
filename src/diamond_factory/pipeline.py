@@ -236,7 +236,8 @@ class Pipeline:
         ):
             errors.append("missing_or_mismatched_stepwise_blueprint_review")
         if self.settings.require_known_result:
-            errors.extend(known_result_errors(candidate.known_result, sources, candidate.solution))
+            errors.extend(known_result_errors(candidate.known_result, sources, candidate.solution,
+                                              candidate.blueprint_audit))
             if candidate.known_result and candidate.source_ids != [candidate.known_result.source_id]:
                 errors.append("known_result_candidate_source_mismatch")
             if not errors:
@@ -465,8 +466,6 @@ class Pipeline:
                 blueprint_errors.append("missing_solution_design")
             blueprint_errors.extend(difficulty_design_errors(plan, target["category"], self.difficulty_profile,
                                                              self.settings.require_difficulty_design))
-            if self.settings.require_known_result:
-                blueprint_errors.extend(known_result_errors(known_result, {source.id: source}, plan))
             if self.settings.require_bottleneck_mask:
                 blueprint_errors.extend(bottleneck_mask_errors(plan))
             if self.settings.preverify_blueprint:
@@ -478,6 +477,8 @@ class Pipeline:
                          issues=[issue.model_dump() for issue in blueprint.issues])
                 if not blueprint.passed():
                     blueprint_errors.append("blueprint_failed:" + blueprint.reason)
+            if self.settings.require_known_result:
+                blueprint_errors.extend(known_result_errors(known_result, {source.id: source}, plan, blueprint))
             if blueprint_errors:
                 self.log("blueprint_repair_feedback", candidate=identity, repair=repair, reasons=blueprint_errors)
                 data["feedback"] = {"original": feedback, "stage": "reference_proof",

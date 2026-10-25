@@ -148,6 +148,13 @@ class BlueprintIssue(StrictModel):
     repair_requirement: str = Field(min_length=10)
 
 
+class AssumptionCorrespondence(StrictModel):
+    source_assumption: str
+    solution_assumption: str
+    equivalent: bool
+    reason: str = Field(min_length=20)
+
+
 class BlueprintAudit(StrictModel):
     valid: bool
     answer_correct: bool
@@ -156,6 +163,7 @@ class BlueprintAudit(StrictModel):
     reason: str = Field(min_length=10)
     reviewed_step_count: int | None = Field(default=None, ge=1)
     issues: list[BlueprintIssue] = Field(default_factory=list)
+    assumption_correspondence: list[AssumptionCorrespondence] = Field(default_factory=list)
 
     def passed(self):
         return (self.valid and self.answer_correct and self.derivation_complete and self.source_grounded
@@ -501,11 +509,23 @@ class VerifierRound(StrictModel):
     actual_models: dict[str, str]
 
 
+class VerifierAnchorRepair(StrictModel):
+    group: Literal["requirements", "conditions"]
+    index: int = Field(ge=0)
+    original: str
+    literal: str
+    start: int = Field(ge=0)
+    end: int = Field(gt=0)
+    method: str
+
+
 class VerifierVersion(StrictModel):
     item: Question
     spec: VerifierSpec
     spec_request: str
     spec_actual_model: str
+    spec_raw_sha256: str = ""
+    anchor_repairs: list[VerifierAnchorRepair] = Field(default_factory=list)
     # 题面修复后先存检查点；恢复时必须完成全部前置复核，不能跳过。
     revalidation_pending: bool = False
     question_repair_request: str = ""

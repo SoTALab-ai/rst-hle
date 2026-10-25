@@ -1,9 +1,11 @@
 """把难度构造假设与真实父题答卷送给作者；不将设计字段当作难度实测。"""
+from pathlib import Path
+
 from .gates import correct_count, evidence_errors, sample_outcomes
 from .models import digest
 
 
-def known_result_errors(result, sources, solution=None):
+def known_result_errors(result, sources, solution=None, blueprint=None):
     if result is None:
         return ["missing_known_result"]
     errors = evidence_errors(result.evidence, sources)
@@ -14,7 +16,15 @@ def known_result_errors(result, sources, solution=None):
             errors.append("locked_result_answer_changed")
         if not solution.design or solution.design.target != result.target:
             errors.append("locked_result_target_changed")
-        if not set(result.assumptions) <= set(solution.assumptions):
+        missing = set(result.assumptions) - set(solution.assumptions)
+        # 不以自然语言近似匹配替代前提审查；改写必须有独立、完整且绑定原串的对应记录。
+        links = blueprint.assumption_correspondence if blueprint else []
+        mapped = {a.source_assumption for a in links if a.equivalent
+                  and a.solution_assumption in solution.assumptions}
+        if missing and (not blueprint or not blueprint.passed()
+                        or blueprint.reviewed_step_count != len(solution.derivation)
+                        or len({a.source_assumption for a in links}) != len(links)
+                        or not missing <= mapped):
             errors.append("locked_result_assumptions_missing")
     return errors
 
@@ -41,7 +51,9 @@ def bottleneck_input(candidate, sources):
 def blueprint_stamp(solution, source_data, target, known_result, prompt, model_config):
     return digest({"solution": solution.model_dump(), "source": source_data, "target": target,
                    "known_result": known_result.model_dump() if known_result else None,
-                   "prompt": prompt, "model": model_config})
+                   "prompt": prompt, "model": model_config,
+                   "contract_code": {name: Path(__file__).with_name(name).read_text()
+                                     for name in ("difficulty.py", "provenance.py")}})
 
 
 def valid_bottleneck(candidate, sources, prompt=None, model_config=None):
@@ -64,7 +76,7 @@ def construction_ready(candidate, sources, settings, prompts):
             return False
     if settings.require_known_result:
         result = candidate.known_result
-        if (known_result_errors(result, sources, candidate.solution)
+        if (known_result_errors(result, sources, candidate.solution, candidate.blueprint_audit)
                 or candidate.source_ids != [result.source_id]
                 or not candidate.blueprint_audit or not candidate.blueprint_audit.passed()
                 or candidate.blueprint_audit.reviewed_step_count != len(candidate.solution.derivation)):

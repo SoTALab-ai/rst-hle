@@ -5,6 +5,7 @@ from collections import Counter
 from pathlib import Path
 
 from .models import Candidate, DeadlineOutcome, Record, Source, digest
+from .provenance import match_quote
 
 
 def normalize(text: str) -> str:
@@ -25,7 +26,7 @@ def evidence_errors(evidence, sources: dict[str, Source]) -> list[str]:
     errors = []
     for ev in evidence:
         source = sources.get(ev.source_id)
-        if not source or " ".join(ev.quote.split()) not in " ".join(source.text.split()):
+        if not source or match_quote(ev.quote, source.text) is None:
             errors.append("evidence_quote_not_in_source")
     return errors
 
