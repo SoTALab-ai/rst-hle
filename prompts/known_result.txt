@@ -39,3 +39,19 @@ branches or a full parameter region; never broaden a locked target by wording al
 Aim to hide an inferable proof bridge: an invariant, representation, auxiliary object, symmetry,
 conservation law or decomposition. State all primitive definitions and necessary model premises.
 The use of a theorem name or a long symbolic formula is not evidence of genuine reasoning depth.
+
+BEFORE selecting and locking a NEW target, challenge it with the shortest CORRECT solution from
+the intended primitive solver inputs. Describe that route and the remaining discovery in reason.
+Do not substitute a deliberately incorrect shortcut for this challenge. A routine coefficient match,
+small matrix inverse, Taylor expansion, power count, quadratic inequality classification or direct
+standard lemma/closure application is insufficient by itself, even with all branches and boundaries.
+The hardest step inside an easy proof may still be easy. Do not select it just to fill a paper quota.
+If no target has an identifiable further non-routine inference, return unavailable with result=null.
+This is a selection heuristic, not a measured solve rate. A theorem name alone is neither evidence
+of depth nor a reason for rejection: establish the actual route and its prerequisites. Never delete
+an independent model premise to manufacture depth. These rules do not authorize changing an already
+locked target or gold; existing easy measured versions stay rejected without hardening.
+When simplifying a paper-inspired model, identify which substantive coupling, inverse reconstruction
+or admissibility interaction survives. Retaining specialist vocabulary while replacing the mechanism
+with isolated linear/quadratic algebra is not sufficient. This is a depth preference, not a renewed
+requirement to reproduce the paper's exact theorem or assumptions.

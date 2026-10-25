@@ -308,6 +308,42 @@ def test_false_locked_result_stops_instead_of_silently_replacing_it(tmp_path, se
     assert seen == [ResultSelection, Solution, StepwiseBlueprintAudit]
 
 
+def test_true_but_shallow_target_terminates_without_author_rewrite_or_solver(
+        tmp_path, settings, source, candidate):
+    enable(settings)
+    settings.max_repairs = 2
+    prepare(candidate, source)
+    original = candidate.known_result.model_dump()
+    pipe, store, gateway = setup_pipeline(tmp_path, settings, source, candidate)
+    seen = []
+
+    async def call(role, prompt, salt, schema=None, **kwargs):
+        seen.append(schema)
+        if schema is ResultSelection:
+            return ResultSelection(outcome='found', result=candidate.known_result,
+                reason='Synthetic result selection for protocol verification.'), 'r', 'fixture'
+        if schema is Solution:
+            return candidate.solution, 'a', 'fixture'
+        assert schema is StepwiseBlueprintAudit
+        payload = step_review().model_dump()
+        payload['issues'] = [{
+            'part': 'target_depth', 'step_index': None,
+            'claim': 'The fixed tree target is routine despite a long proposed proof.',
+            'evidence': 'A finite tree with n vertices has n minus one edges; direct use resolves the target.',
+            'repair_requirement': 'Terminate this line; do not change the target or add a proof deliverable.'}]
+        review = StepwiseBlueprintAudit.model_validate(payload)
+        assert review.valid and review.answer_correct and review.derivation_complete
+        assert not review.passed(source_fidelity='advisory')
+        return review, 'j', 'fixture'
+
+    gateway.call = call
+    with pytest.raises(AuthoringRejected, match='target_depth_rejected'):
+        asyncio.run(pipe.generate(source, None, {'category': 'Math', 'subtopic': '组合与图论'}, 0, 0))
+    assert seen == [ResultSelection, Solution, StepwiseBlueprintAudit]
+    assert candidate.known_result.model_dump() == original
+    assert not store.candidates() and not candidate.trials
+
+
 def test_model_failure_during_mask_review_is_not_wrong_answer_or_quality_verdict(tmp_path, settings, source, candidate):
     enable(settings)
     prepare(candidate, source)

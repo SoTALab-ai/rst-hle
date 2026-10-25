@@ -574,6 +574,9 @@ class Pipeline:
                                     "Do not write a question before the proof is approved."}
                 if blueprint and any(issue.part == "known_result" for issue in blueprint.issues):
                     raise AuthoringRejected("locked_known_result_rejected:" + blueprint.reason)
+                if blueprint and any(issue.part == "target_depth" for issue in blueprint.issues):
+                    # 目标偏浅不是证明错误；终止该线，不能靠反复包装或换金标加难。
+                    raise AuthoringRejected("target_depth_rejected:" + blueprint.reason)
                 if repair == self.settings.max_repairs:
                     raise AuthoringRejected("; ".join(blueprint_errors))
                 continue

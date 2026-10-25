@@ -63,3 +63,13 @@ that the result is still recoverable. Do not paste the derivation's result or it
 conditions into the question as a premise. Hiding only the final answer does not satisfy the mask.
 Keep the quantifier and scope of each variable explicit when different readings change the target.
 Do not hide a universal/existential requirement as if it were a derived proof hint.
+
+Check for structural scaffolding as well as literal answer leakage: defining the solved Schur
+complement together with its residual load, printing the monotone-function ansatz, naming the exact
+projection/reflection theorem to apply, or supplying an identity with conditions that annihilate
+one side may already give the intended discovery away. These are examples, not banned words.
+Distinguish an essential primitive definition/model law from a proof-designed auxiliary expression.
+Keep independent premises and notation sufficient; omit a derived helper only if reconstructible
+from those premises. Do not erase a physical law or require an undeclared proof to force the intended
+route. If the locked result still has a routine correct solution, flag that fact in rationale;
+do not conceal the weakness by adding subquestions, obscure labels or gratuitous calculations.

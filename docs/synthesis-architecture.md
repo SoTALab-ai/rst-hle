@@ -31,6 +31,7 @@ flowchart LR
 | `experiment.py`、`pipeline.py`及出题/质检模块 | 来源结果锁定、推导修复、题面、科学审查、难度评测与谱系 |
 | `library_questions.py` | 50份完整材料冻结、不同推理结构规划、来源锚点及选页核对、原出题管线分片试产 |
 | `llm.py`、`costs.py`、`campaign_costs.py` | 实际模型校验、原始请求/响应、逐HTTP尝试、缓存、失败/未知/在途与跨阶段实际用量核算 |
+| `easy_audit.py`、`scripts/audit_easy_cohort.py` | 只读核对首4/4候选、既有答卷/判分/盲解封印与人工逐项判断，导出脱敏账本；不调用模型、不写回原run |
 
 ## 材料阶段合同
 
