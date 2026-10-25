@@ -76,3 +76,6 @@ Check the proposed dependency traceback against the numbered full proof. A helpe
 solver inputs into the solution only if it can be constructed from retained primitive data and does
 not change the theorem's truth conditions. A minimal-looking dependency path is not necessarily unique
 or globally minimal; inspect alternative paths rather than certifying necessity from the graph alone.
+For a proposed retained question, distinguish missing quantifiers from hidden reasoning. If the
+target needs universal validity, the question must state or uniquely entail that scope; the private
+gold/proof cannot supply it. Check whether existential and universal readings change the answer.

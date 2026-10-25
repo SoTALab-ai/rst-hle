@@ -61,3 +61,5 @@ If design.difficulty.mask exists, prioritize concealing THAT selected hardest in
 hint that effectively supplies it. Follow hidden_information and retained_information, then check
 that the result is still recoverable. Do not paste the derivation's result or its transformed
 conditions into the question as a premise. Hiding only the final answer does not satisfy the mask.
+Keep the quantifier and scope of each variable explicit when different readings change the target.
+Do not hide a universal/existential requirement as if it were a derived proof hint.

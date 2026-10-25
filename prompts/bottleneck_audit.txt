@@ -30,3 +30,9 @@ test the hypotheses and exceptions. Do not demand that the solver be told the de
 Use ONLY literal retained inputs for bypass claims. A different proof of the same conceptual bridge
 does not by itself defeat the mask. An auxiliary object that can be removed without affecting the
 target is vacuous. Model-described traceback is not a formal symbolic proof or a measured difficulty.
+
+Check the literal quantifiers and scope of every free variable, not only parameter types. Never
+import "for all", "there exists", an observation value, or an admissibility law from the gold,
+full proof, source or retained-information plan into a question that does not state or entail it.
+If different quantifier readings give different targets, recoverable must be fail (with witnesses)
+or uncertain if unresolved; a vacuous existential shortcut does not resolve an ambiguous question.
