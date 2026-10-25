@@ -32,6 +32,7 @@ flowchart LR
 | `library_questions.py` | 50份完整材料冻结、不同推理结构规划、来源锚点及选页核对、原出题管线分片试产 |
 | `llm.py`、`costs.py`、`campaign_costs.py` | 实际模型校验、原始请求/响应、逐HTTP尝试、缓存、失败/未知/在途与跨阶段实际用量核算 |
 | `easy_audit.py`、`scripts/audit_easy_cohort.py` | 只读核对首4/4候选、既有答卷/判分/盲解封印与人工逐项判断，导出脱敏账本；不调用模型、不写回原run |
+| `difficulty_adversary.py` | 新首题锁定前的完整构造对抗、实际题面后的盲解路线挑战、有限增强修订与PG/CAS检查点；不改已测题和verifier冻结题 |
 
 ## 材料阶段合同
 

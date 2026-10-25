@@ -118,6 +118,9 @@ class QuestionExperiment(Pipeline):
                   "transitions":transitions,"roots":trees,
                   "interpretation":"Small convenience sample; staged selection, not an unbiased model accuracy "
                                    "estimate or causal proof of RST. Machine QC is not expert scientific validation."}
+        if self.settings.require_difficulty_adversary:
+            from .difficulty_adversary import summarize_difficulty
+            result["difficulty_adversary"] = summarize_difficulty(self, own)
         atomic_json(self.run_dir/"experiment-report.json",result)
         atomic_json(self.run_dir/"candidates.json",[c.model_dump() for c in own])
         return result

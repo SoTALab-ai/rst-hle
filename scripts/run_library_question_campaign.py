@@ -28,7 +28,7 @@ def main():
     p.add_argument('--directory', required=True)
     p.add_argument('--run-prefix', required=True)
     p.add_argument('--rates', required=True)
-    p.add_argument('--config', default='configs/library-source-inspired.toml')
+    p.add_argument('--config', default='configs/library-difficulty-adversary.toml')
     p.add_argument('--materials', type=int, default=50, choices=range(1, 201))
     p.add_argument('--wait', action='store_true')
     p.add_argument('--exclude-milestone', type=Path, help='排除已试产材料；不改变原清单')

@@ -46,6 +46,38 @@ def test_pg_source_and_candidate_sample_roundtrip(pg, source, candidate):
         pg.sources()
 
 
+def test_pg_difficulty_checkpoints_and_two_stage_history_roundtrip(pg, tmp_path, source, candidate):
+    import asyncio
+
+    from test_bottleneck import prepare
+    from test_difficulty_adversary import DepthGateway
+
+    from diamond_factory.config import load
+    from diamond_factory.difficulty import construction_ready
+    from diamond_factory.pipeline import Pipeline
+
+    prepare(candidate, source)
+    pg.add_source(source)
+    settings = load("configs/library-difficulty-adversary.toml")
+    gateway = DepthGateway(candidate, design=["too_easy", "sufficient"], question=["too_easy", "sufficient"])
+    pipe = Pipeline(settings, pg, "depth-test", "pilot", tmp_path / "run", gateway)
+    target = {"category": "Math", "subtopic": "组合与图论"}
+    result = asyncio.run(pipe.generate(source, None, target, 0, 0))
+    stored = pg.candidates()[0]
+    assert stored == result and len(stored.difficulty_rounds) == 2
+    assert pg.runs()["depth-test"]["difficulty_checkpoints"]
+    resumed = Pipeline(settings, pg, "depth-test", "pilot", tmp_path / "run", gateway)
+    count = len(gateway.calls)
+    assert asyncio.run(resumed.preflight(stored)) and len(gateway.calls) == count
+    assert construction_ready(stored, {source.id: source}, settings, pipe.prompts)
+    # run元数据的轻量指针确实从CAS恢复；破坏对象后不得重购提案。
+    pointer = next(iter(resumed.difficulty_checkpoints.values()))
+    (pg.objects.root / pointer["key"]).write_text("corrupt")
+    from diamond_factory.difficulty_adversary import DifficultyAdversary
+    with pytest.raises(ValueError, match="corrupt"):
+        asyncio.run(DifficultyAdversary(resumed).design(source, target, result.id, None))
+
+
 def test_pg_advisory_provenance_is_persisted_without_relabelling_sources(pg, source, candidate):
     run_meta(pg)
     pg.add_source(source)

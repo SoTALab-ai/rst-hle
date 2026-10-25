@@ -649,6 +649,97 @@ class AuthoringSeed(StrictModel):
     verifier_actual_model: str = ""
 
 
+class DifficultyChallenge(StrictModel):
+    verdict: Literal["sufficient", "too_easy", "invalid", "uncertain"]
+    shortest_correct_route: list[str] = Field(min_length=1)
+    route_validity: Literal["verified", "invalid", "uncertain"]
+    indispensable_proof_entries: list[Annotated[int, Field(ge=1)]]
+    remaining_discoveries: list[str]
+    reference_comparison: str = Field(min_length=20)
+    feedback: list[str] = Field(min_length=1)
+    reason: str = Field(min_length=20)
+
+    @model_validator(mode="after")
+    def supported_decision(self):
+        if self.verdict in ("sufficient", "too_easy") and self.route_validity != "verified":
+            raise ValueError("A depth decision requires a checked correct route")
+        if self.verdict == "sufficient" and (not self.indispensable_proof_entries or not self.remaining_discoveries):
+            raise ValueError("Depth approval needs specific remaining discoveries")
+        if len(set(self.indispensable_proof_entries)) != len(self.indispensable_proof_entries):
+            raise ValueError("Duplicate proof entries do not add reasoning")
+        return self
+
+
+class DifficultyProposal(StrictModel):
+    result: KnownResult | None
+    proof: LockedProofDraft | None
+    outcome: Literal["proposed", "unavailable"] = "proposed"
+    reason: str = "A provisional construction requiring independent review."
+
+    @model_validator(mode="after")
+    def available_proposal(self):
+        if (self.outcome == "proposed") != (self.result is not None and self.proof is not None):
+            raise ValueError("A proposed construction needs both result and proof")
+        if self.outcome == "unavailable" and (self.result is not None or self.proof is not None):
+            raise ValueError("Unavailable must not invent a result or proof")
+        return self
+
+
+class DifficultyProposalVersion(StrictModel):
+    proposal_id: str
+    parent_proposal_id: str | None
+    proposal: DifficultyProposal
+    author_request: str
+    author_actual_model: str
+    blueprint: BlueprintAudit | None = None
+    blueprint_request: str = ""
+    blueprint_actual_model: str = ""
+    challenge: DifficultyChallenge | None = None
+    challenge_request: str = ""
+    challenge_actual_model: str = ""
+    errors: list[str] = Field(default_factory=list)
+
+
+class DifficultyCampaign(StrictModel):
+    identity: str
+    input_sha256: str
+    protocol_sha256: str
+    status: Literal["pending", "passed", "rejected"] = "pending"
+    versions: list[DifficultyProposalVersion] = Field(default_factory=list, max_length=3)
+
+
+class DifficultyOrigin(StrictModel):
+    root_id: str
+    source_sha256: str
+    protocol_sha256: str
+    campaign_input_sha256: str
+    selected: DifficultyProposalVersion
+
+
+class DifficultyMaskRevision(StrictModel):
+    question: str = Field(min_length=50)
+    concealed_proof_entries: list[Annotated[int, Field(ge=1)]] = Field(min_length=1)
+    reasoning: str = Field(min_length=20)
+    recoverability: str = Field(min_length=30)
+
+
+class DifficultyQuestionRound(StrictModel):
+    input_sha256: str
+    parent_input_sha256: str
+    protocol_sha256: str
+    item: Question
+    solution: Solution
+    audit: Audit
+    bottleneck: BottleneckAssessment
+    consistency: ConsistencyAssessment
+    challenge: DifficultyChallenge
+    request_id: str
+    actual_model: str
+    revision: DifficultyMaskRevision | None = None
+    revision_request: str = ""
+    revision_actual_model: str = ""
+
+
 class Candidate(StrictModel):
     id: str
     parent_id: str | None
@@ -674,6 +765,8 @@ class Candidate(StrictModel):
     blueprint_fingerprint: str = ""
     known_result: KnownResult | None = None
     bottleneck_assessment: BottleneckAssessment | None = None
+    difficulty_origin: DifficultyOrigin | None = None
+    difficulty_rounds: list[DifficultyQuestionRound] = Field(default_factory=list, max_length=3)
     trials: list[Trial] = Field(default_factory=list)
     deadline_outcomes: list[DeadlineOutcome] = Field(default_factory=list)
     status: Literal["quality_seed", "rejected", "screened", "accepted"]
