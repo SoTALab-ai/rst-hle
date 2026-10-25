@@ -1,0 +1,202 @@
+{
+  "scope": "新首题提示和前置验算分流的合成组件诊断；不修改原批统计，不代表整批留存提升。",
+  "runs": [
+    {
+      "run_id": "bridge-mask-components-20261025-v1",
+      "status": "completed",
+      "code": {
+        "commit": "da0313a54645330ae77b9081aea25d8f6c49a2d8",
+        "archive_sha256": "ea7eca589634aa2e5437cd5ded0f6fbafc88fd6d5a91b1bab2889a6f90f4f355",
+        "snapshot": "~/Developer/rst-hle/work/library20-bridge-mask-check-20261025-v1"
+      },
+      "private_report_sha256": "836fa572cfcde38df3a06abbc06caea310d74420a93aeaa02de31d4f0de7a3b3",
+      "model": "gpt-6-luna-2026-09-22",
+      "components": [
+        {
+          "component": "mask_masked",
+          "passed": true,
+          "verdicts": {
+            "selection_supported": "pass",
+            "hidden": "pass",
+            "necessary": "pass",
+            "recoverable": "pass",
+            "not_answer_only": "pass"
+          },
+          "request": "ce7f0ee50c271be5b98801cf9051d75610c76d07abe63c61b20f950e7f22dc81",
+          "actual_model": "gpt-6-luna-2026-09-22",
+          "full_qc_passed": false
+        },
+        {
+          "component": "mask_leaked",
+          "passed": false,
+          "verdicts": {
+            "selection_supported": "pass",
+            "hidden": "fail",
+            "necessary": "pass",
+            "recoverable": "pass",
+            "not_answer_only": "fail"
+          },
+          "request": "0b1bf00d94abddc7dc1d057ffe644cbea971c1f1197233f323ac4bd8634cbeae",
+          "actual_model": "gpt-6-luna-2026-09-22",
+          "full_qc_passed": false
+        },
+        {
+          "component": "mask_missing_quantifier",
+          "passed": false,
+          "verdicts": {
+            "selection_supported": "pass",
+            "hidden": "pass",
+            "necessary": "fail",
+            "recoverable": "pass",
+            "not_answer_only": "pass"
+          },
+          "request": "d74fffb904672bec307c0ad3feae960f4b624cde7c9796809497a078d14f098c",
+          "actual_model": "gpt-6-luna-2026-09-22",
+          "full_qc_passed": false
+        },
+        {
+          "component": "certificate_repair",
+          "initial_verdict": "unsupported",
+          "repair_category": "certificate_execution",
+          "faithful_translation": true,
+          "final_verdict": "pass",
+          "passed": true,
+          "question_gold_proof_unchanged": true,
+          "request": "be95438db16dea5db07bd66a079819ea8d420886a7001f32cb0bdd97b9c27954",
+          "actual_model": "gpt-6-luna-2026-09-22",
+          "anchor_request": "",
+          "full_qc_passed": false,
+          "initial_input_type": "synthetic control; no model review or initial certificate HTTP"
+        }
+      ],
+      "cost": {
+        "unsettled_reserved_attempts": 0,
+        "known_cost_usd": 0.0058543250000000005,
+        "rmb_reference": 0.03922397750000001,
+        "http_attempts": 4,
+        "logical_request_receipts": 4,
+        "unknown_usage_attempts": 0,
+        "by_role": {
+          "consistency": {
+            "http_attempts": 4,
+            "known_cost_usd": 0.0058543250000000005,
+            "unknown_usage_attempts": 0
+          }
+        },
+        "by_candidate_usd": {
+          "synthetic-certificate": 0.000499675,
+          "synthetic-masked": 0.0007605499999999999,
+          "synthetic-leaked": 0.001148675,
+          "synthetic-missing_quantifier": 0.0034454250000000002
+        },
+        "pricing_snapshot_date": "2026-10-23",
+        "note": "Returned usage only; unknown/cancelled usage is not zero. Excludes VM and human labor."
+      },
+      "verification": {
+        "uid": 1031248789,
+        "test_database": "rst_hle_library20_continue_20261025_test",
+        "test_count": 356,
+        "ruff": "passed",
+        "doctor": "passed"
+      },
+      "difficulty_samples": 0,
+      "full_quality_passed": 0,
+      "retained": 0
+    },
+    {
+      "run_id": "bridge-quantifier-components-20261025-v1",
+      "status": "completed",
+      "code": {
+        "commit": "573e4ce44f3c503e58d061cfc91f7f4b00df0ea0",
+        "archive_sha256": "658d07f608a54652403fe6f5dacccfa585a691c8a9f8a98d011f1bf4a73157ec",
+        "snapshot": "~/Developer/rst-hle/work/library20-bridge-mask-check-20261025-v2"
+      },
+      "private_report_sha256": "a22cfee3d57a79d5d343d38747632a863706453a629148c8361e59dc9204e806",
+      "model": "gpt-6-luna-2026-09-22",
+      "components": [
+        {
+          "component": "mask_masked",
+          "passed": true,
+          "verdicts": {
+            "selection_supported": "pass",
+            "hidden": "pass",
+            "necessary": "pass",
+            "recoverable": "pass",
+            "not_answer_only": "pass"
+          },
+          "request": "d13315bf14c04ee6ee84b9387635214d1baf695dfbd66c1def9cfc62974c3c61",
+          "actual_model": "gpt-6-luna-2026-09-22",
+          "full_qc_passed": false
+        },
+        {
+          "component": "mask_missing_quantifier",
+          "passed": false,
+          "verdicts": {
+            "selection_supported": "pass",
+            "hidden": "pass",
+            "necessary": "pass",
+            "recoverable": "fail",
+            "not_answer_only": "pass"
+          },
+          "request": "5476f36bb4f87a531f1ed84ab552e5498581e5b164be5be84da84e4701aebadb",
+          "actual_model": "gpt-6-luna-2026-09-22",
+          "full_qc_passed": false
+        }
+      ],
+      "cost": {
+        "unsettled_reserved_attempts": 0,
+        "known_cost_usd": 0.0028502249999999996,
+        "rmb_reference": 0.0190965075,
+        "http_attempts": 2,
+        "logical_request_receipts": 2,
+        "unknown_usage_attempts": 0,
+        "by_role": {
+          "consistency": {
+            "http_attempts": 2,
+            "known_cost_usd": 0.0028502249999999996,
+            "unknown_usage_attempts": 0
+          }
+        },
+        "by_candidate_usd": {
+          "synthetic-masked": 0.001365425,
+          "synthetic-missing_quantifier": 0.0014847999999999999
+        },
+        "pricing_snapshot_date": "2026-10-23",
+        "note": "Returned usage only; unknown/cancelled usage is not zero. Excludes VM and human labor."
+      },
+      "verification": {
+        "uid": 1031248789,
+        "test_database": "rst_hle_library20_continue_20261025_test",
+        "test_count": 356,
+        "ruff": "passed",
+        "doctor": "passed"
+      },
+      "difficulty_samples": 0,
+      "full_quality_passed": 0,
+      "retained": 0
+    }
+  ],
+  "synthetic_only": true,
+  "new_glm_calls": 0,
+  "new_full_quality_passed": 0,
+  "new_difficulty_accepted": 0,
+  "new_retained": 0,
+  "first_missing_quantifier_attribution_correct": false,
+  "followup_missing_quantifier_recoverable": "fail",
+  "http_attempts": 6,
+  "new_known_api_usd": 0.00870455,
+  "previous_cumulative_known_api_usd": 13.89764073,
+  "cumulative_known_api_usd": 13.90634528,
+  "fx_reference": 6.7,
+  "cumulative_rmb_reference": 93.172513376,
+  "vm_storage_network_cost": "unknown",
+  "unknown_usage_attempts": 0,
+  "unsettled_reserved_attempts": 0,
+  "uncovered": [
+    "四类构造各自的实际出题成功率",
+    "新题完整科学审查",
+    "目标GLM 4到16难度与最终去重",
+    "规模试产留存率"
+  ],
+  "source_method": "https://www.nature.com/articles/s41586-023-06747-5"
+}
