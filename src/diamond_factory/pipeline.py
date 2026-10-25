@@ -95,6 +95,7 @@ class Pipeline:
         self.base_fingerprint = self.fingerprint
         self.invocation = None
         self.authoring_seeds: dict[str, AuthoringSeed] = {}
+        self.difficulty_checkpoints = self.store.runs().get(run_id, {}).get("difficulty_checkpoints", {})
 
     def log(self, event: str, **data):
         self.run_dir.mkdir(parents=True, exist_ok=True)
@@ -112,7 +113,8 @@ class Pipeline:
                                     "prompt_hashes": {k: digest(v) for k, v in self.prompts.items()},
                                     "corpora": self.corpus_hashes,
                                     "quotas_sha256": digest(self.quotas),
-                                    "requests_directory": str(self.run_dir / "requests")})
+                                    "requests_directory": str(self.run_dir / "requests"),
+                                    "difficulty_checkpoints": self.difficulty_checkpoints})
 
     def generation_identity(self, source, parent, target, generation, attempt, brief=None):
         return digest({"run":self.run_id,"source":source.id,"parent":parent.id if parent else None,
@@ -196,7 +198,15 @@ class Pipeline:
                        and assessment.versions[-1].revalidation_pending)
         if candidate.status == "rejected" and not pending:
             return False
-        base_passed = pending or await self._preflight_correctness(candidate)
+        if self.settings.require_difficulty_adversary:
+            from .difficulty_adversary import DifficultyAdversary, has_valid_difficulty
+            builder = DifficultyAdversary(self)
+            if pending and not has_valid_difficulty(candidate, {s.id: s for s in self.store.sources()}, builder.protocol):
+                return False
+            base_passed = pending or await builder.question(candidate, {s.id: s for s in self.store.sources()},
+                                                            self._preflight_correctness)
+        else:
+            base_passed = pending or await self._preflight_correctness(candidate)
         if not base_passed:
             if self.settings.freeze_question_at_verifier:
                 return False
@@ -422,7 +432,7 @@ class Pipeline:
                  actual_model=assessment.actual_model)
         return passed
 
-    async def review_blueprint(self, solution, source_data, target, salt, known_result=None):
+    async def review_blueprint(self, solution, source_data, target, salt, known_result=None, construction_reference=None):
         """审完整证明；步骤映射不合法只修审查格式，不重购作者答案。"""
         schema = StepwiseBlueprintAudit if self.settings.require_stepwise_blueprint_review else BlueprintAudit
         prompt = self.prompts["blueprint_audit"] + "\n" + json.dumps({
@@ -430,7 +440,8 @@ class Pipeline:
             "source_fidelity": self.settings.source_fidelity,
             "known_result": known_result.model_dump() if known_result else None,
             "step_indexing": "One-based indices into solution.derivation; inspect every entry.",
-            "expected_step_count": len(solution.derivation)}, ensure_ascii=False)
+            "expected_step_count": len(solution.derivation),
+            **({"construction_reference": construction_reference} if construction_reference else {})}, ensure_ascii=False)
         for attempt in range(2):
             review, rid, model = await self.consistency_call(
                 prompt, salt if attempt == 0 else salt + ":step-map-repair", schema)
@@ -464,6 +475,14 @@ class Pipeline:
             operator = "supply_one_lemma_or_reduce_one_coupling"
         identity = self.generation_identity(source,parent,target,generation,attempt,brief)
         existing = next((c for c in self.store.candidates() if c.id == identity), None)
+        if self.settings.require_difficulty_adversary and generation == 0:
+            from .difficulty_adversary import DifficultyAdversary, DifficultyRejected
+            if seed is not None or parent is not None:
+                raise ValueError("New difficulty design requires a fresh root; historical seeds cannot be hardened implicitly")
+            try:
+                return await DifficultyAdversary(self).generate(source, target, identity, brief, existing)
+            except DifficultyRejected as error:
+                raise AuthoringRejected(str(error)) from error
         if existing and existing.authoring_complete:
             return existing
         if existing and existing.status == "quality_seed":
@@ -615,6 +634,8 @@ class Pipeline:
                                blueprint_audit=blueprint, blueprint_request=bid, blueprint_actual_model=bmodel,
                                known_result=known_result,
                                blueprint_fingerprint=self.blueprint_stamp(plan, source_data, target, known_result),
+                               difficulty_origin=parent.difficulty_origin.model_copy(deep=True)
+                                   if parent and parent.difficulty_origin else None,
                                authoring_repairs_completed=repair, verifier_history=verifier_history,
                                status="quality_seed", run_id=self.run_id)
             errors = static_errors(result, {source.id: source}, self.quotas)

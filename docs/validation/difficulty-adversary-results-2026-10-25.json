@@ -1,0 +1,192 @@
+{
+  "protocol": "two-stage-difficulty-v1",
+  "pilot_only": true,
+  "implementation_code": "f7f13fd1dfdd96e5d65df6461f2767f14469a5b3",
+  "native_probe_code": "99e4cbcfdd5a39bee0e895dc5ce177ae5f1fd5e6",
+  "personal_vm": {
+    "ssh_alias": "liaojunteng-vm",
+    "uid": 1031248789,
+    "owned_database": "rst_hle_difficulty_probe_20261025_v3",
+    "native_snapshot": "~/Developer/rst-hle/work/difficulty-adversary-20261025-v3",
+    "component_snapshot": "~/Developer/rst-hle/work/difficulty-adversary-20261025-v5"
+  },
+  "native_materials": 2,
+  "native_materials_by_category": {
+    "Math": 1,
+    "Physics": 1
+  },
+  "author_http_responses": 5,
+  "proof_bearing_author_responses": 4,
+  "unavailable_responses": 1,
+  "native_schema_valid_constructed_proposals": 3,
+  "native_graph_invalid_author_response": 1,
+  "native_selected_targets": 0,
+  "native_actual_questions": 0,
+  "native_full_preflight_passed": 0,
+  "native_dedicated_before_lock_challenges": 0,
+  "native_second_stage_reviews": 0,
+  "native_verifier_rounds": 0,
+  "new_glm_requests": 0,
+  "new_difficulty_samples": 0,
+  "difficulty_accepted": 0,
+  "retained": 0,
+  "historical_grades_changed": false,
+  "native_cases": [
+    {
+      "category": "Math",
+      "run_id": "difficulty-adversary-20261025-v3-math",
+      "source_sha256": "41006f4dbb9c346b97eb22bb73f87958ed745ca180e11938123b3f90644e00fa",
+      "run_state": "completed_with_errors",
+      "formal_stages": {
+        "pilot_only": true,
+        "empirical_difficulty_claim": false,
+        "design_campaigns": 1,
+        "provisional_versions": 2,
+        "design_passed": 0,
+        "design_exhausted": 0,
+        "design_pending_or_unverified": 1,
+        "question_reviewed_versions": 0,
+        "question_mask_revisions": 0,
+        "question_sufficient": 0,
+        "question_uncertain": 0,
+        "question_scientific_defects": 0,
+        "question_too_easy_reviews": 0
+      },
+      "http_attempts": 5,
+      "known_cost_usd": 0.03804875,
+      "outcome": "two_depth_rejections_then_graph_validation_uncovered"
+    },
+    {
+      "category": "Physics",
+      "run_id": "difficulty-adversary-20261025-v3-physics",
+      "source_sha256": "102d54af0534fb0fabd0cc6239de4536d911d610b3578ace8abea6438527c0c8",
+      "run_state": "completed_with_errors",
+      "formal_stages": {
+        "pilot_only": true,
+        "empirical_difficulty_claim": false,
+        "design_campaigns": 1,
+        "provisional_versions": 2,
+        "design_passed": 0,
+        "design_exhausted": 1,
+        "design_pending_or_unverified": 0,
+        "question_reviewed_versions": 0,
+        "question_mask_revisions": 0,
+        "question_sufficient": 0,
+        "question_uncertain": 0,
+        "question_scientific_defects": 0,
+        "question_too_easy_reviews": 0
+      },
+      "http_attempts": 3,
+      "known_cost_usd": 0.020308775,
+      "outcome": "one_depth_rejection_then_unavailable"
+    }
+  ],
+  "component_replay": {
+    "run_id": "difficulty-components-20261025-v5",
+    "component_only": true,
+    "graph": {
+      "original_request": "5366ba405c284b632dc3d163b796163ff74cb3c7049d92d16289c10c107506d9",
+      "original_author_rebought": false,
+      "schema_repaired": true,
+      "result_and_full_proof_unchanged": true,
+      "repair_request": "b9c4f6b734e61fdde4a0074d778ac48b1c378923bcd8c91849dd4bfeb815bb4c",
+      "repair_actual_model": "gpt-6-luna-2026-09-22",
+      "review_request": "5fada2e06d7e2c7f793985e4d8da0fa194910197a69106e9c4ca8ad1a2efe17d",
+      "review_actual_model": "gpt-6-luna-2026-09-22",
+      "blueprint_passed": false,
+      "issues": [
+        "target_depth"
+      ]
+    },
+    "second_stage_negative_controls": [
+      {
+        "candidate_id": "f7c0264bf5ffd78c29925083",
+        "category": "Math",
+        "historical_4_of_4": true,
+        "question_sha256": "e8c5778dc9d6c8e4720c0163f708e1ecf782271326414c3f65c5630496fd82d4",
+        "verdict": "too_easy",
+        "route_validity": "verified",
+        "expected": "too_easy",
+        "matched": true,
+        "request_id": "0f40200db861aabe748ded93b771e0bf8143b2b71a6142cbe5ae42334b18bc47",
+        "actual_model": "gpt-6-luna-2026-09-22"
+      },
+      {
+        "candidate_id": "4be2e3e3de4f910b70d62f1d",
+        "category": "Physics",
+        "historical_4_of_4": true,
+        "question_sha256": "f011856c52784e8897cdcd6b77e0f4ebf9d3c0937f702b082cc515b360e1f8fd",
+        "verdict": "too_easy",
+        "route_validity": "verified",
+        "expected": "too_easy",
+        "matched": true,
+        "request_id": "e68dfcbf8cd96e86fc226eb65fba9cf9d55107fa3727c2265518b33d2f59b408",
+        "actual_model": "gpt-6-luna-2026-09-22"
+      }
+    ],
+    "controls_matched": 2,
+    "historical_question_revisions": 0,
+    "new_candidate_writes": 0,
+    "http_attempts": 4,
+    "known_cost_usd": 0.010567325000000002
+  },
+  "cost": {
+    "new_http_attempts": 12,
+    "new_known_usd": 0.06892485000000001,
+    "new_rmb_reference": 0.4617964950000001,
+    "new_unknown_usage_attempts": 0,
+    "new_inflight_attempts": 0,
+    "pricing_date": "2026-10-23",
+    "fx_reference": 6.7,
+    "previous_known_usd": 25.298594245,
+    "cumulative_known_usd": 25.367519095,
+    "cumulative_rmb_reference": 169.9623779365,
+    "historical_unknown_usage_attempts": 1,
+    "vm_disk_network_cost": "unavailable",
+    "supplier_invoice": false
+  },
+  "validation": {
+    "local_passed": 361,
+    "local_skipped": 38,
+    "personal_vm_real_pg_passed": 399,
+    "ruff_passed": true,
+    "doctor_blockers": []
+  },
+  "uncovered": [
+    "No new question passed both stages in a real model run.",
+    "The dedicated pre-lock sufficient path was not reached because blueprint depth checks rejected the proposals.",
+    "Actual second-stage masked-question revision is covered by automated controlled tests, not a successful real-model campaign.",
+    "No new GLM difficulty measurements or positive sensitivity calibration were performed."
+  ],
+  "private_evidence_sha256": {
+    "work/private/difficulty-adversary-probe-v3-report.json": "cd408f2cfaf66c0b2f75ab6b166452b7b872ff206af36f2d33a7b5cc21f745b6",
+    "work/private/depth-components-v5-report.json": "601b1685ac176e6907874016fabdf22b2064e39858a74c7597f3fdff28608197",
+    "work/private/depth-final-ledger.json": "b0d41891b1f87334fa8c57182b269ee4fc592551ab15568038c25bd44c993f51"
+  },
+  "actual_models": [
+    "gpt-6-luna-2026-09-22"
+  ],
+  "http_roles": {
+    "generator": 5,
+    "consistency": 7,
+    "solver": 0,
+    "judge": 0
+  },
+  "terminal_pg_runs": [
+    {
+      "run_id": "difficulty-adversary-20261025-v3-math",
+      "status": "completed_with_errors",
+      "reserved_http": 5
+    },
+    {
+      "run_id": "difficulty-adversary-20261025-v3-physics",
+      "status": "completed_with_errors",
+      "reserved_http": 3
+    },
+    {
+      "run_id": "difficulty-components-20261025-v5",
+      "status": "completed",
+      "reserved_http": 4
+    }
+  ]
+}

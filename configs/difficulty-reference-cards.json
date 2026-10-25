@@ -1,0 +1,46 @@
+{
+  "version": "20261025-verified-structure-cards-v1",
+  "cards": [
+    {
+      "id": "math-orbit-poles-reference",
+      "category": "Math",
+      "observed_correct": 8,
+      "valid_samples": 14,
+      "requested_samples": 16,
+      "measurement_complete": false,
+      "convention": "Finite distinct coordinates, complex derivative and meromorphic interpretation must be explicit. The reference is not fully difficulty-accepted.",
+      "modules": [
+        "Discover finite closure of transformed arguments without being given the closure relation.",
+        "Reconstruct one hidden function through an orbit linear system.",
+        "Reconstruct a second function using a different elimination of nonlinear terms.",
+        "Combine both reconstructions and check cancellations and exceptional locations globally.",
+        "Translate the actual target into the correct finite set with its declared counting convention.",
+        "Extract a compact invariant instead of explicitly solving every high-degree root."
+      ],
+      "bottlenecks": ["Finding a useful representation from primitive functional relations.", "Completeness of exceptional-point and cancellation analysis after reconstruction."],
+      "legitimate_short_routes": ["Vieta or another invariant identity may replace numerical root solving.", "Equivalent elimination methods are allowed when they retain the same conceptual burden."],
+      "ambiguity_warnings": ["Do not hide distinct-point versus multiplicity counting.", "The apparent physical vocabulary in this reference is not itself a reasoning burden."],
+      "observed_failures": ["Of six historically incorrect completed answers, four chose multiplicity counting, one omitted two exceptional locations, and one had incorrect denominator coefficients.", "Two truncated answers are not semantic errors. No clarified-question accuracy has been measured."]
+    },
+    {
+      "id": "physics-inverse-spectrum-reference",
+      "category": "Physics",
+      "observed_correct": 6,
+      "valid_samples": 16,
+      "requested_samples": 16,
+      "measurement_complete": true,
+      "convention": "Declare period averaging, angular integration, normalization and the physical approximation separately. The old score includes observable-convention differences.",
+      "modules": [
+        "Recover the actual state from an implicit or operator-level driving relation.",
+        "Derive the state-to-observable mapping from the geometry and governing laws.",
+        "Construct the stipulated radiative or statistical observable with correct normalization.",
+        "Evaluate the nonlinear waveform statistic through a representation such as its harmonic spectrum.",
+        "Infer the admissible parameter range and prove the global target including its boundaries."
+      ],
+      "bottlenecks": ["The geometry-to-observable mapping must be derived rather than supplied as an effective formula.", "Nonlinear harmonic weighting can remain after the state is reconstructed."],
+      "legitimate_short_routes": ["Parseval, direct integration or an established generating function may be equivalent valid routes.", "A genuine low-burden closure identity must be considered instead of demanding the private proof."],
+      "ambiguity_warnings": ["Peak versus period-averaged intensity is a definition, not a hidden inference.", "Special functions or fractional operators alone are not demonstrated difficulty."],
+      "observed_failures": ["All sixteen completed answers recovered the same state, so that initial special-function step did not discriminate in this sample.", "Nine of ten historically incorrect answers used a peak route; the remaining one used an incorrect geometry normalization. Do not copy this ambiguity into new tasks."]
+    }
+  ]
+}

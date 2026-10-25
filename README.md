@@ -12,7 +12,7 @@
 - [架构与模块归属](docs/synthesis-architecture.md)、[验证方法与个人VM](docs/local-validation.md)。
 - [论文下载](docs/pdf-paper-library.md)、[直接读取入库](docs/paper-library-ingestion.md)、[读取上限与20份试产](docs/reader-limits.md)、[数据库](docs/database.md)。
 - [出题设计](docs/question-design.md)、[科学检查](docs/consistency.md)、[verifier对抗](docs/verifier-adversary.md)。
-- [来源启发与自洽验收](docs/source-fidelity.md)：新论文库默认`configs/library-source-inspired.toml`；严格模式保留给历史配置。
+- [来源启发与自洽验收](docs/source-fidelity.md)：论文作为构造启发；新首题默认`configs/library-difficulty-adversary.toml`并启用[两阶段难度对抗](docs/difficulty-adversary.md)，旧来源启发配置及严格模式保留历史身份。
 - [实验协议](docs/theory-experiment.md)、[历史结果](docs/validation/README.md)、[验收](docs/acceptance.md)。
 
 ## 本地开始

@@ -38,6 +38,10 @@ class Settings(StrictModel):
     use_locked_proof_draft: bool = False
     source_fidelity: Literal["strict", "advisory"] = "strict"
     require_bottleneck_mask: bool = False
+    require_difficulty_adversary: bool = False
+    difficulty_references_path: str | None = None
+    difficulty_design_max_revisions: int = Field(default=2, ge=0, le=2)
+    difficulty_mask_max_revisions: int = Field(default=2, ge=0, le=2)
     require_verifier_adversary: bool = False
     freeze_question_at_verifier: bool = True
     verifier_max_revisions: int = Field(default=2, ge=0, le=2)
@@ -72,6 +76,12 @@ class Settings(StrictModel):
 
     @model_validator(mode="after")
     def validate_role_capacity(self):
+        if self.require_difficulty_adversary and not (
+                self.source_fidelity == "advisory" and self.use_locked_proof_draft
+                and self.require_bottleneck_mask and self.require_verifier_adversary
+                and self.freeze_question_at_verifier and self.difficulty_references_path
+                and self.difficulty_policy == "ease_only"):
+            raise ValueError("Difficulty adversary requires advisory construction, locked proof, masking, references and frozen verifier")
         if self.use_locked_proof_draft and not self.require_known_result:
             raise ValueError("Locked proof drafts require a locked known result")
         if self.source_fidelity == "advisory" and not (
