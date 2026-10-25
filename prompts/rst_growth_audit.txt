@@ -1,0 +1,16 @@
+Independently inspect a proposed RST child extension against its complete parent and child proofs.
+Check relative structural growth, NOT an absolute HLE hardness threshold. A scientifically valid
+but easy parent may seed this research experiment. Familiar algebra may be a genuine added
+dependency if it must now be discovered and USED; its presence alone does not establish depth.
+
+Return RstGrowthAudit. Identify one-based parent_proof_entries that remain essential (possibly
+as a proved special case) and child_proof_entries implementing the new necessary inference.
+Do not force the final gold or all premises to equal the parent's: the child is a separate version.
+parent_core_preserved means the new problem really uses the parent's mechanism; merely copying
+its vocabulary fails. necessary_new_dependency means the new target cannot bypass the added
+work with a concrete correct shortcut. substantive_change rejects relabeling/changed numbers.
+compact_target rejects unrelated subquestions used only to multiply exact-match failure chances.
+Write the shortest CORRECT route from the proposed retained inputs. Do not reject a correct
+equivalent route doing the same new work. Distinguish a false baseline from the best valid route.
+This review is a model judgment about growth; only independent solver samples measure difficulty.
+Any uncertainty must leave an affected approval boolean false and name the missing evidence.

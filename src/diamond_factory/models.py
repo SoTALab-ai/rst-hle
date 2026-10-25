@@ -748,6 +748,46 @@ class DifficultyQuestionRound(StrictModel):
     revision_actual_model: str = ""
 
 
+class RstGrowthAudit(StrictModel):
+    parent_core_preserved: bool
+    necessary_new_dependency: bool
+    substantive_change: bool
+    compact_target: bool
+    parent_proof_entries: list[Annotated[int, Field(ge=1)]]
+    child_proof_entries: list[Annotated[int, Field(ge=1)]]
+    shortest_correct_route: list[str] = Field(min_length=1)
+    reason: str = Field(min_length=20)
+
+    def passed(self):
+        return (self.parent_core_preserved and self.necessary_new_dependency and self.substantive_change
+                and self.compact_target and bool(self.parent_proof_entries and self.child_proof_entries))
+
+
+class RstParentSnapshot(StrictModel):
+    candidate_id: str
+    root_id: str
+    generation: int = Field(ge=0)
+    source_ids: list[str]
+    item: Question
+    solution: Solution
+    known_result: KnownResult
+
+
+class RstOrigin(StrictModel):
+    protocol_sha256: str
+    source_sha256: str
+    contract_sha256: str
+    parent_contract_sha256: str = ""
+    parent_snapshot: RstParentSnapshot | None = None
+    imported_seed_sha256: str = ""
+    growth_request: str = ""
+    growth_actual_model: str = ""
+    growth_audit: RstGrowthAudit | None = None
+    growth_audit_request: str = ""
+    proposal_request: str = ""
+    alignment_request: str = ""
+
+
 class Candidate(StrictModel):
     id: str
     parent_id: str | None
@@ -775,6 +815,7 @@ class Candidate(StrictModel):
     bottleneck_assessment: BottleneckAssessment | None = None
     difficulty_origin: DifficultyOrigin | None = None
     difficulty_rounds: list[DifficultyQuestionRound] = Field(default_factory=list, max_length=3)
+    rst_origin: RstOrigin | None = None
     trials: list[Trial] = Field(default_factory=list)
     deadline_outcomes: list[DeadlineOutcome] = Field(default_factory=list)
     status: Literal["quality_seed", "rejected", "screened", "accepted"]

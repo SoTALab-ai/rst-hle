@@ -72,6 +72,9 @@ class Pipeline:
         self.run_id, self.mode, self.run_dir = run_id, mode, run_dir
         self.quotas = json.loads(Path(settings.quotas_path).read_text())
         self.prompts = {p.stem: p.read_text() for p in Path(settings.prompts_dir).glob("*.txt")}
+        if settings.synthesis_protocol == "rst_curriculum":
+            from .rst_curriculum import effective_prompts
+            self.prompts = effective_prompts(self.prompts)
         self.difficulty_profile = (json.loads(Path(settings.difficulty_profile_path).read_text())
                                    if settings.difficulty_profile_path else None)
         self.gateway = gateway or Gateway(settings, run_dir / "requests", store=store, run_id=run_id)
@@ -243,6 +246,10 @@ class Pipeline:
         candidate.preflight_repair = None
         sources = {s.id: s for s in self.store.sources()}
         errors = static_errors(candidate, sources, self.quotas)
+        if self.settings.synthesis_protocol == "rst_curriculum":
+            from .rst_curriculum import rst_protocol, valid_rst_origin
+            if not valid_rst_origin(candidate, sources, rst_protocol(self.settings, self.prompts)):
+                errors.append("missing_or_stale_rst_growth_contract")
         if candidate.source_fidelity != self.settings.source_fidelity:
             errors.append("source_policy_changed_requires_new_version")
         if candidate.source_fidelity == "advisory":
