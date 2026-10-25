@@ -1,0 +1,1617 @@
+{
+  "method": "人工逐题阅读完整推导、实际题面、挖空设计及全部四份已有GLM答卷；主因互斥便于计数，实际机制可重叠。不是新模型判分或因果消融。",
+  "labels": {
+    "shallow_target": "主要隐藏步骤仍需恢复，但最短正确路线主要是常规代数、微积分或标准引理直接应用。",
+    "scaffolded_question": "实际题面已提供关键辅助量、解题表达式或直接可用的定理路线；并非必然逐字泄露答案。",
+    "valid_short_route": "可通过标准封闭性或已知结果回答字面目标，无需重建作者指定的完整证明。"
+  },
+  "case_count": 53,
+  "existing_glm_answers_read": 212,
+  "new_http_requests": 0,
+  "new_glm_requests": 0,
+  "new_api_cost_usd": 0,
+  "official_regrading": false,
+  "counterfactual_new_prompt_replay": false,
+  "by_category": {
+    "Math": 42,
+    "Physics": 11
+  },
+  "primary_causes": {
+    "shallow_target": 46,
+    "scaffolded_question": 5,
+    "valid_short_route": 2
+  },
+  "primary_causes_by_category": {
+    "Math": {
+      "shallow_target": 36,
+      "scaffolded_question": 5,
+      "valid_short_route": 1
+    },
+    "Physics": {
+      "shallow_target": 10,
+      "valid_short_route": 1
+    }
+  },
+  "historical_approvals": {
+    "blueprint": 53,
+    "composite_no_shortcut": 53,
+    "all_mask_checks_pass": 53
+  },
+  "cases": [
+    {
+      "index": 1,
+      "root": "L50_001_q2",
+      "cause": "shallow_target",
+      "mechanism": "扭结配对与自由部分检测",
+      "observation": "四份答卷均用扭元配对为零及自由部分的非退化性；隐藏步骤被恢复，但只是标准同调代数引理。",
+      "candidate_id": "32031637df33a05fb2c35d1b",
+      "category": "Math",
+      "question_sha256": "4913c1ea976b91773ab9b172538bc242e3ec8e60301fef0a4fc116784339a4e8",
+      "golden_sha256": "4518fdf37b1ced127b15b8c9b69f3781e96588165140a6f3990209c2a045b3c1",
+      "solution_sha256": "e299a9fcde7eb9a5eb61b99ce995e34134359fd49a672703d76618bb0234abf4",
+      "candidate_sha256": "cdc3062d76f15ea57581e1165ff1689ee52253c9a72c3d833ceacacbe37b23b7",
+      "masked_proof_entries": [
+        4
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "20758027315cf6a79a522cbb6616ea2443b3bef15520bf3dd8c2cef985fecfc0",
+      "receipts_sha256": "68ed0dc3378b60013096099ee9dff0ecebf2e12017ae3b1a39738d86b70925b6"
+    },
+    {
+      "index": 2,
+      "root": "L50_002_q1",
+      "cause": "shallow_target",
+      "mechanism": "等角向量的Gram矩阵谱",
+      "observation": "四份答卷自行建立常数非对角Gram矩阵，两个特征值及秩/半正定性立即给出各分支；不是没藏住Gram变换。",
+      "candidate_id": "f7c0264bf5ffd78c29925083",
+      "category": "Math",
+      "question_sha256": "e8c5778dc9d6c8e4720c0163f708e1ecf782271326414c3f65c5630496fd82d4",
+      "golden_sha256": "f3ce8417ecfaa800a7bc753897579c0e8833beb6afc222a0209e7c9210a555a0",
+      "solution_sha256": "e35fbb74b44028a14cc53647fe14d2f39c666df7eca5a6a8126461d769e9a778",
+      "candidate_sha256": "cd8734e5450bab1dc5a548ce80bbd68e96c87bb62494b8d17dc5d50221146cd0",
+      "masked_proof_entries": [
+        9
+      ],
+      "full_proof_entries": 11,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "f4e97b7bc4f41eec281db168e7f44c2086df64258be8cc464a344c1fd6ba9303",
+      "receipts_sha256": "701df4d96b69acc00a2a38470dde1ca3ca54b685cc730afdcf1acaee2b21b4be"
+    },
+    {
+      "index": 3,
+      "root": "L50_002_q2",
+      "cause": "shallow_target",
+      "mechanism": "集合对合与单个不相交见证",
+      "observation": "四份答卷用一个已在集合族中的不相交前驱排除对合像，再用单射计数；层递归没有增加实质负担。",
+      "candidate_id": "9bf2725b23cce6361e8c6c41",
+      "category": "Math",
+      "question_sha256": "6515266dc326a422b56d5fc67b39c64184913c74dcd32f7266adcde1087f659d",
+      "golden_sha256": "103434c1af743d25b7c4918288e769976584cf58864d5992ff35a20d04e83352",
+      "solution_sha256": "a2618a0df5edb6b4912422d524e7bc95810bb5ee593b15885ca0e27547701226",
+      "candidate_sha256": "55f5e49c3617ec0d4d3bf6b1cc57ed3dd83b7d3dfc3121621cb8061e8ffecae1",
+      "masked_proof_entries": [
+        4
+      ],
+      "full_proof_entries": 7,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "0e3c7867693052220a37cd72dae83de7359caa7a7c45476f4aec39d5775e08c8",
+      "receipts_sha256": "414ed9b96bca8d7e82f97dc8656a0f41f6fe64d0aa0726dcd6f4cacf2197d8fb"
+    },
+    {
+      "index": 4,
+      "root": "L50_002_q3",
+      "cause": "scaffolded_question",
+      "mechanism": "根符号与反射下降判据",
+      "observation": "题面直接给出反射下降及简单根判据；四份答卷只做共轭、选正负根及调用给定判据。",
+      "candidate_id": "0c1acd1de5d4f66265c3517b",
+      "category": "Math",
+      "question_sha256": "e004fb91163180f333cca1e96444d9f806e2ac62aff0ae1c7cf8a90ec491da4c",
+      "golden_sha256": "6cf68828dd177e689c60fd7b9c69c616a3c19f87cd7d4b79e149d032c2f371b7",
+      "solution_sha256": "04de78aea0d7b18cac25828abe3a522c53843430b377ce89f7e6a937acf1ea80",
+      "candidate_sha256": "eaa6760b2390e857e88d9b06570ac1254b89ffcafeea5eb0edd0cb7e921719fe",
+      "masked_proof_entries": [
+        2,
+        3
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "4118a94b031dd69fb2d9c33b277e5f6ce026775d2076e360685832cc53179e70",
+      "receipts_sha256": "4537916ad21a4bf31c213eb972c3371876994c7fe967e1ed855e134ce0a004c0"
+    },
+    {
+      "index": 5,
+      "root": "L50_004_q1",
+      "cause": "shallow_target",
+      "mechanism": "线性可加性与格陪集",
+      "observation": "三份答卷只比较和式的陪集便结束，不需要参考解先分析负向条件的分支；核心仍是一次同余比较。",
+      "candidate_id": "0f3cab37ff34192ae8337af9",
+      "category": "Math",
+      "question_sha256": "10dcc8030c7968c2082a53a3f2edd2800dba35987b0b7a73b0d7880695a081ae",
+      "golden_sha256": "80aadbab0305ce4ecdbcab6c15b83e35dbcf65b18cb49b24f7780b302ffd1532",
+      "solution_sha256": "d89d37ea466d980825c5f7bd8198717143a8b75553f3510e7b9ffb8e2a43651a",
+      "candidate_sha256": "ba235aad279de6469b4e52e354d73dd1f2afa49fe35e4b5032789bcc8b976de7",
+      "masked_proof_entries": [
+        3
+      ],
+      "full_proof_entries": 4,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": "branch_discovery",
+      "blind_solution_sha256": "9f1524f4ea07e12dcb2ba025efe3358f0cb1617ae3a6239716a78cd2138cdc6e",
+      "receipts_sha256": "5a5e41f2a6e325921723f562a421c9ca27ce5c8487a979750d8fd96ba832825a"
+    },
+    {
+      "index": 6,
+      "root": "L50_004_q2",
+      "cause": "shallow_target",
+      "mechanism": "有序区间与半整数格相交",
+      "observation": "四份答卷用区间长度排除非零相邻差，再枚举端点；多分支外观不改变初等负担。",
+      "candidate_id": "57464a4a390d3a92e6811469",
+      "category": "Math",
+      "question_sha256": "dd3ed93aca67a0df0940ce45978ac6cc4c0108e5faa67ba290a6cd26d0e1e18c",
+      "golden_sha256": "31aa9ac14d080071a985106b2271044a787dbf8b3791eeefe2c1b95ce4e2cfab",
+      "solution_sha256": "2849a6cf6566df2e162e98f80127ed666e3c25d458f85a35770e802809f04269",
+      "candidate_sha256": "83a93226ac5288120667684ef8f437b5b3e19eddea45cfcb83fb479f45927159",
+      "masked_proof_entries": [
+        3
+      ],
+      "full_proof_entries": 7,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "c68171d30cca5259abad181334dbb139ac23b16d6db6501a3df8b7217423e7f1",
+      "receipts_sha256": "7638168d0fccbebd476f07baa56949c4a6c700befe5692e66b475dd2af1b2b27"
+    },
+    {
+      "index": 7,
+      "root": "L50_004_q3",
+      "cause": "shallow_target",
+      "mechanism": "sl2权重尾和反演",
+      "observation": "四份答卷用标准不可约表示权重及同奇偶尾和作差；隐藏步骤真实执行，却是常用重数公式。",
+      "candidate_id": "dcf67bfa7021220416a5ceca",
+      "category": "Math",
+      "question_sha256": "365c6e0255de79125b0a015acc8d96085b27ef3f16e158c87dcc08ad91b1e306",
+      "golden_sha256": "d3a0eadf47a852ef1406ae8afe731c44500464ed44c2548bbe874884927e4774",
+      "solution_sha256": "67eaf5e7a8ed2127fa16d84b81a7ec9e245b2343739b83438490cab52345ba92",
+      "candidate_sha256": "53d30a4f6cb54c748df1652a983f1ccb86a68c051e5b9b6326032d4f68d30bc6",
+      "masked_proof_entries": [
+        3,
+        4
+      ],
+      "full_proof_entries": 6,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": "inverse_identification",
+      "blind_solution_sha256": "61bf3a802820f63aa94be4f59a857b30572b185ae42d890a0672d6cf7dab27d3",
+      "receipts_sha256": "3d2e2106ca03ee8a180472c69727a660d25b197f79e6c1b46086ee25f358c537"
+    },
+    {
+      "index": 8,
+      "root": "L50_006_q2",
+      "cause": "shallow_target",
+      "mechanism": "复有理式模方与平方因子",
+      "observation": "四份答卷展开模方、作差、因式分解并检查实参数域；物理背景没有引入额外推理。",
+      "candidate_id": "4be2e3e3de4f910b70d62f1d",
+      "category": "Physics",
+      "question_sha256": "f011856c52784e8897cdcd6b77e0f4ebf9d3c0937f702b082cc515b360e1f8fd",
+      "golden_sha256": "d6b0338fe98c35d662d163b74ca8e92f8d7a6def2f2029c3e9f8f5d66f937488",
+      "solution_sha256": "b150e3765516d48b1c1bebec87707b695e1bac99b1e69faef13bfeaa7debb490",
+      "candidate_sha256": "ac66b75e7e6de261bf572566381701f72b7a9f324eb6113b7ea4c664d2f3b3f9",
+      "masked_proof_entries": [
+        2
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "7d352ec7e7b320656a4d9e4e2692478dec0efa917ce7a07d0d7befbcab14ce52",
+      "receipts_sha256": "7ef527ae76e6d6e4b43f4d4f08852ed1940dafed4ab8569edfa892675753dcd6"
+    },
+    {
+      "index": 9,
+      "root": "L50_006_q3",
+      "cause": "shallow_target",
+      "mechanism": "逆矩阵虚部与非交换乘积",
+      "observation": "四份答卷使用逆矩阵差恒等式并展开有序乘积；所藏的交叉项抵消属于常规矩阵运算。",
+      "candidate_id": "d93aee4d0dee293d6eda1b2c",
+      "category": "Math",
+      "question_sha256": "db9107c0b7bae90f625a67c91cd5420df7437391c1e13d7ac6451b8b23a6f0af",
+      "golden_sha256": "8482a1446d33c0b4de847bcf678c18d0683178836cc1b650b22c8181777b3c68",
+      "solution_sha256": "a4c2d9ea30dedba5f2d193ae064faeb33e62122d7b070070f1dca36846195347",
+      "candidate_sha256": "e46834a98998e2a68b4643eedde3c60f8de3d35180167b841bd6bb67e80d9b31",
+      "masked_proof_entries": [
+        5
+      ],
+      "full_proof_entries": 6,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "b5cf8be68b630cb24f2f92527163bea813a87271e89c4df7fe42c37a8cd8a449",
+      "receipts_sha256": "919c453e9dc5417539ed2051bdf9c32f53dc3d92a0132bfc3cd2b97e0a655355"
+    },
+    {
+      "index": 10,
+      "root": "L50_007_q1",
+      "cause": "shallow_target",
+      "mechanism": "旋转量子位轨道的直接代入",
+      "observation": "题面给出待验轨道；四份答卷用同轴对易使耗散项消失，再求导及判断振荡。这与所选桥梁等价，不能仅因证明写法不同称作旁路。",
+      "candidate_id": "ebb4bb4ce6f3044ab08d1b58",
+      "category": "Math",
+      "question_sha256": "59cd8d6a58096407091654942169fe861dbeb9f0ab31e246bfd482b14eb408d5",
+      "golden_sha256": "1f6fb5e215347d254b110bf9a959c6da85fc7e18fa666e07e8a09fbcc874126b",
+      "solution_sha256": "9be1eb1d01e4e0714eb51f84be103dd7e0c0a5dbc8ec1d750adb71c7367d928b",
+      "candidate_sha256": "a914a95b3e962dfe9b47b93c78a101bf2afe13bd6b782211d7e6aa63e969467b",
+      "masked_proof_entries": [
+        5
+      ],
+      "full_proof_entries": 8,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "34c8d6fa4444018ca295d12faef5b6b2196237aa5ab5d5cdc3403c91f6b9463d",
+      "receipts_sha256": "05630e2d000f6eefa545cab978504534c8bd46db7db0db932b65ded1cd531870"
+    },
+    {
+      "index": 11,
+      "root": "L50_007_q2",
+      "cause": "shallow_target",
+      "mechanism": "最近邻对易子的最前沿传播",
+      "observation": "四份答卷追踪唯一全向前路径及三角张成；作者否定的回返项捷径并非这个正确的前沿计算。",
+      "candidate_id": "42abdf61732d3ad83e0860aa",
+      "category": "Math",
+      "question_sha256": "1918c3851e6c3df4bf54165214b318f335ea96c05d0c28768d3977484914985d",
+      "golden_sha256": "4c15139018987345e7874987bf6ba5d45562de52ece0f4ac0469acaceddfb784",
+      "solution_sha256": "45f63ccfd00a8484e0b6e18a2e0d667dcd822e391a7d391876ca9e2753446eb1",
+      "candidate_sha256": "95756592b64b12f5fe7c16956b788c3994df14eee220a183dfd2a4b356f44ae7",
+      "masked_proof_entries": [
+        3,
+        4
+      ],
+      "full_proof_entries": 8,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "5bca45497344190b95e5c0c6efa63274507d9c072dc99454ec7afb9ef7f0e5e9",
+      "receipts_sha256": "8c5f74756387f004dc49e69f8419bae18b8c91d56edf60ecb1d7dc45011858e2"
+    },
+    {
+      "index": 12,
+      "root": "L50_008_q1",
+      "cause": "shallow_target",
+      "mechanism": "显式坐标映射的相交计数",
+      "observation": "四份答卷代入两条坐标条件，再按符号检查定义域；编号较多的证明实际上只有简单坐标计算。",
+      "candidate_id": "ce0b41e159447b96d11210a3",
+      "category": "Math",
+      "question_sha256": "9391d67e9a5df57f07522adb58b39871fa46b0dbcc0340061ad76433ce9cd88e",
+      "golden_sha256": "311b6933262003368020797fd1b9a40bae5825c119e221b9d3154b84c6361fb8",
+      "solution_sha256": "a6531774375e4ddd78c89583089c65233cc21c3d45e1759b29d48e0f0efb9650",
+      "candidate_sha256": "1033cb4881a44ae3af4f239316b1ddad90b84f67f46a49b29df374744223764a",
+      "masked_proof_entries": [
+        2
+      ],
+      "full_proof_entries": 4,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "3a3d8d5d94bbc82af013f332861f85cbe14fd4487d727460af1efe4a19d8f9a3",
+      "receipts_sha256": "331c45a5c8b442e85a05c28cc5b6b213bd6b47cbc09de3860eeb6ae6b966fdea"
+    },
+    {
+      "index": 13,
+      "root": "L50_010_q1",
+      "cause": "shallow_target",
+      "mechanism": "群中四角碰撞与共轭",
+      "observation": "四份答卷用消去律检查对角碰撞及对合条件；一份先归一化，仍是同一初等群运算。",
+      "candidate_id": "1af56b1dfa5dfdbcb5df28e9",
+      "category": "Math",
+      "question_sha256": "f574ea82fb44a16c4b6f195bf8c8591094a29ccf2ff8916f64945e64a5a1ff9b",
+      "golden_sha256": "72f873a74ba00e668f918b47bb14aa43831a1ae00d2917d430dde838c0919338",
+      "solution_sha256": "77641d296295e1362cd94ec845942fbf9e43531103f68708ab3fa273a50ab47b",
+      "candidate_sha256": "1460871bb120102a1d54f134c32af5c1b6dc36246754c06606105a1599ae757a",
+      "masked_proof_entries": [
+        4,
+        5,
+        6
+      ],
+      "full_proof_entries": 7,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": "branch_discovery",
+      "blind_solution_sha256": "acd63fe92da637c6bc1dfa4d028d55aa3bc347b82cc533d307726fb7c1ba69d4",
+      "receipts_sha256": "77e8b87951e8820375ff6f2615d1c19483d68eecdcd4c95caf9eb5b9b80deea6"
+    },
+    {
+      "index": 14,
+      "root": "L50_010_q3",
+      "cause": "shallow_target",
+      "mechanism": "图平均算子的谱界转移",
+      "observation": "四份答卷用伴随、均值保持及Jensen收缩传递界；反驳错误的等距假设并未排除这条标准正确路线。",
+      "candidate_id": "33aa86e343270571cc3caf67",
+      "category": "Math",
+      "question_sha256": "98d531c8999e694dc75b8e04c4269ecff7a4bd812ddf692ec6acf4623c4e3ded",
+      "golden_sha256": "4fed8e06b33b94f1b54446fe7e990081447b0e0b84a517dae49c98b9dee3422e",
+      "solution_sha256": "4f9ccc11e9a7389e1c9ac397a6cd21884f9fb05f426ad6c5292585f9b1aa58c0",
+      "candidate_sha256": "756ac8dddfaa6ad2ca1d2b3ad1eb64e40a3d0ff73710650348e36fc985c1e8c4",
+      "masked_proof_entries": [
+        5
+      ],
+      "full_proof_entries": 7,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "f5f5058d42d5c1938959eaec4fa00d00fe88f5fe1589e598d13059f0ac51d566",
+      "receipts_sha256": "f383ca1f98e1fc9a685b8dbda30ddbaabb23f6042b66c6aa9d2132b2ae354925"
+    },
+    {
+      "index": 15,
+      "root": "L50_012_q1",
+      "cause": "shallow_target",
+      "mechanism": "隐函数求导与分子相消",
+      "observation": "四份答卷隐式求导后通分相消；隐去的抵消步骤本身是短链式法则计算。",
+      "candidate_id": "111d35d52d8fe2d82a597a7d",
+      "category": "Math",
+      "question_sha256": "dab753f59aba6dc06e400a539fd3bc8a1b61f322a7abbb62fcb6f4b74e6acfa7",
+      "golden_sha256": "f007fcae3ebf6c542b377eb526e6327426d052557a5b53fc8b30b87cc2fb571b",
+      "solution_sha256": "4b75298a7608580babdd118f88f3371fe52e54b748ddcc69cf748bb97b198ffb",
+      "candidate_sha256": "dfb952aa9adce57a38137c8737c91c0034c1c043631f581f8667c7166b614026",
+      "masked_proof_entries": [
+        3
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "60f8bafa7c663ac8a80d32813291e4cd889312c4f9cbee6123094ba6fe3cdbfd",
+      "receipts_sha256": "ec6002fedc71e6ad7d2fdf675428f5f33f085beaa3f5aec8791045f0b4459099"
+    },
+    {
+      "index": 16,
+      "root": "L50_012_q2",
+      "cause": "shallow_target",
+      "mechanism": "已给定校准场的凸变分比较",
+      "observation": "关键的子梯度校准关系已作为模型前提；四份答卷用支撑不等式、旋转梯度散度为零及分部积分，不需发现校准场。",
+      "candidate_id": "b0e38b2e2a669df623a812ff",
+      "category": "Math",
+      "question_sha256": "1baf6293eb59d179fce0a3469414b96081fde45f1835da96f9c1b88a7fc080e7",
+      "golden_sha256": "68ad76101f9c4fdd22d1d9b3d075861cb479eb9c0c95c0b8d3accd0c9cc09586",
+      "solution_sha256": "1096a2a0e55aeacad40404a57958bb3e8a13b825e55eff22a07368dd5d37f0c0",
+      "candidate_sha256": "6ce5ac5e21132a04279e6fafef4ddcb7ef237aa7078afe8f7c8ddfad5080726a",
+      "masked_proof_entries": [
+        5,
+        6,
+        7
+      ],
+      "full_proof_entries": 8,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "be6a07c3a9a84eca37d5008b3a35b09bd90e472c06fea8f6a2a68c56736219a3",
+      "receipts_sha256": "7d15a4b123d7ab216169a4f3ac3e1b5127b5d92d2d87882b852cb31b5b21e2f3"
+    },
+    {
+      "index": 17,
+      "root": "L50_012_q3",
+      "cause": "shallow_target",
+      "mechanism": "双零点条件的系数消元",
+      "observation": "三份用行列式列变换，一份用Cramer法；均完成同一系数消元，不能把不同表示自动算作绕开桥梁。",
+      "candidate_id": "2157202acd16d51fb4476e55",
+      "category": "Math",
+      "question_sha256": "314162a56328e361a462ada352e572ad11e5626388cb6b309783984c499f71f8",
+      "golden_sha256": "09ab6ef46c103b32701089237677a2f66ab46e57be4c516271f454fc20d71497",
+      "solution_sha256": "df4902f5eeeed3f7c46b0bab42f6df4ad60f93187b7c8fb163d2dc66ae1e6923",
+      "candidate_sha256": "06df17a644c3e661b968b8af627624fd03d2899ec3f7b1f2e44aade1ce78506b",
+      "masked_proof_entries": [
+        3
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "fd4b3c57ade0deb4873b0190edc46be0ea305cef16451d838a7fc9eeb7abd4fe",
+      "receipts_sha256": "66979c37c12dc0a90d6cd021d535b72b5a3b7f0bb5866161a8c6723a4496cbc7"
+    },
+    {
+      "index": 18,
+      "root": "L50_013_q3",
+      "cause": "shallow_target",
+      "mechanism": "剩余有限群的递降链",
+      "observation": "四份答卷枚举元素并逐次交有限指标核；存在性目标和前提接近标准构造，辅助要求未增加独立难点。",
+      "candidate_id": "9e6ccde854349023fd4ebe3f",
+      "category": "Math",
+      "question_sha256": "92a301e4ef8a85118c449fe301859d9649c0cfbae3017c8cd7e134b723143766",
+      "golden_sha256": "8e38329fc29780f622d2597e1d1b0528f2b68ca675c2d24a8018aedd3135aa14",
+      "solution_sha256": "20d096a6bc6c0a6d18c1a1ffb30d338700e7d1ccef04a74be17ce0efd24728e2",
+      "candidate_sha256": "5af11f954fb6faedca17fa2879e7b3ad1fa092cf25099a06ccc0795f075df98c",
+      "masked_proof_entries": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "full_proof_entries": 9,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "e0a84378f6fc021d8b8ee99f33d68f9c6dc060f41b8579a485af23742e55d58e",
+      "receipts_sha256": "a4b9fe7f0f2688b5594510e81ba5971afd62ff87224b9da6207cba6ca7e0ec26"
+    },
+    {
+      "index": 19,
+      "root": "L50_014_q1",
+      "cause": "shallow_target",
+      "mechanism": "图上Lipschitz势与最短路",
+      "observation": "四份答卷沿路径给上界，再取距离函数达到界；属于经典距离见证。",
+      "candidate_id": "b99568a14b872fe70278c335",
+      "category": "Math",
+      "question_sha256": "fc73401cc7c88252ef4c575d7e608448d7512aae2abc4cde54e869a9c12bd81f",
+      "golden_sha256": "c866e9da5da08b197b599c5a2365a776b80a1a8928b3068c7c0dd985381658d7",
+      "solution_sha256": "9786156181ad155e6d58f2e29d2f225871d9acd80292528c815d13f90f05f3bb",
+      "candidate_sha256": "f20f69308740d6c1a07ba9861bd051556064287c51cb954bad168a8aec3d5dce",
+      "masked_proof_entries": [
+        3,
+        4
+      ],
+      "full_proof_entries": 6,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "4029bbd63165a7af1d8e940a76a56ffa8860b50d08a00810bfa29c08ceca7356",
+      "receipts_sha256": "da9fc5aba3d31a07474315970b7c1d28a65fa42ec61afa4a9d1b0a08036db3e7"
+    },
+    {
+      "index": 20,
+      "root": "L50_014_q2",
+      "cause": "scaffolded_question",
+      "mechanism": "已给单调函数形式的指数匹配",
+      "observation": "题面直接提供待发现的函数组合形式；四份答卷只需求导、加权AM-GM和匹配幂次。",
+      "candidate_id": "ee30ddabbe4cf1755503419c",
+      "category": "Math",
+      "question_sha256": "519c2731dde17c3dedb2835b867040eef822f6069bbff8fe40380971546cfbd9",
+      "golden_sha256": "ac1c4354eb7cd7fa89f5bd82b44b85533485946e9908f458c3aa0c876d354e11",
+      "solution_sha256": "4c8da663b7c28631b7f0d0ec2846590d98672a5fea274d5978ca99589c6e1be7",
+      "candidate_sha256": "264a08a01de2c3574ec4abbd85e7b4f454bc71aec0bd2e5537b486442b3913c7",
+      "masked_proof_entries": [
+        5,
+        6,
+        7
+      ],
+      "full_proof_entries": 8,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "bd531754ba5fc4926efdd8b2402f5e815999c1358565ad52a29e168f23ef82f4",
+      "receipts_sha256": "1c73b4244ee74bca751115f2d728d17851f5fd791b981094ee60224f67574bff"
+    },
+    {
+      "index": 21,
+      "root": "L50_016_q1",
+      "cause": "shallow_target",
+      "mechanism": "总荷约束的线性消元",
+      "observation": "四份答卷直接消元及求整数区间；参考解把可达性见证写长，但答卷省略见证不等于证明没有思考，更不应暗增证明输出。",
+      "candidate_id": "67671e1f1a14da23555ca90e",
+      "category": "Physics",
+      "question_sha256": "363e4d728097f48393f697d860acf6d56138cbf0639f6a03104f44308bc82016",
+      "golden_sha256": "f3fd7280b560bba8a2191a0ad7b0c3054be8be9dd07313c7004b64cf243c7ee7",
+      "solution_sha256": "932d2af4bb8cc9690f28e9ca3d1780035a8d15f785551212005f74f6e2910508",
+      "candidate_sha256": "31acbbd873c8f8027df88b847524345add7ebbc0295d59552741db9f85639b93",
+      "masked_proof_entries": [
+        5
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "6c01c2035cccf2f5ff5aecfbff50f7b500e88fb1cd57dd5516eb4ba5f106c1c3",
+      "receipts_sha256": "d5d7257de88b98cb8078bdf4ae1a26ad48ea1fc631ad5fb862e40536783b521f"
+    },
+    {
+      "index": 22,
+      "root": "L50_016_q2",
+      "cause": "shallow_target",
+      "mechanism": "指数系数匹配与代入",
+      "observation": "题面已给完整字典及目标公式；四份答卷匹配三个线性系数再代入，专业符号没有形成理论发现。",
+      "candidate_id": "4af26e10aef68ce6895e0de8",
+      "category": "Physics",
+      "question_sha256": "65e2231eb08c83edd796a62a63c52eaa4986b8d04075b1ca47ad5b4aa16e2d34",
+      "golden_sha256": "f3fd7bf6e7a6b2241d3edb7dca2798e7c789fc276f4f8ab8ce77b5877b43a3e3",
+      "solution_sha256": "9a20ac7fa8218f9024277bf2394cde3c5225bb447f851cdc91dd41a7381912d2",
+      "candidate_sha256": "ab280410d3c00c5bbebcaca97adc2af9e06e134decaa9ea876f7793eacc2e4e1",
+      "masked_proof_entries": [
+        2
+      ],
+      "full_proof_entries": 6,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "c05346f850cecde44a2c4d53da31f760e9c9f07f63a54a4ba9d3fe723c7608d7",
+      "receipts_sha256": "c23c71c95d9f24358e31699bf9318387986766ad29eb93b12f844a13776deb09"
+    },
+    {
+      "index": 23,
+      "root": "L50_016_q3",
+      "cause": "shallow_target",
+      "mechanism": "仿射标签变换下的二次量",
+      "observation": "四份答卷展开给定变换下的一次、二次式并解零条件；多个输出是同一代数展开。",
+      "candidate_id": "7438e6927d2c3b9a39a6cb95",
+      "category": "Physics",
+      "question_sha256": "97fb5934a9d38e177af9209f35165eb35e7ad570d74429319dbfe8c85dc777dd",
+      "golden_sha256": "7ad426c6062d4c011729c5bc671e680e6786da83739bb2c644ad706e4d6ca4ed",
+      "solution_sha256": "d5222708903f4478659670b8b62790dabd50586722bb47662407d409e8308eb3",
+      "candidate_sha256": "74fbd669597fcc7d059b3f66c5f4f655e3d084c2c2e5ee4d513a14acfd04d9f9",
+      "masked_proof_entries": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "full_proof_entries": 8,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "1c6abe2a401ec047c2e60e19774ea5330150b9a1db56e56157b2a7af16af9646",
+      "receipts_sha256": "37e70798d132bb4aef038336bd641e9b7d0549ce8dc5ac9abce797642a38ffd0"
+    },
+    {
+      "index": 24,
+      "root": "L50_016_q4",
+      "cause": "shallow_target",
+      "mechanism": "二次根的整参数分类",
+      "observation": "四份答卷用求根公式、判别式和少量整数指标分支；求完整区域这个类型本身并不保证困难。",
+      "candidate_id": "fc1a5997ab5f0a04091f8742",
+      "category": "Physics",
+      "question_sha256": "6d20e6c25200ae7367d411dd0878a7630e20d65c55c1cdd58792bb753b8be8fc",
+      "golden_sha256": "c264bc0cccf1445e3ae2b8eb592ded0b590a8647809a28c8fcd91118d6e21353",
+      "solution_sha256": "436e96a26f1150a8307aca7e6757afe313e75273a927e603a466a31df57ca6be",
+      "candidate_sha256": "f8edd0ff316075e80d10b9201dd25229d66b14f747764afff8def7f1c3d45da9",
+      "masked_proof_entries": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "full_proof_entries": 7,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": "branch_discovery",
+      "blind_solution_sha256": "715df4b13137169d178c08eb2ec4ae6a57f763b51ad1e437a0ee81aa2ac22c72",
+      "receipts_sha256": "cf097c7729bb596972243cb12ec4634d967419afb3deca70fd8ba5913ddc9ce5"
+    },
+    {
+      "index": 25,
+      "root": "L50_017_q3",
+      "cause": "valid_short_route",
+      "mechanism": "热态经纯损耗通道的封闭性",
+      "observation": "一份答卷直接识别标准热态损耗通道并更新均值，无需重建作者要求的Fock求和或特征函数；其余答卷也有直接几何级数路线。",
+      "candidate_id": "647ad126bf69ee858bf44cf2",
+      "category": "Physics",
+      "question_sha256": "6ba82a159c8ad0a748b4a484e9315f02631a8b6d76b0e3fd2a65507fd83effa9",
+      "golden_sha256": "dac269109d23bf0ddb730be4c40da56267444f5fcd868f07587129f9ad6dfb49",
+      "solution_sha256": "74e02cc968bb9e749c204653b419e10e149b239ef00f036382c49b9bd39d2520",
+      "candidate_sha256": "bdcfbbbe8c8794aa48902199997db7bbd65b702a5045e986b3c99f99abb9ba4a",
+      "masked_proof_entries": [
+        4,
+        5
+      ],
+      "full_proof_entries": 6,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "42df8e17d215ca8854a7b7ebdee85233dddeb5b0e2fcde0b0c127932238d0e43",
+      "receipts_sha256": "6fb51c9ded50abb26e3020faf8cb6ba367be8e89093f1a59f919711451e427be"
+    },
+    {
+      "index": 26,
+      "root": "L50_018_q2",
+      "cause": "shallow_target",
+      "mechanism": "径向积分的幂次计数",
+      "observation": "四份答卷将体积元与核的尾部幂次相加，再检查临界指数和内部尺度；是标准可积性计算。",
+      "candidate_id": "d20f7d829d97cb8f3b60cf8d",
+      "category": "Math",
+      "question_sha256": "e17dea825ecb12999dec0cd5e92fe0a93d2b7513697931c46d8120e6d1a25e6d",
+      "golden_sha256": "6de72d9ad82b8da11d176a380a1c63bddc5256dff8ef6e88c3033ea2724c8e67",
+      "solution_sha256": "ddf5cb1ce9753156d35bd482a76e75a5c9723ed97977481fa3b502234fffb04a",
+      "candidate_sha256": "913899f61c597165bc717b6112ed58d0ff5a6a81c877e813b949f611c17876e7",
+      "masked_proof_entries": [
+        3
+      ],
+      "full_proof_entries": 7,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": "parameter_region",
+      "blind_solution_sha256": "7af476e06c6940a700b18913f08fc88ab99a68d0db2ba149b1b61fdc61fc0cfd",
+      "receipts_sha256": "9ead57f4ef37b60da63740c8fbe31828d49e5351792de68d3f5c7fcc097bb834"
+    },
+    {
+      "index": 27,
+      "root": "L50_018_q4",
+      "cause": "shallow_target",
+      "mechanism": "小尾项的Taylor首项",
+      "observation": "四份答卷作一阶展开并估计二阶余项；隐藏Taylor步骤没有建立额外难点。",
+      "candidate_id": "4045c5840b5c81a17fb85612",
+      "category": "Math",
+      "question_sha256": "9f6926d4c88435b39d14955aca77d46f7a554f4d2f53b1d82ce675f81c6a4f6a",
+      "golden_sha256": "bab043d37ee75419afa451809f842909a08f3dbe36702f86bf4b446855e0ce51",
+      "solution_sha256": "4258f21d4d8849bddc4dd8881fb17d8b1acc4eceeb0ecf982dc39d4ea355868d",
+      "candidate_sha256": "5ace47acd047abdb7447bd4900ab98c3c4713e8b7dee78492ea71d20f4dd976e",
+      "masked_proof_entries": [
+        3
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "54a1dd3cef998440c7ae8eb9d8024bbe847ceb0fc119c95ae74c4545cd07a306",
+      "receipts_sha256": "c15f37fb9c0894a03870587e0fa86b9dba678d71b1ee666a9e4cc4fa8db90bca"
+    },
+    {
+      "index": 28,
+      "root": "L50_019_q1",
+      "cause": "shallow_target",
+      "mechanism": "符号图的环相容性",
+      "observation": "四份答卷用生成树或路径乘积证明充要性并计数；是平衡符号图的标准命题。",
+      "candidate_id": "201eb0ffe3c3ee8794beee91",
+      "category": "Math",
+      "question_sha256": "df1c4280c4dc7047a5223fbab65dcb8d15f6e7bfdaae0fc0caf1ba3b9d212847",
+      "golden_sha256": "323a158f8880ffa27ce4a137c55e6070f441481e638066a1f2b2eadbbdc51767",
+      "solution_sha256": "84bc7529424a50024bf885b84204cb7632b73fd47bd23a1d14bc733f26374388",
+      "candidate_sha256": "34007fb5862209a8ce8c691ad1b0627080a860743c23c29a758f679e22962bc0",
+      "masked_proof_entries": [
+        2,
+        3
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "f05989fe18a49b4118a159e631d483ccd058b49ecc58b70831a541355a4ddc00",
+      "receipts_sha256": "08122c6ee87a8f3711ac109fef6d2986ea4cfbe2d0eb7a2ffbc9880d4ea04161"
+    },
+    {
+      "index": 29,
+      "root": "L50_020_q1",
+      "cause": "shallow_target",
+      "mechanism": "平面旋转的交换子代数",
+      "observation": "四份答卷限制到二维切平面，使用恒等算子与四分之一旋转的标准基，再计算幂。",
+      "candidate_id": "8c5ea363b4df47eec9ae98d2",
+      "category": "Math",
+      "question_sha256": "baa9c238843df000976efb8fe6eda39be501262bb9a6ea17aa201c6c49079e9a",
+      "golden_sha256": "8f2fa5e3b42c4a08b7de8c2eb8bf0169ef8bbe3e7cb2e8d48eff9f3b384ebb63",
+      "solution_sha256": "0f43c4eebeb18552306554b6a7875abf1f53bcd1760850d909d06cc09852b725",
+      "candidate_sha256": "b67ae1ce17609fbf1094b880b7eeee2090a7fae43563ee4a78bd81c8bea292a0",
+      "masked_proof_entries": [
+        2,
+        3,
+        4
+      ],
+      "full_proof_entries": 6,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "c6491b65973d239613a8e144ae9adb7732f2f8eb878e0c1509595fcc8e773045",
+      "receipts_sha256": "2a62577db1ccc0fb71b1bf1276da166408a14f47d54b10d7694a4c1e8a2a421f"
+    },
+    {
+      "index": 30,
+      "root": "L50_020_q2",
+      "cause": "scaffolded_question",
+      "mechanism": "已给互易恒等式的零右端",
+      "observation": "题面同时给出双线性恒等式及使右端为零的辅助关系；四份答卷立即消去右端、比较任意向量系数，两份无需使用另行提供的算子族。",
+      "candidate_id": "85a3b025d56e1af1bfd49259",
+      "category": "Math",
+      "question_sha256": "c86b6b28e33b390728ea340159360615d5842a47d3a7be9c725f7956d5e49844",
+      "golden_sha256": "72516e1fa0fa48ad4f93d2f825a0a5f7ddaa51b1f96949ddc06b5312cbe8f56c",
+      "solution_sha256": "04e430062cd46a6384eb2baf7a418d0362c1f148a2ad24846429b52d322dd843",
+      "candidate_sha256": "e6b0306bcac90a483cfe2532f6727a3f578f28c1177bfe17b184f29298a7367d",
+      "masked_proof_entries": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "full_proof_entries": 7,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "30680b71efe2b959c3757ec91b7edb3779678521e47930f41fcf797b45828c8f",
+      "receipts_sha256": "7812a25216dbf9be9a53a9f0a27c3ed573d6f32d01a41759b62f57c3421feb84"
+    },
+    {
+      "index": 31,
+      "root": "L50_020_q3",
+      "cause": "shallow_target",
+      "mechanism": "二维线性响应与单变量极值",
+      "observation": "四份答卷求逆一个二阶矩阵，再对单个有理式求导；增加极限和分量输出没有增加推理深度。",
+      "candidate_id": "7b3f7c8ea2a6aa77fa15fa03",
+      "category": "Math",
+      "question_sha256": "23cb1c15c07afcdb94215d6af2c305c1004f24fdda21e826b7209fa5c1eeb3b3",
+      "golden_sha256": "985a2c6402fd5255db4bf7f83b565b66d9230c662a567aaf15d9405fbe02d7a6",
+      "solution_sha256": "cdaa38d0bf263edf5c91cd0a5cf7c842c0dafe3556e4f1d7fa6aace80237f3d7",
+      "candidate_sha256": "78382b05e59e0cdac94b29be91339bfe9c16c70e62f98bc62f69f82f93583e4d",
+      "masked_proof_entries": [
+        3
+      ],
+      "full_proof_entries": 7,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "1a5ae87ac8af4c7953cda916cb67fb851bb835e327a6309e1285e3e9116103b1",
+      "receipts_sha256": "336e9289ad3422d24bab2ae18912dc3933ffe9db586beef6c84358df2b53940c"
+    },
+    {
+      "index": 32,
+      "root": "L50_021_q1",
+      "cause": "shallow_target",
+      "mechanism": "独立尺度乘积的端点最小值",
+      "observation": "四份答卷先化为单尺度线性不等式，再在分段系数端点取最小；普遍量词不自动意味着难。",
+      "candidate_id": "d43b613c5d5a6458ce9da667",
+      "category": "Math",
+      "question_sha256": "af281999b0752ef553ecf3d0850a7a1f0b48664cd979d725596281664b4c0527",
+      "golden_sha256": "4fc7d064ad16f301ac248a596be02c13d94f4c74607c6ec37030db244a344f38",
+      "solution_sha256": "01a5dcb63195bd006be8202d6696b519446ef00481616de1b347c94f2982527d",
+      "candidate_sha256": "66787ae45a454ef67f3361d1367940668eb3d0e503d434d5513c3ccf45e49a81",
+      "masked_proof_entries": [
+        3,
+        4
+      ],
+      "full_proof_entries": 6,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "ff25620a3f486399e5f562d6ce6f839dbc72dc68102749c17c88a1a432b3c804",
+      "receipts_sha256": "e84b92f9940a78f78fec87d350da5f84acf66668858e55579157b2fac04c2534"
+    },
+    {
+      "index": 33,
+      "root": "L50_022_q1",
+      "cause": "shallow_target",
+      "mechanism": "正负型剖面的线性系数比较",
+      "observation": "四份答卷配对合并线性项，再区分固定剖面与任意剖面；物理名词下仍是线性独立性。",
+      "candidate_id": "6c65b1d22a9ad0d4f31e5799",
+      "category": "Physics",
+      "question_sha256": "acc89600e99388eed17e35c9e4cf2a00257e227f15308f072ca63fec6a95f07b",
+      "golden_sha256": "188519a01045a713c1faeffc557cb6b53a62e713992e84ed8176ef5079aa1f22",
+      "solution_sha256": "d9f46d6e6c1d92a9c461cc3e72451defd3ea1686cf9170bb97fb16b5391e38d1",
+      "candidate_sha256": "1cf10c685bba2f63f5acf53e2a9875ea4ea2b8fbd6579996132e0efe9d0507e7",
+      "masked_proof_entries": [
+        3,
+        4
+      ],
+      "full_proof_entries": 6,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "23b84dd74070acec9c1684cf6dd58303d863708ee9d9491b959c59301f6cba12",
+      "receipts_sha256": "45d66ab3febf60f9e8972b27d6d112a630a836a02570966d0a171d2631448784"
+    },
+    {
+      "index": 34,
+      "root": "L50_023_q1",
+      "cause": "shallow_target",
+      "mechanism": "共享力项的守恒消元",
+      "observation": "四份答卷将两个一维平衡式相加消元并积分；只是基本微积分恒等式。",
+      "candidate_id": "827d2f5edd30d865de726f9c",
+      "category": "Math",
+      "question_sha256": "1faadc5a78d5218a72a56ca0b052a3f8ec199ce0dceaadf2b03e89c1527d09c0",
+      "golden_sha256": "621f64cb60e1205ea0921546ae85421a8a121c3356c90422d158e55d8ed2ee65",
+      "solution_sha256": "9c59bedffd6047f0b724bbf6ca3c762cb1b6b06c7426041edac7c9bc65ac3b20",
+      "candidate_sha256": "053e6de39eaeea2c423e229d46d9b7108aa122b62c6edbfd5b81d53c0041f354",
+      "masked_proof_entries": [
+        3
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "03c7a0e227fca60e758f3ac4f34f5b988957ccfb8965063729aae7d71b9ab18b",
+      "receipts_sha256": "f47d2536a007cb5496aff667f5dd245740e001d2572137407d50252ce28f1c36"
+    },
+    {
+      "index": 35,
+      "root": "L50_023_q2",
+      "cause": "shallow_target",
+      "mechanism": "两个有序叉乘项的反对称性",
+      "observation": "四份答卷直接列出仅有的两项、合并符号并用零乘积条件；证明条目数量高估了负担。",
+      "candidate_id": "ce44ad4a0d733bb4336e4257",
+      "category": "Math",
+      "question_sha256": "623315487d17d7da60a6150a1daf39d292222cd2eae3527743718f1242a823f1",
+      "golden_sha256": "210ad3b7d4a6501c5bd5ebdee03d62dc2ab2f9adf520350ededeab5161c0ae39",
+      "solution_sha256": "75287e462615544554fe915868c188924525b43d7cd61b2a165edc30297610d0",
+      "candidate_sha256": "f8e8ec64c4a8749d44e8a4d15348efc7492ba409d74b851c098201a62145c866",
+      "masked_proof_entries": [
+        2,
+        3,
+        4
+      ],
+      "full_proof_entries": 6,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "189f3856bb3bd5adf7abcf362a887df804533e943bb2e6d042313bc4285153bb",
+      "receipts_sha256": "91eedfa0ae1a5a5bda0c98fa1cd4de6d5889ead3f207e5dc73f292af4d359131"
+    },
+    {
+      "index": 36,
+      "root": "L50_024_q1",
+      "cause": "shallow_target",
+      "mechanism": "凹函数超水平集的宽度比较",
+      "observation": "两份用关于极大点的位似，两份用凸组合或投影宽度凹性；都恢复相同凸性负担，不能把等价证明自动算旁路。",
+      "candidate_id": "03d84ca426a3ca1ac4d9fa39",
+      "category": "Math",
+      "question_sha256": "0f549d27c8df81cd1d257fec434a2e7a9fd83d969bdbffbd05abb906ec489d0f",
+      "golden_sha256": "89cbb047c7cbd9eab6c73b8b99457761ce305e3a49796e6f38c517215766c322",
+      "solution_sha256": "146131d7c0bc58f676fb03ca7d614cc5debf62b479fcb908d3dcd65c488f09e9",
+      "candidate_sha256": "0a9a799b0118cd8d39b0b746a4392f33f145e82b36e545653182a81abfe232fe",
+      "masked_proof_entries": [
+        4
+      ],
+      "full_proof_entries": 6,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "a5f0fd62f574e4b48dec858bee8fdd78376bc5b795f593e407a8881ac6c1080c",
+      "receipts_sha256": "941bdd15d9c4800d874f451e145662c7e0d7a342b3fc7990e43bff787ffc458c"
+    },
+    {
+      "index": 37,
+      "root": "L50_024_q3",
+      "cause": "scaffolded_question",
+      "mechanism": "交数伸缩与投影公式",
+      "observation": "题面明示可使用投影公式及推前次数；四份答卷沿给定定理比较一个伸缩因子，再作多项式展开。",
+      "candidate_id": "b7cbbb7f9b5f5ecfa587151a",
+      "category": "Math",
+      "question_sha256": "847460a04432b4561c11fb25b1e0376c4e8725d5fa14ef2f954dd6b2a13520dd",
+      "golden_sha256": "8ce5f1f9e4ed1a644dd882ada796a0c9046332af29704035d0cb366fbbf6ff5f",
+      "solution_sha256": "b4b9f6f7012efc6d262a17476525791757d0075095192778a5c204e7c23e9665",
+      "candidate_sha256": "4f908587b784fb51452210b00a3847fee4c8d69eb5178c898472ca0efaf786a3",
+      "masked_proof_entries": [
+        2,
+        3,
+        4
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "b79c8a59ed1f1a615c2631ea0123cc1adc4721be15b30009eab3d471edba2371",
+      "receipts_sha256": "6483bc1634d3a55481beb1a0e7c3c7693abf62bb0794281bbcf6e1d5d3812ebb"
+    },
+    {
+      "index": 38,
+      "root": "L50_024_q4",
+      "cause": "valid_short_route",
+      "mechanism": "本质下确界的有限拉回不变性",
+      "observation": "两份答卷直接引用标准有限拉回不变性回答标量目标，不重建作者选中的拓扑论证；其余解释有论证缺口，原HLE答案判分不构成证明正确性认证，本审计不重判。",
+      "candidate_id": "9b6dcc73db6bd69a4979b78b",
+      "category": "Math",
+      "question_sha256": "982214f23262ffdc96b8dfeffcb842945d33ef726576814623bb315a3b8b8c6e",
+      "golden_sha256": "2cb6d0d424010b1863ad6888dd159c3efef44f2a1f987819bc6a1ce4b4a801f0",
+      "solution_sha256": "2bb93d045dd68c5a3a1b0c19f9865188178f90f8b8472cc23adb1c7aeed9b3db",
+      "candidate_sha256": "68b0adbebcdae359117ed9218fb51f23fafa309b189011b66fcb75a8edd45f77",
+      "masked_proof_entries": [
+        4
+      ],
+      "full_proof_entries": 7,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "5b14bcfb6af7efd46dc3a636ee80375598e3dcb0e129c97b55ab3446dea18cf7",
+      "receipts_sha256": "b356c7a69a78abe9071e50e5b6ace23bcdfb6564113ce9474a6ef756cd042439"
+    },
+    {
+      "index": 39,
+      "root": "L50_025_q1",
+      "cause": "shallow_target",
+      "mechanism": "分块合同变换的广义谱不变性",
+      "observation": "四份答卷用行列式乘法或相似性；两份用分块分解省掉长乘法，但关键隐藏步骤仍是一条标准恒等式。",
+      "candidate_id": "ea11cafa6f64a630f97bdf02",
+      "category": "Math",
+      "question_sha256": "9a67655d495f43c75747c37202624cd309da63d3f3f924cfd973aaca920cfbb1",
+      "golden_sha256": "45596dceb249ce398eec317047da8dcd72f2d8f0b98db8c17053bce3c1322a7a",
+      "solution_sha256": "8e03219b8a96fde88213416761bc2a9359e23a0d76f60bee74aa6a77607c1ac3",
+      "candidate_sha256": "529e637bacdebf5531876a2fd1d6e6bd05fb2bafa9d90572610cadef8133587d",
+      "masked_proof_entries": [
+        4
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "d476cdc7a084e45c77b89d4cc7e08d302aee3991ee6fdfbba2e55a4cd6da8635",
+      "receipts_sha256": "a4e5669b48028fd002ce09e69fc9ea08881c9d3ef8301b16f420ece3dc1a8a87"
+    },
+    {
+      "index": 40,
+      "root": "L50_025_q2",
+      "cause": "scaffolded_question",
+      "mechanism": "已命名Schur补与残差载荷",
+      "observation": "题面直接定义有效Schur补及剩余载荷；四份答卷代入分块消元和能量正交分解，最有发现性的表示已经给出。",
+      "candidate_id": "6b96912ef80a02a08e3414e4",
+      "category": "Math",
+      "question_sha256": "3af93f7387b4cf2c3fbf241137d8b6394012fccdbfe3532eb4c7a78f9e417531",
+      "golden_sha256": "fe88e25951074e6aa0992677caea6835f1e80365c61e74b0fc8d89b803cef841",
+      "solution_sha256": "fddf4555392306b93b13c7d50ef06dbb316a82c9814881d413c18361d1d52331",
+      "candidate_sha256": "2e413b38bfb3f56659b432e26ffabf3c2f7d347d94e9a045f8ae09f0136aafb6",
+      "masked_proof_entries": [
+        3
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "dd39dd1b414a6b19cc88dffd030f94b8d28be58f9c572c93ea7bb784bd46a71b",
+      "receipts_sha256": "4d14e56f15b50b24b45a80ef162e1fa3c1be460f880a9d1a0414fa97378da403"
+    },
+    {
+      "index": 41,
+      "root": "L50_026_q1",
+      "cause": "shallow_target",
+      "mechanism": "仿射拉回的最高次齐次项",
+      "observation": "四份答卷按次数取顶次项，常数平移消失；是多项式滤过的直接性质。",
+      "candidate_id": "c7f37d69d461e4f7ac446aed",
+      "category": "Math",
+      "question_sha256": "5c2ca93292324ec064d1418f59dc50c31ec67beb87d65f2ae47245878ff28f43",
+      "golden_sha256": "bc4274db9b1301a588d83b87775c90d512da6c52917d49108ac275a51e068e15",
+      "solution_sha256": "42f26bb2b85ab116808942fa29887943f379010dc1cedea15dc730b46bb3c04f",
+      "candidate_sha256": "f1b0e3c9f437ab0e9425fc7692fe281df965a0b7fe1ba5a96d9b7eaf75c9d5f1",
+      "masked_proof_entries": [
+        3,
+        4
+      ],
+      "full_proof_entries": 6,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "705c042dd158f8b9b388211f9346ef8f97eee0777bfd1d1b1a93a502d974c91b",
+      "receipts_sha256": "87f3ded5b84aabb9ff9d7b8bab97d90d448d0923086c5c4b2fe901805c02fe58"
+    },
+    {
+      "index": 42,
+      "root": "L50_026_q3",
+      "cause": "shallow_target",
+      "mechanism": "矩阵群左右切向量的共轭",
+      "observation": "四份答卷比较指数共轭或同一切向量；一份直接写切向量等式便确定符号和方向。",
+      "candidate_id": "f94733a1b6069e2089696dbd",
+      "category": "Math",
+      "question_sha256": "8640d359fac8b208aec6885e9c388b6d2ed485961dc482933135109102cbfc1d",
+      "golden_sha256": "4d9baba02edf2e52e897a345b850d712423c0a230284951f30e317429e3a865f",
+      "solution_sha256": "99cffa19dd357e261b08197f45887ec5013ab4e211f55d1d48cce89e241077d2",
+      "candidate_sha256": "981a13603e780976d42fd85b562013736812366d44bce396aa2507e7022ac309",
+      "masked_proof_entries": [
+        2,
+        3
+      ],
+      "full_proof_entries": 4,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "23a4cc36c4d5bce7ad4e88fe09117fd6748b7692d1667e289cded7325bb5604d",
+      "receipts_sha256": "adb248147a83f5e73ab9aa195c09be86a3b96c93f9bd85eee3ca6e55dd83ceab"
+    },
+    {
+      "index": 43,
+      "root": "L50_026_q4",
+      "cause": "shallow_target",
+      "mechanism": "Grassmannian轨道映射的一阶微分",
+      "observation": "四份答卷使用一阶扰动后取商投影，再求核和商；题面已给标准切空间识别，剩下是教科书微分。",
+      "candidate_id": "79f430eb85569fe44956d869",
+      "category": "Math",
+      "question_sha256": "e720313d71d8a80b224737c7a7fda9720f672db40967cdee4a9a672f91f71193",
+      "golden_sha256": "c43582307811636bb558555f6f61662dddd3bbe5c19f0b0540e28e9bccd30dbf",
+      "solution_sha256": "68c7ffdb28b98af81c19063e942a5aa576d0b65a468a46faf5ebcd06fbef0dc6",
+      "candidate_sha256": "e17de6c23317951acc5b21afcb4684662d2de1e0b09fb107c772d118baaa4d1f",
+      "masked_proof_entries": [
+        2
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "12d9993cbec5ef2bea1eec0221a90fd9eecf82eaf1def0e833e4966ed13d1b34",
+      "receipts_sha256": "c930f581108abeb7ef58176ed83fdb59fabfb58d02d17f7d5cca5dcfc3811296"
+    },
+    {
+      "index": 44,
+      "root": "L50_027_q2",
+      "cause": "shallow_target",
+      "mechanism": "齐次函数Euler公式的二阶收缩",
+      "observation": "四份答卷应用Euler恒等式一至两次，再解一个次数二次式；属于标准微分运算。",
+      "candidate_id": "3abc43a67b3aa3bcb486839e",
+      "category": "Math",
+      "question_sha256": "4db7eb34c49acb67d9e7441ea418ea5cab9d9697cc30a40829f1995b90f410ee",
+      "golden_sha256": "ea5736b0817780d3727a507d7442056da6932bbeb7cb06d9cb431de3fca28404",
+      "solution_sha256": "8fe5bbb098bb46ff379df137567684c9a827f377a550fadd73485066a830713a",
+      "candidate_sha256": "f878fc80e5c7640291134a7f39d57ea0b94095ad495728472771c53d83cfc105",
+      "masked_proof_entries": [
+        3
+      ],
+      "full_proof_entries": 6,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "a6785ab6359969f721a04c7dbe389caec760aead590adeb4ac23bb66767c7624",
+      "receipts_sha256": "b2749c9d5f86c176ad510e9a29f9dd1a370771400779ebf54ec2f642acf77ad4"
+    },
+    {
+      "index": 45,
+      "root": "L50_027_q3",
+      "cause": "shallow_target",
+      "mechanism": "符号电荷的两条线性约束",
+      "observation": "四份答卷按符号分两类、加减两个方程并检查非负端点；物理命名没有提高结构复杂性。",
+      "candidate_id": "3667f2189e2784b51b80bb2c",
+      "category": "Physics",
+      "question_sha256": "bc45cb5bd2b24278452d98fb4981c0f146c70906cde1f39e2eec6a0ad55b8731",
+      "golden_sha256": "4f2c7ed918cab01b7fc672adbd6a09d1df973af14e9a9899a8c8889c1cd4de53",
+      "solution_sha256": "8b1fefcd5a3c402a75b3083992707060726e4704d32405e4660aebaf23b154bf",
+      "candidate_sha256": "fe08dabf5abfacff57093a3cbfba5561dd61201a8372215e3c9bab89d05c0f2a",
+      "masked_proof_entries": [
+        4
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": "branch_discovery",
+      "blind_solution_sha256": "dca4c4e433d51b1ca3ad45084818902b9c2e2c7e6a03713810cc1d917d52fb61",
+      "receipts_sha256": "8e37ff8cded1fc8898405af4d46c93b4af14ed0fe9137bec318e01b3437edbac"
+    },
+    {
+      "index": 46,
+      "root": "L50_027_q4",
+      "cause": "shallow_target",
+      "mechanism": "模二矩阵族的右稳定子",
+      "observation": "四份答卷把整个族约化到一个模二形式，用一个合法例子和一般乘法确定同余子群；标准小环计算。",
+      "candidate_id": "01bca1633737a524b67f33ad",
+      "category": "Math",
+      "question_sha256": "f88f97fb21151b404686eb2c8d33d3076e36cbb22737c614c692c2c21d130cc8",
+      "golden_sha256": "ed69c67d71275037b5f42c3509f61c068f3b407db21ff2348526f4d7f1c02ace",
+      "solution_sha256": "d97eb7e3419a9a47d61b85019aac01b1e624736b796429fa7b75aa6534d67123",
+      "candidate_sha256": "3ae8dc28a9a5d4abb158f450aed1af090289b6d959c5f49b1ef5ae4e1b64faba",
+      "masked_proof_entries": [
+        2,
+        3,
+        4
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "fbc41388222dc1de148df862a55e7af224e9a9fe391e3987a194aec3ce51ac1a",
+      "receipts_sha256": "78bf5376d805a9b2fda301c031cd2543b951f3a30c0a69d7faba61dcf53a1aac"
+    },
+    {
+      "index": 47,
+      "root": "L50_028_q2",
+      "cause": "shallow_target",
+      "mechanism": "多齐次多项式的有限网格零点",
+      "observation": "一份引用组合零点定理，三份用逐坐标插值或归纳；主因是标准网格插值，不能宣称四份都绕开了隐藏步骤。",
+      "candidate_id": "81a12f9a307afb1c6e82da51",
+      "category": "Math",
+      "question_sha256": "bbdd30b9dfc0d4cad4e41a396bc862dcfc6bc2230e58a1a648e0e52d1a3faac2",
+      "golden_sha256": "9c232a11c99faa3e306685e302300cda63a3b2f74afb1f9cfe4410e214ab01dc",
+      "solution_sha256": "55f59c17f4a09fa1fdb6b4c9790ba58cdc98756593da287ca8dcc68c8c11f4f4",
+      "candidate_sha256": "663d194811686df569b287e48260885ce5b986dca89f3c274d708f80f7ae3cef",
+      "masked_proof_entries": [
+        4
+      ],
+      "full_proof_entries": 7,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "9747408ca7ad239fb56c4b002de8902d46606202ffd42ff34795589d7d8b95e0",
+      "receipts_sha256": "eb25f33ff40e7da48d85840d57eaea5bc856cb7b4a9f01a248a740f70ec1b27f"
+    },
+    {
+      "index": 48,
+      "root": "L50_028_q4",
+      "cause": "shallow_target",
+      "mechanism": "乘积椭圆曲线的坐标交数",
+      "observation": "四份答卷按坐标支撑是否覆盖及重复因子消失来计数；属于乘积几何的常规组合公式。",
+      "candidate_id": "9bbb1037345e65a20104fb15",
+      "category": "Math",
+      "question_sha256": "92ab8fbae89f5287780a166802e37e5c2b80f6148657f83cbc866a8e6f1ba580",
+      "golden_sha256": "d7936ffd5a983fb81b55072bc920307ed78f32beffc3125b047548508e63936c",
+      "solution_sha256": "4591892c175ea5bde39a514fda739768bed2c08b7289326be4729ba489d033eb",
+      "candidate_sha256": "e2d561319af8ac4d091e3cdf9e3d3eea97622f9d949b07c81dc3040767826ce3",
+      "masked_proof_entries": [
+        3
+      ],
+      "full_proof_entries": 4,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "f1dd6e4db860006a8e03491c832c29637909ede63592c0c46b677f4d261636c6",
+      "receipts_sha256": "d524d855428cd4543c69dda6c940f29cb674b4c5f0b84fb961990b6da2a2a616"
+    },
+    {
+      "index": 49,
+      "root": "L50_029_q2",
+      "cause": "shallow_target",
+      "mechanism": "二次输运项的支撑消项",
+      "observation": "四份答卷展开新增场的三个项并按支撑不交消去交叉项，只保留给定例外指标。",
+      "candidate_id": "f2b75e0d4924fea0df5a2c71",
+      "category": "Math",
+      "question_sha256": "cf7643d868c886f6c4a1a97597077381a9601ae18a755dcc48d81f28f617c3c7",
+      "golden_sha256": "2dab4ab6704c9ae6186544116c60282da4ce92e42c806e38e513ebc7d7896f9c",
+      "solution_sha256": "8c2e1f0f209d0f9c63fee9643f72b5342282c3b8a71a26b6cbb031cd41b58bd5",
+      "candidate_sha256": "6225cf6f08d45fb890e207497ecf4e4183c21ce174a0d81212af4bfe3d18ebf2",
+      "masked_proof_entries": [
+        3
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "2e1c042bad14e9aa5085e1831587a5e80b0ba9c73e23deee8ab29b90c9a14d15",
+      "receipts_sha256": "43234781175f15575f8b862d4e18757a938fa81778591d951b4b12b5a52d03dc"
+    },
+    {
+      "index": 50,
+      "root": "L50_029_q3",
+      "cause": "shallow_target",
+      "mechanism": "逐层保留测度与无穷乘积",
+      "observation": "四份答卷写阶段乘积后调用标准正无穷乘积判据；私有证明中的对数估计并非答题合同要求重建的内容。",
+      "candidate_id": "841525d684d28404a02dacb1",
+      "category": "Math",
+      "question_sha256": "b6b11842ed4ae83abc3b2f5c3069ae2e394af71002e584611f37fe490bedf0af",
+      "golden_sha256": "0c33feddeb7ece0f9d6c4c5f2b0ae4e520ed96386f14ba80c19d54e61d35158d",
+      "solution_sha256": "46ec32edc11ca8318dca607fe357a58365f90551df284eb36a021190a9a9ed04",
+      "candidate_sha256": "2a5698e10a4270a056254909f79e8ee197e2df79ce2211308127cb3f9f5147ae",
+      "masked_proof_entries": [
+        5
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "3d6ddd9fec00c10816cc3c0b741219f5c86373bda577d20ec6133ad7ec075a22",
+      "receipts_sha256": "f82df538abb8e2723eca231a569c314864f38544b12979082216432fe4d72ae8"
+    },
+    {
+      "index": 51,
+      "root": "L50_030_q1",
+      "cause": "shallow_target",
+      "mechanism": "任意密度轨迹确定本构关系",
+      "observation": "四份答卷链式法则后比较任意速度系数，得到一阶微分关系及原函数；普遍轨迹量词仍落到基本ODE。",
+      "candidate_id": "7d841deb6d202dd664c00549",
+      "category": "Physics",
+      "question_sha256": "88289e8757375ead1a241bd8c72912764c2e21c759f8a34c28cf228d901a3cfb",
+      "golden_sha256": "15336ac9b98b9c726a695ef00a2d0dda68de471d8570f8216a5fdfdbc6c155bb",
+      "solution_sha256": "9c906fd24dbf748552f44f120d1426db54cf4785f52e88ed8c4a8115106b2d7e",
+      "candidate_sha256": "e50d8ec6a43ef52ad7a031ee180b44caf2d2dfd95184bd30f3439c0a9495b6f4",
+      "masked_proof_entries": [
+        1
+      ],
+      "full_proof_entries": 6,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": "inverse_identification",
+      "blind_solution_sha256": "944c383af95a73d4142e04430768ae6e663dacdf8f4f8a51ebfb8df77755a0ce",
+      "receipts_sha256": "4ffbf8ed9f76e37ca14cdaf361eb715d76fd37e1bfd592fa35433a79982e4cd0"
+    },
+    {
+      "index": 52,
+      "root": "L50_030_q2",
+      "cause": "shallow_target",
+      "mechanism": "显式密度式的物理可行区间",
+      "observation": "四份答卷只需求解上下界对应的两个二次不等式并取交集；完整参数域仍可非常简单。",
+      "candidate_id": "fcc4fc92c1a3284680fb6958",
+      "category": "Physics",
+      "question_sha256": "6b62b49a0f4ab0db945642f974513758e4f6f839eef68e4d68831b8cdbfe20dd",
+      "golden_sha256": "80637030ea86ae3541cdc56e81b9b6e541410a6cd3a5b4294665f4752e94e1dd",
+      "solution_sha256": "0940029b50999594f5658d3716199780d786c6ddade7ce53ab8e14468b216c5d",
+      "candidate_sha256": "6dc781fbce5071f59b9ba818233cf0dbb2377b9b5fb61ac0d29d7ae56de19005",
+      "masked_proof_entries": [
+        4
+      ],
+      "full_proof_entries": 5,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": "parameter_region",
+      "blind_solution_sha256": "2f4baa5d202cd20362d2d65ebb271c6f421a85d2e8d37a4ed4652fcb04996b05",
+      "receipts_sha256": "ba650f1b330ab66a2657b014d8c2362eab483cb9643f2f7d621ee89c7f7ef50e"
+    },
+    {
+      "index": 53,
+      "root": "L50_030_q3",
+      "cause": "shallow_target",
+      "mechanism": "宇宙学运动参数的求导恒等式",
+      "observation": "四份答卷直接对参数定义求导，或调用标准关系；字母和物理背景下的核心是商法则。",
+      "candidate_id": "23ec3e80a881c571c3219abb",
+      "category": "Physics",
+      "question_sha256": "fe95ff46ceeab0ded34501bf2dd0d19df309d317ef3b8ca513c162e0965985db",
+      "golden_sha256": "a0ad3a9e678e30d1dc9a836aa965cd6116be20d8860d909c96f5aefc1df5927c",
+      "solution_sha256": "933e80b033debd07de9cd2d5e5ceefdbb8d5e4bac5c5c44adb6090103d70c8e2",
+      "candidate_sha256": "46b4416018ba4ba4f24ac7fe51e1dd219b8d94543c64a909c9f7c8240a5945f2",
+      "masked_proof_entries": [
+        3
+      ],
+      "full_proof_entries": 6,
+      "historical_blueprint_pass": true,
+      "historical_no_shortcut": true,
+      "historical_mask_checks": {
+        "selection_supported": "pass",
+        "hidden": "pass",
+        "necessary": "pass",
+        "recoverable": "pass",
+        "not_answer_only": "pass"
+      },
+      "construction_type": null,
+      "blind_solution_sha256": "bb8596d116a4d23697d2a2610d71d4ed63307238d7b8d9e513351b8eec584de0",
+      "receipts_sha256": "7587b98eaf14cc458eea2201708e5402b04da83c068ae926343599fd3c1bf588"
+    }
+  ],
+  "evidence_manifest_sha256": "09011ca03228d47278718206163ec20ef395ff53c1a2a095c5492fee29d56606",
+  "manual_findings_sha256": "4cf9d4eb3a41aa29e1d3c075ee16b7b4a05f91204148d920bfc345c505649440"
+}

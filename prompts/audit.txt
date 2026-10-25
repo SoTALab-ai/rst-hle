@@ -42,3 +42,11 @@ solver's independent samples establish the empirical screen result.
 The supplied source and golden proof are privileged QC material, not part of the solver prompt.
 An established result appearing in its source alone is not a shortcut; identify a bypass available
 from the literal question and ordinary background without accessing that paper or the hidden proof.
+
+For a new seed, independently describe the shortest CORRECT route in reason. Do not use only an
+author-supplied incorrect baseline. If the actual target is routine algebra/calculus or a direct
+standard lemma with no further substantive inference, set substantive_delta=false while keeping
+the scientific validity fields truthful. A multi-case or inverse question may still be routine.
+Inspect effective-helper definitions, supplied ansatzes and ready-to-apply theorem hints as well as
+literal answer leakage. A structurally supplied bridge must set no_shortcut=false. Equivalent
+correct proofs of the same substantive bridge are allowed; private proof length is not difficulty.

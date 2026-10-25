@@ -174,7 +174,7 @@ class LockedProofDraft(StrictModel):
 
 
 class BlueprintIssue(StrictModel):
-    part: Literal["derivation", "answer", "assumptions", "source", "difficulty_design", "known_result"]
+    part: Literal["derivation", "answer", "assumptions", "source", "difficulty_design", "target_depth", "known_result"]
     step_index: int | None = Field(default=None, ge=1)
     claim: str = Field(min_length=10)
     evidence: str = Field(min_length=10)

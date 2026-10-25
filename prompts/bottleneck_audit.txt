@@ -36,3 +36,15 @@ import "for all", "there exists", an observation value, or an admissibility law 
 full proof, source or retained-information plan into a question that does not state or entail it.
 If different quantifier readings give different targets, recoverable must be fail (with witnesses)
 or uncertain if unresolved; a vacuous existential shortcut does not resolve an ambiguous question.
+
+Write a shortest CORRECT route in selection_supported.witness using only the literal question and
+ordinary background, then compare it to the selected numbered proof entries. A counterexample to
+an incorrect shortcut is not evidence against that route. The mask can be genuinely hidden and
+necessary yet still be routine: in that case hidden/necessary may pass but selection_supported
+must fail with the concrete low-burden route. Do not certify depth from proof length, skill labels,
+all-parameter scope or advanced notation. Inspect structural hints such as already-defined effective
+operators/residuals, a supplied ansatz or an identity whose other side is forced to zero. Preserve
+necessary independent model premises; they are not removable merely because they simplify the task.
+If a standard result legitimately answers the literal compact target, do not insist on reconstructing
+its private proof. A different representation of the same substantive burden is not a bypass.
+These checks remain semantic model judgments; they do not establish a measured GLM success rate.

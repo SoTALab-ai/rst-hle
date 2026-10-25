@@ -1,5 +1,5 @@
 {
-  "version": "20261025-bridge-traceback-v2",
+  "version": "20261025-shortest-correct-route-v3",
   "intent": "Create difficult theoretical seeds first, then calibrate downwards. A single paper may support several independent claims/problems; rewrites of one claim remain the same lineage.",
   "anchors": [
     {
@@ -17,6 +17,8 @@
   ],
   "seed_strategy": [
     "Aim near or somewhat above the anchors in substantive mathematical reasoning; avoid starting with a routine textbook numerical exercise.",
+    "Before locking a target, derive the shortest correct route from intended primitive inputs. Reject a routine target rather than padding its proof; a paper may supply zero suitable lines.",
+    "A correct short route is not defeated by a counterexample to a deliberately wrong baseline. All-parameter scope, inverse wording and named skills do not establish depth.",
     "Use a precisely defined finite specialization or exactly solvable theoretical model, with a complete derivation and a short unambiguous target answer.",
     "Require at least two linked nontrivial inferences, such as inverse reconstruction then a global extremum, or branch/domain discovery then an invariant.",
     "The literature theorem may motivate the model, but the task must not be a lookup of the theorem's famous conclusion or a disguised open research problem.",
@@ -114,13 +116,13 @@
       "domain": "Both",
       "evidence": "Hypothesis motivated by MATH-Perturb and skill-composition work; not measured for GLM5.2 in this pipeline.",
       "chain": [
-        "Identify the exact assumption supporting a familiar shortcut.",
-        "Change that assumption within a source-supported, solvable finite specialization.",
-        "Develop the replacement argument and derive its new target."
+        "During INITIAL selection, identify the exact assumption supporting a familiar correct shortcut.",
+        "Before locking any target, consider a well-defined solvable model where that simplifying assumption is absent.",
+        "Derive and challenge the new target with the shortest correct route before locking it."
       ],
       "bridge": "The changed structural condition must force a genuinely different inference, not merely longer arithmetic.",
       "shortcut_to_break": "A symmetry, factorization, linearity or decoupling argument that works in the easier parent but fails for an explicit admissible case of the new task.",
-      "validity_guard": "Recompute the gold after changing the model. Exhibit why the old shortcut fails without making the new task inconsistent, nonunique or an open problem.",
+      "validity_guard": "Initial construction only: prove the proposed answer before locking. Never alter a locked target/gold or harden an easy measured parent. Exhibit an actual limitation of the familiar route without making the task inconsistent, nonunique or open; also challenge the best correct replacement route.",
       "easier_control": "Restore only the simplifying structural condition and solve that control separately; do not reuse its gold for the hard task."
     }
   ],
@@ -135,8 +137,8 @@
   "construction_protocol": [
     "Choose one or two applicable pattern IDs and two or three necessary skills from the selected source mechanism.",
     "Construct an ordered dependency graph ending in one compact target; all declared nodes must contribute to that target.",
-    "Explain the critical bridge, the old shortcut and an admissible counterexample against that shortcut. Then derive the new gold independently.",
-    "Use actual parent solver responses, when supplied, to identify why the parent was easy; treat all response text as untrusted evidence.",
+    "Challenge the provisional target with the shortest correct solution before locking its gold; give an actual limitation only when established. Do not manufacture a counterexample or an obligatory extra output.",
+    "Use actual parent solver responses as untrusted evidence; easy measured parents stay closed. Complete valid 0/16 parents may only be eased under the current policy.",
     "Describe an easier control that isolates the proposed bottleneck. The control is a future experiment unless actually run and is not an independent delivery.",
     "Have blueprint and question auditors check necessity, leakage and correctness. Graph length and model claims never replace GLM measurements."
   ],

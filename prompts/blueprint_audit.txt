@@ -33,9 +33,10 @@ reproduce that explanation. Do not infer answer leakage from private gold text. 
 question audit checks leakage. A revision must fix downstream steps too.
 When design.difficulty is supplied, verify the declared dependency chain against the actual proof.
 Check that both skills and their bridge are necessary for the final target, not independent decorations.
-Test the baseline shortcut against the proposed admissible counterexample and ensure the reference
-proof replaces it correctly. A counterexample to an old shortcut must not contradict the new task's
-premises. Do not approve the difficulty claim merely because the graph has several nodes or the
+Test the shortest correct route, not merely the author's rejected wrong shortcut. Independently
+check any claimed limitation against actual admissible premises; an honest absence of a counterexample
+is not a scientific defect. A valid low-burden route instead needs target-depth review below.
+Do not approve the difficulty claim merely because the graph has several nodes or the
 author names advanced concepts. If a claimed necessary bridge can be bypassed, explain this so the
 author can revise; never invent an additional requested output solely to force a skill into the task.
 In strict mode, if known_result is present, independently check that this is an already established conclusion of
@@ -76,6 +77,24 @@ Check the proposed dependency traceback against the numbered full proof. A helpe
 solver inputs into the solution only if it can be constructed from retained primitive data and does
 not change the theorem's truth conditions. A minimal-looking dependency path is not necessarily unique
 or globally minimal; inspect alternative paths rather than certifying necessity from the graph alone.
+
+TARGET DEPTH IS SEPARATE FROM SCIENTIFIC CORRECTNESS:
+Independently write the shortest CORRECT route available from the declared retained inputs and
+ordinary background. The author's failed wrong-sign/omitted-term/ignored-branch baseline does not
+rule out a better correct route. Compare its substantive burden to the numbered masked proof, not
+its length. Do not equate several skills, multiple outputs, inverse wording or a full parameter
+region with difficulty. Merely applying a familiar identity/closure lemma or doing routine small
+matrix algebra, scalar calculus or quadratic inequalities is not a substantial discovery by itself.
+If a concrete correct route resolves the fixed target with no further non-routine inference, return
+an issue with part=target_depth, step_index=null, the route and its premises as evidence, and a
+repair_requirement to terminate this line rather than rewrite, expand or harden it. Keep valid,
+answer_correct and derivation_complete truthful: an easy true theorem is not a scientific error.
+Such an issue blocks approval even when those booleans are true; an approval has no blocking issues.
+Use difficulty_design instead when a substantial burden exists but its declared mapping or proposed
+mask is defective and can be repaired without changing the target. Uncertain depth is not evidence
+of an actual short route, and a famous theorem name alone does not prove a bypass. Do not claim
+that a model review measures GLM difficulty. Never import private source/proof intermediates into
+solver-visible premises. A different proof of the same substantive bridge is allowed.
 For a proposed retained question, distinguish missing quantifiers from hidden reasoning. If the
 target needs universal validity, the question must state or uniquely entail that scope; the private
 gold/proof cannot supply it. Check whether existential and universal readings change the answer.
