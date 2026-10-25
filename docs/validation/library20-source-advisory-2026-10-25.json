@@ -1,0 +1,44 @@
+{
+  "run_id": "library20-source-advisory-20261025-v1",
+  "origin_run": "library20-theory-20261025-v1-part01",
+  "source_fidelity": "advisory",
+  "runtime_archive_sha256": "dff53f30abc2251b3a4c0c68a546bba1aafd16a21e7dfaf37b101273c5dcb939",
+  "private_report_digest": "c247417edf9cf3a0f07b0bac1f933d0d5f794b7bfa11e67eb6e07bdbffe745bb",
+  "evidence_manifest_sha256": "3c9c022ceef7c582fc259cf97d3f43d59571e78bbab39d092656595fba6c7bf7",
+  "config": "configs/library-source-inspired.toml",
+  "config_sha256": "2e2612076c2e08305211179e5788cadf348b04c309e859af3a1c08bdfb889568",
+  "planning": {
+    "failed_materials_replayed": 9,
+    "proposed_lines": 25,
+    "admitted_lines": 25,
+    "admitted_categories": {
+      "Math": 12,
+      "Physics": 13
+    },
+    "nonliteral_source_notes": 2,
+    "new_independence_or_scientific_passes": 0
+  },
+  "measurements": {
+    "saved_glm_answers_verified": 12,
+    "new_glm_requests": 0,
+    "new_difficulty_passes": 0,
+    "historical_retained": 0
+  },
+  "validation": {
+    "host": "liaojunteng-vm",
+    "database": "rst_hle_rejection_audit_20261025_test",
+    "pytest_passed": 310,
+    "pytest_skipped": 0,
+    "real_postgresql": true,
+    "model_calls_in_tests": "mock",
+    "new_real_model_validation": false,
+    "ruff": "passed",
+    "doctor": "passed"
+  },
+  "cost": {
+    "new_http_requests": 0,
+    "incremental_api_usd": 0,
+    "vm_disk_network_usd": null
+  },
+  "scope": "Recovered entry points and preserved scientific gates only. No missing model review inferred; no new full quality/difficulty passes."
+}

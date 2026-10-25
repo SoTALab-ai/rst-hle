@@ -13,6 +13,7 @@ from .llm import CacheIntegrityError, GatewayConfigurationError, ModelResponseEr
 from .models import Source, StrictModel, digest
 from .paper_ingest import LibraryRepository, ReadPage
 from .paper_metadata import canonical_doi
+from .provenance import match_quote
 from .runtime import atomic_json, gather_cancel_on_error
 
 
@@ -94,6 +95,40 @@ class OutlineReview(StrictModel):
     reason: str = Field(min_length=30)
 
 
+# 仅同一分类的已核定语言/字形别名；不把凝聚态等缺失分类猜成粒子物理。
+SUBTOPIC_ALIASES = {
+    ("Physics", "量子場論と粒子物理"): "量子场论与粒子物理",
+    ("Physics", "量子场论與粒子物理"): "量子场论与粒子物理",
+    ("Physics", "量子場論與粒子物理"): "量子场论与粒子物理",
+    ("Physics", "quantum field theory and particle physics"): "量子场论与粒子物理",
+    ("Physics", "電磁学"): "电磁学",
+}
+
+
+def admit_lines(paper, lines, allowed, max_chars, *, source_fidelity="strict"):
+    """逐条登记入口结果；一条无效不能抹去同材料的其他有效规划。"""
+    selected, receipts = [], []
+    for original in lines:
+        line = original.model_copy(update={"subtopic": SUBTOPIC_ALIASES.get(
+            (original.category, original.subtopic), original.subtopic)})
+        receipt = {"line_id": line.id, "original_subtopic": original.subtopic,
+                   "canonical_subtopic": line.subtopic, "scientific_pass": False}
+        try:
+            if (line.category, line.subtopic) not in allowed:
+                raise ValueError("Invalid v3 category/subtopic")
+            source = source_for_line(paper, line, max_chars, source_fidelity=source_fidelity)
+            match = match_quote(line.source_quote, source.text)
+            receipt.update(status="admitted", source_sha256=source.sha256,
+                           anchor=vars(match) if match else None,
+                           source_notes=[] if match else ["nonliteral_source_anchor_advisory"],
+                           source_fidelity=source_fidelity)
+            selected.append((line, source))
+        except ValueError as error:
+            receipt.update(status="rejected", error=str(error))
+        receipts.append(receipt)
+    return selected, receipts
+
+
 def complete_paper_ids(store, library_run_id, limit=50):
     # 登记200篇不触发；所有正文/补充的物理页均已存且无未读清，才计一份完整材料。
     return [r[0] for r in store.db.execute("""WITH docs AS (
@@ -164,7 +199,7 @@ def planning_outline(paper, max_chars):
                   for doc, p in pages]}
 
 
-def source_for_line(paper, line, max_chars):
+def source_for_line(paper, line, max_chars, *, source_fidelity="strict"):
     by_page = {(doc.ordinal, page.page): (doc, page) for doc in paper.documents for page in doc.pages}
     keys = [(r.document, r.page) for r in line.pages]
     if len(keys) != len(set(keys)) or any(k not in by_page for k in keys):
@@ -177,8 +212,8 @@ def source_for_line(paper, line, max_chars):
         blocks.append(f"[PDF document {doc.ordinal}; SHA256 {doc.pdf_sha256}; "
                       f"physical page {page.page}; parse {doc.parse_id}]\n{page.text}")
     text = "\n\n".join(blocks)
-    if line.source_quote not in text:
-        raise ValueError("Source anchor must be copied verbatim from selected original pages")
+    if source_fidelity == "strict" and match_quote(line.source_quote, text) is None:
+        raise ValueError("Source anchor must match selected original pages without semantic rewriting")
     if len(text) > max_chars:
         raise ValueError("Complete selected proof exceeds model context; no silent truncation")
     identity = digest({"paper": paper.id, "line": line.model_dump(), "text": digest(text)})
@@ -206,6 +241,7 @@ async def plan_questions(store, milestone, settings, pricing, directory, run_id)
     quotas = json.loads(Path(settings.quotas_path).read_text())["quotas"]
     allowed = {(q["category"], q["subtopic"]) for q in quotas if q["category"] in ("Math", "Physics")}
     sem = asyncio.Semaphore(4)
+    advisory = settings.source_fidelity == "advisory"
 
     async def one(index, paper):
         row = {"paper_id": paper.id, "doi": paper.doi, "planned_roots": 0, "roots": []}
@@ -213,37 +249,45 @@ async def plan_questions(store, milestone, settings, pricing, directory, run_id)
             try:
                 outline, rid, model = await gateway.call("generator",
                     "Plan 1–5 STRUCTURALLY INDEPENDENT hard theoretical short-answer questions from this ONE "
-                    "paper and its supplied supplements. You see page locator excerpts, NOT complete proofs. "
-                    "Select physical pages covering each EXISTING exact result, complete proof and all needed "
+                    "paper and its supplied supplements. You see page locator excerpts, NOT complete proofs. " +
+                    ("Select physical pages containing an inspiring mechanism and definitions; you may propose "
+                     "a self-contained constructed variant, with its answer proved independently later. "
+                     "Label this as a construction rather than claiming it is a theorem of the paper. " if advisory else
+                     "Select physical pages covering each EXISTING exact result, complete proof and all needed ") +
                     "definitions. Do not rely on unavailable figure values, external papers or missing supplements. "
-                    "Choose existing answers first, reconstruct proofs later, and hide the hardest necessary "
+                    "Choose candidate answers first, reconstruct proofs later, and hide the hardest necessary "
                     "inference. Prefer non-obvious intermediate mechanisms, branch/domain classification or "
                     "coupled derivations; avoid a headline theorem, coefficient lookup or direct substitution. "
                     "Each line needs a DIFFERENT inference structure; rewordings or changed numbers do not add "
-                    "lines. Use ids q1..q5. Use 1 line if only one is well supported, unavailable if none. "
-                    "Copy a 20+ character source_quote VERBATIM from a selected page, preferably prose; "
+                    "lines. Use ids q1..q5. Use 1 line if only one is well supported, unavailable if none. " +
+                    ("Provide a 20+ character source_quote as a locator; paraphrase is advisory, not a rejection. "
+                     if advisory else "Copy a 20+ character source_quote VERBATIM from a selected page, preferably prose; ") +
                     "it is only an anchor, not proof validation. Provisional answers remain untrusted. "
                     "Choose the exact category/subtopic pair from the supplied list.\n" + json.dumps(
-                        {"allowed_targets": sorted(allowed), "material": planning_outline(paper, settings.max_source_chars)},
+                        {"source_fidelity": settings.source_fidelity, "allowed_targets": sorted(allowed),
+                         "material": planning_outline(paper, settings.max_source_chars)},
                         ensure_ascii=False), f"{paper.id}:plan-independent-lines", PaperOutline)
                 row.update(outline=outline.model_dump(), planning_request=rid, planning_model=model)
                 if not outline.lines:
                     row["status"] = "source_unavailable"
                     return row
-                selected = []
-                for line in outline.lines:
-                    if (line.category, line.subtopic) not in allowed:
-                        raise ValueError("Invalid v3 category/subtopic")
-                    selected.append((line, source_for_line(paper, line, settings.max_source_chars)))
+                selected, receipts = admit_lines(paper, outline.lines, allowed, settings.max_source_chars,
+                                                 source_fidelity=settings.source_fidelity)
+                row["line_admission"] = receipts
+                if not selected:
+                    row.update(status="planning_failed", error_type="LineAdmissionError")
+                    return row
                 keep = [line.id for line, _ in selected]
                 if len(selected) > 1:
                     review, rid, model = await gateway.call("auditor",
                         "Independently inspect whether these proposed question lines from ONE paper have "
-                        "distinct necessary reasoning structures. Keep only supported independent targets. "
+                        "distinct necessary reasoning structures. Source-inspired constructed targets are allowed "
+                        "when source_fidelity=advisory; source alignment alone does not reject them. "
                         "Different numbers, labels, equivalent formulations or splitting one identical "
                         "bottleneck do not add independent lines. This is planning review, NOT a scientific "
                         "pass or difficulty score; existing proof/consistency/verifier stages will still run.\n"+
-                        json.dumps({"title": paper.title, "lines": [line.model_dump() for line, _ in selected]},
+                        json.dumps({"title": paper.title, "source_fidelity": settings.source_fidelity,
+                                    "lines": [line.model_dump() for line, _ in selected]},
                                    ensure_ascii=False), f"{paper.id}:independence-review", OutlineReview)
                     keep = review.keep_ids
                     if len(keep) != len(set(keep)) or not set(keep) <= {line.id for line, _ in selected}:
@@ -252,8 +296,14 @@ async def plan_questions(store, milestone, settings, pricing, directory, run_id)
                 for line, source in selected:
                     if line.id not in keep:
                         continue
-                    focus = ("Use ONLY this selected PDF body/formula/table material. First independently lock "
-                        "the EXISTING source result and golden answer, reconstruct its complete proof, and "
+                    focus = (("Use this material as INSPIRATION. First select a self-contained theoretical model "
+                        "and candidate answer, mark it as a construction, and independently prove it before masking. "
+                        "Source alignment and literal citations are advisory. Do not invent unavailable empirical "
+                        "data or treat the paper as proof of a changed claim. Keep the locked constructed target "
+                        "and answer across repairs and easing. " if advisory else
+                        "Use ONLY this selected PDF body/formula/table material. First independently lock "
+                        "the EXISTING source result and golden answer. ") +
+                        "Reconstruct the complete proof and "
                         "verify each step before reverse construction. The plan is untrusted guidance, not an "
                         "additional premise or a passed gold. Hide the hardest necessary inference and its "
                         "equivalent hints; preserve answer uniqueness and physical validity. No figure values "
@@ -270,7 +320,8 @@ async def plan_questions(store, milestone, settings, pricing, directory, run_id)
             except (CacheIntegrityError, GatewayConfigurationError):
                 raise
             except (ValueError, ModelResponseError) as error:
-                row.update(status="planning_failed", error_type=type(error).__name__, roots=[], planned_roots=0)
+                row.update(status="planning_failed", error_type=type(error).__name__, error=str(error),
+                           roots=[], planned_roots=0)
             finally:
                 atomic_json(directory/"papers"/(paper.id+".json"), row)
             return row

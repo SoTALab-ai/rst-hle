@@ -148,6 +148,13 @@ class BlueprintIssue(StrictModel):
     repair_requirement: str = Field(min_length=10)
 
 
+class AssumptionCorrespondence(StrictModel):
+    source_assumption: str
+    solution_assumption: str
+    equivalent: bool
+    reason: str = Field(min_length=20)
+
+
 class BlueprintAudit(StrictModel):
     valid: bool
     answer_correct: bool
@@ -156,10 +163,13 @@ class BlueprintAudit(StrictModel):
     reason: str = Field(min_length=10)
     reviewed_step_count: int | None = Field(default=None, ge=1)
     issues: list[BlueprintIssue] = Field(default_factory=list)
+    assumption_correspondence: list[AssumptionCorrespondence] = Field(default_factory=list)
+    source_notes: list[str] = Field(default_factory=list)
 
-    def passed(self):
-        return (self.valid and self.answer_correct and self.derivation_complete and self.source_grounded
-                and not self.issues)
+    def passed(self, *, source_fidelity="strict"):
+        issues = [i for i in self.issues if source_fidelity == "strict" or i.part != "source"]
+        return (self.valid and self.answer_correct and self.derivation_complete
+                and (self.source_grounded or source_fidelity == "advisory") and not issues)
 
 
 class StepwiseBlueprintAudit(BlueprintAudit):
@@ -168,7 +178,7 @@ class StepwiseBlueprintAudit(BlueprintAudit):
 
     @model_validator(mode="after")
     def actionable_issues(self):
-        if not self.passed() and not self.issues:
+        if not (self.valid and self.answer_correct and self.derivation_complete) and not self.issues:
             raise ValueError("A rejected proof must include actionable issues")
         for issue in self.issues:
             if issue.part == "derivation" and issue.step_index is None:
@@ -501,11 +511,23 @@ class VerifierRound(StrictModel):
     actual_models: dict[str, str]
 
 
+class VerifierAnchorRepair(StrictModel):
+    group: Literal["requirements", "conditions"]
+    index: int = Field(ge=0)
+    original: str
+    literal: str
+    start: int = Field(ge=0)
+    end: int = Field(gt=0)
+    method: str
+
+
 class VerifierVersion(StrictModel):
     item: Question
     spec: VerifierSpec
     spec_request: str
     spec_actual_model: str
+    spec_raw_sha256: str = ""
+    anchor_repairs: list[VerifierAnchorRepair] = Field(default_factory=list)
     # 题面修复后先存检查点；恢复时必须完成全部前置复核，不能跳过。
     revalidation_pending: bool = False
     question_repair_request: str = ""
@@ -536,6 +558,8 @@ class Candidate(StrictModel):
     generation: int
     operator: str
     source_ids: list[str]
+    source_fidelity: Literal["strict", "advisory"] = "strict"
+    source_notes: list[str] = Field(default_factory=list)
     solution: Solution
     item: Question
     audit: Audit

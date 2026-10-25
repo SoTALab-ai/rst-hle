@@ -25,7 +25,7 @@ def main():
     p.add_argument('--directory', required=True)
     p.add_argument('--run-prefix', required=True)
     p.add_argument('--rates', required=True)
-    p.add_argument('--config', default='configs/library50-questions.toml')
+    p.add_argument('--config', default='configs/library-source-inspired.toml')
     p.add_argument('--materials', type=int, default=50, choices=range(1, 201))
     p.add_argument('--wait', action='store_true')
     a = p.parse_args()

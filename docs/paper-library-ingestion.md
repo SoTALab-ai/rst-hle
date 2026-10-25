@@ -1,6 +1,6 @@
 # 直接读取论文库
 
-材料先解析入库，首50份完整独立材料可以触发试产，其余论文继续读取。保留原PDF，用6Luna读取正文、公式、数学表格和脚注，跳过插图及图注。模型一次读取每批1–2个物理页，同时提供同页原PDF文本层作符号消歧，原页图像为版面依据；乱码/空文本层不等于空页，不同义改写函数名。没有第二模型逐页验收。新入口与旧MinerU实验分开，不回写历史审查结果。
+材料先解析入库，按批次指定的完整材料数触发试产。2026-10-25当前批次改为首20份立即试产、读到50份停止新增请求，见[限量读取与20份试产](reader-limits.md)。保留原PDF，用6Luna读取正文、公式、数学表格和脚注，跳过插图及图注。模型一次读取每批1–2个物理页，同时提供同页原PDF文本层作符号消歧，原页图像为版面依据；乱码/空文本层不等于空页，不同义改写函数名。没有第二模型逐页验收。新入口与旧MinerU实验分开，不回写历史审查结果。
 
 ## 下载与研究类型
 
@@ -92,7 +92,7 @@ uv run python scripts/run_paper_library_pipeline.py \
 
 `--representative-checks`可接收已核对原件哈希/页号的开发反例。先真实读取这些代表论文，再检查固定符号是否保留或明确标记未读清；API/覆盖失败或静默改符号会阻止批量阶段。该检查不宣称整篇公式已认证。代表读取和批量读取共享解析身份，成功响应不重复购买。
 
-## 50份完整材料触发出题
+## 完整材料触发出题（支持20份/50份）
 
 这是“完整解析材料数”，不是元数据条数、PDF文件数或已生成题数。只计正文和已关联补充PDF的所有物理页已存、无`unreadable`且有可读正文的论文；冻结前再核对原件及转录对象。冻结先完成的50篇，后到论文不替换队列。上游终态仍不足50篇时明确报缺口，不伪造出题启动。
 
@@ -102,10 +102,12 @@ uv run python scripts/run_paper_library_pipeline.py \
 uv run python scripts/run_library_question_campaign.py \
   --library-run-id RUN-ID-read --materials 50 --wait \
   --run-prefix QUESTIONS-RUN-ID --directory work/questions/QUESTIONS-RUN-ID \
-  --rates work/private/prices.json --config configs/library50-questions.toml
+  --rates work/private/prices.json --config configs/library-source-inspired.toml
 ```
 
 每篇由6Luna规划1–5条不同推理结构的已有结论，检查原文逐字锚点和完整选页；多题时另次调用审查重复结构。材料不足或规划失败可为0条并保留拒绝原因，不强凑题数。50篇最多250条计划，分片进入原`QuestionExperiment`，仍需锁定金标、完整证明、独立审查、最难步骤挖空、科学质检、反代、verifier对抗、GLM首4次筛选及16次验收。简单题拒绝；仅对过难题做降难。同论文题目相关，计划量不等于合格交付量。
+
+规划入口逐条记录受理/拒绝及来源原文位置；无效一条不抹去有效兄弟线。v3只允许代码中明确登记的同分类语言/字形别名，不猜测新领域。来源锚点首先逐字匹配，另容忍数学分隔符、排版空白、单字字体参数及大写希腊字母呈现差异，保留原始规划和匹配原文、位置、方法与哈希；不接受同义改写、数字/符号/指标变化或拼接省略。入口受理不算独立性、科学审查或难度通过。已有失败收据的回放边界见[20份误杀审计](validation/library20-rejection-audit-2026-10-25.md)。
 
 论文读取并发8，出题总并发8、solver并发6，为judge留容量。两库分开写锁，出题不会占住论文库写者。
 
@@ -119,3 +121,5 @@ uv run python scripts/report_campaign_costs.py \
 ```
 
 清单包含`scopes`（`database_url_env`、`objects`）及`stages`（`scope`、`stage`、`run_id`、`directory`、`config`、完整`pricing`快照）。只读查询，不调用模型。输出分阶段、分角色美元费用、人民币参考、HTTP次数、未知用量和在途预留。VM/存储/网络账单未取得时标null并说明未并入；不能把API估算叫完整账单。历史13页探针、重复版本和补采成本也应纳入同一轮累计。
+
+2026-10-25用户进一步放宽来源复现要求：上述逐字匹配规则保留给历史`strict`模式；新管线默认`configs/library-source-inspired.toml`，来源引文或结论差异仅作提示，允许由论文启发的新构造。实际题面、完整证明、金标、域条件与verifier的一致性仍为硬验收。详见[来源口径](source-fidelity.md)。

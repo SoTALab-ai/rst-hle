@@ -88,6 +88,27 @@ def test_locked_source_result_cannot_silently_change(candidate, source, defect):
     assert known_result_errors(candidate.known_result, {source.id: source}, candidate.solution)
 
 
+def test_paraphrased_premise_requires_bound_independent_equivalence_review(candidate, source):
+    from diamond_factory.models import AssumptionCorrespondence, BlueprintAudit
+
+    prepare(candidate, source)
+    original = candidate.known_result.assumptions[0]
+    revised = original + ' This is the same premise in a different wording.'
+    candidate.solution.assumptions[0] = revised
+    audit = BlueprintAudit(valid=True, answer_correct=True, derivation_complete=True, source_grounded=True,
+        reason='Synthetic independent review of exact preserved premise.',
+        reviewed_step_count=len(candidate.solution.derivation), assumption_correspondence=[
+            AssumptionCorrespondence(source_assumption=original, solution_assumption=revised,
+                equivalent=True, reason='Synthetic equivalence evidence for the preserved condition.')])
+    assert known_result_errors(candidate.known_result, {source.id: source}, candidate.solution)
+    assert not known_result_errors(candidate.known_result, {source.id: source}, candidate.solution, audit)
+    audit.assumption_correspondence[0].equivalent = False
+    assert known_result_errors(candidate.known_result, {source.id: source}, candidate.solution, audit)
+    audit.assumption_correspondence[0].equivalent = True
+    audit.valid = False
+    assert known_result_errors(candidate.known_result, {source.id: source}, candidate.solution, audit)
+
+
 @pytest.mark.parametrize('indices', [[0], [1, 1]])
 def test_mask_proof_indices_are_strict_and_unique(candidate, source, indices):
     prepare(candidate, source)

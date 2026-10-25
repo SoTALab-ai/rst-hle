@@ -1,17 +1,18 @@
 # RST → HLE-style Question Factory
 
-从数学/理论物理论文构造可追溯题目：预建论文库，锁定来源已有答案与完整推导，挖空最难推理，通过独立科学检查后测量难度。目前仍是实验管线，尚未证明能稳定生产HLE Diamond题目。
+从数学/理论物理论文构造可追溯题目：预建论文库，从候选答案与完整推导出发，挖空最难推理，通过独立科学检查后测量难度。按用户最新口径，论文作为启发，允许自洽的新构造，来源逐字/逐结论一致性只记提示；实际题面、推导和golden必须一致。目前仍是实验管线，尚未证明能稳定生产HLE Diamond题目。
 
 当前模型：作者和审查为gpt-6-luna，解题为GLM5.2无工具、600秒墙钟；官方HLE模板由gpt-6-luna medium判分。首4次全对直接拒绝，出现错答或解题墙钟超时才补至16次；1–8/16进入后置复核，0/16先排错再降难，不执行加难。
 
-新材料流程为“元数据规范化DOI并去重登记 → 下载原PDF和补充材料 → 6Luna直接逐页读取一次 → PG索引与内容寻址库 → 出题时读取冻结论文版本”。不再对全文追加第二个模型逐页验收；来源疑点保留原页核对，科学审查仍在出题阶段执行。下载、转录完成与可用于出题分别统计。首50份完整独立材料入库后可自动规划每篇1–5条不同推理结构，通过原科学质检管线试产。各阶段费用包含拒绝、失败与重试，缓存归原支付run计费。
+新材料流程为“元数据规范化DOI并去重登记 → 下载原PDF和补充材料 → 6Luna直接逐页读取一次 → PG索引与内容寻址库 → 出题时读取冻结论文版本”。不再对全文追加第二个模型逐页验收；来源疑点保留原页核对，科学审查仍在出题阶段执行。下载、转录完成与可用于出题分别统计。完整独立材料达到批次指定数量后可自动规划每篇1–5条不同推理结构（当前首20份试产，解析到50份停止新增请求），通过原科学质检管线试产。各阶段费用包含拒绝、失败与重试，缓存归原支付run计费。
 
 ## 入口
 
 - [文档导航](docs/README.md)：按ClawGym的文档职责划分组织。
 - [架构与模块归属](docs/synthesis-architecture.md)、[验证方法与个人VM](docs/local-validation.md)。
-- [论文下载](docs/pdf-paper-library.md)、[直接读取入库](docs/paper-library-ingestion.md)、[数据库](docs/database.md)。
+- [论文下载](docs/pdf-paper-library.md)、[直接读取入库](docs/paper-library-ingestion.md)、[读取上限与20份试产](docs/reader-limits.md)、[数据库](docs/database.md)。
 - [出题设计](docs/question-design.md)、[科学检查](docs/consistency.md)、[verifier对抗](docs/verifier-adversary.md)。
+- [来源启发与自洽验收](docs/source-fidelity.md)：新论文库默认`configs/library-source-inspired.toml`；严格模式保留给历史配置。
 - [实验协议](docs/theory-experiment.md)、[历史结果](docs/validation/README.md)、[验收](docs/acceptance.md)。
 
 ## 本地开始

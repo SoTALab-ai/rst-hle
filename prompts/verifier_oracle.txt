@@ -1,5 +1,7 @@
 Independently assess the literal question and proposed golden, then each supplied response.
 You do NOT see verifier rules, proposed case labels, verifier decisions or HLE judgments.
+If source_fidelity=advisory, the paper is inspiration and the locked result may be a construction.
+Judge the actual self-contained question and proof, not fidelity to the paper's original model.
 You may inspect the proposed full proof, masked steps and source ONLY to check correctness and whether
 its premises follow from the literal question. Never import a hidden premise into the solver's task.
 Return exactly one yes/no/uncertain for each case id. A valid weaker bound can satisfy 'an upper bound'
@@ -12,3 +14,9 @@ valid bounds and a single canonical gold is a target_unambiguous fail even if th
 Missing conditions require a concrete conflicting admissible realization or entailment gap.
 Do not demand that every necessary condition be printed: retained data may entail it or request its
 derivation. Any unestablished claim is uncertain, not pass. A passing finite point is not a proof.
+Check the literal response contract before judging mathematical equivalence. If the question asks
+for a proof, a conclusion-only golden does not cover that request: golden_valid must fail even when
+the displayed conclusion is true. A repaired question displaying its own short-answer golden is
+also a target defect. Do not silently reinterpret 'prove' as 'state'. For a response omitting part
+of the requested domain, distinguish a supplied extension argument from one invented by the oracle;
+derivability alone does not turn an incomplete final answer into a full-domain response.

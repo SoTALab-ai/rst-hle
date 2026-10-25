@@ -1,0 +1,227 @@
+{
+  "run_id": "library20-rejection-audit-20261025-v4",
+  "origin_run": "library20-theory-20261025-v1-part01",
+  "evidence_manifest_sha256": "3c9c022ceef7c582fc259cf97d3f43d59571e78bbab39d092656595fba6c7bf7",
+  "private_report_digest": "5cb09d97dd56dd2d346b1cd86dd1d4961718233a60cb74a0bb4c34def2675c38",
+  "runtime_archive_sha256": "97e9207ad6cc2d06ce4acac6feec87726e42dc10a9380b8c57d98ed80ed13318",
+  "replay_code_sha256": {
+    "src/diamond_factory/__init__.py": "a7309356882178af79cfb9cf7edcc903140414c96c82c78e914e24e0601c6f51",
+    "src/diamond_factory/artifacts.py": "7c3ac27cdbd02713ddd1384b5b2c846f64038e933cadef2e45adbd4312bf294e",
+    "src/diamond_factory/calibration.py": "33c74c1ee2c0161e2d42bfcbdb98ac129d515c3f9b55497d7358ab9f0687ea46",
+    "src/diamond_factory/campaign_costs.py": "fbf66284dfbacbdf5a39b69ec6725727fa523e7410a433f477089d706732f8ec",
+    "src/diamond_factory/catalog.py": "00b17515504c2cf6dc10d57957e328252585493d019dced8ddfbe90de9d7cde0",
+    "src/diamond_factory/cli.py": "f814f624fadb3ca75ac632538fc53b9d36022596d2b7b926235c1be21dfd34e2",
+    "src/diamond_factory/config.py": "bbf7bc3b0c1d35c0e39238b6db5b5f8cc35d63583655c58a995cdd77b50bb35f",
+    "src/diamond_factory/consistency.py": "3c07324c31d69b6981b043d489834414ac73c6c30dc653f221fecf2a7af0fb73",
+    "src/diamond_factory/costs.py": "fc15be0ce93c6c3c38bec30d4adf7c82a6c655782dba0d10f386bac2810748f7",
+    "src/diamond_factory/difficulty.py": "f9a2b18339c23b7959529ecad5d8af46bbf46a6a789751a24770043d9c25fc07",
+    "src/diamond_factory/discovery.py": "c3094fd0c4a9bab9ca9886e655eaf69796bc85b4512ef5c387e774e7adfbc68a",
+    "src/diamond_factory/evaluation.py": "6bce2aaeb984936b94684f90274fa64d3c11d8281337761b5cb7fe6166547c76",
+    "src/diamond_factory/experiment.py": "3e745c54da4d9e2212c8d592b8f8f45e0edc2b653c22efbba0af6ff7dbfaa748",
+    "src/diamond_factory/gates.py": "db4200b11ddb5779fa1b401c8fd96c3869d6316d6fb74aa68debc1f1545892e8",
+    "src/diamond_factory/library_questions.py": "b761376242bd9c784a951fef324560dc47d8cf9d593ae2c57f2ebcfe61c53471",
+    "src/diamond_factory/llm.py": "0898765cfd6745fa2e093cdb2ac5c8dada0efa0fed1b7f40a8831b7c00b4ab1d",
+    "src/diamond_factory/models.py": "7b692ea2ee2d7a67ccb3046609d832c29285067857da591dfa39f096532605db",
+    "src/diamond_factory/open_access.py": "6819a7c937f1205d9b324b37689b7434f4dfd4aceb725fcb40a273f400c6d3d8",
+    "src/diamond_factory/paper_acquisition.py": "66c26ee444beacedd2c836d32f4445e762c6e8c624bee90e01833c0591c3bf06",
+    "src/diamond_factory/paper_ingest.py": "55da768300fb7e01353288d39ed7b71d7f5acbfc73370f8df866143b919e718d",
+    "src/diamond_factory/paper_metadata.py": "e4df13c9d29eceaf3491963dc0c36fb3bdd093366fb48f870af16de24bfc5573",
+    "src/diamond_factory/pdf_library.py": "523cfd5c7bb63cee7ee1a1552dbed4fe6358be09357efb1bdb0a11f9b992f19e",
+    "src/diamond_factory/pdf_ocr.py": "89289f72c724cc499a53f44fe98f66a80b04f3e256bc2377bf17bac6fe5140f3",
+    "src/diamond_factory/pdf_precision.py": "ff9f1846b79b49dbef7137bd7f314ad3c29274e5cadecc77ed4bda5a8856210a",
+    "src/diamond_factory/pdf_review.py": "d3e12cfda6c011de8d46b55e2e15c4ec24a81901015b69d6e52c3a73351bd492",
+    "src/diamond_factory/pipeline.py": "ee6fc9a5ca365acee6915cb4871f85e54a04197cfc5f9d26dd07b41c9cbf1b2e",
+    "src/diamond_factory/postgres.py": "1d832178ade6ee3c6be73d0e2b3a76a1156126dd7ae399882a89c32ba57e9309",
+    "src/diamond_factory/provenance.py": "ed0172fde6b4dd70207e984ad73cb87de86723cb62c4d077280efb672668dbfe",
+    "src/diamond_factory/reader_control.py": "fbba39ceb9c484832e94c7aaf77cc84e5ac771c5a43412d309a7c5143cb84f30",
+    "src/diamond_factory/rechecking.py": "c63e23e490e04aa41b7aad60079a18a17a0cc4877bb002b7b4d53a1f8846e262",
+    "src/diamond_factory/reference_selection.py": "958c4e673d43e795d01b122bfa7f8bfb08232c7735e8ed6b394f4efb74a87095",
+    "src/diamond_factory/rejection_replay.py": "52ee2221e11b8f6ad516264ed5f4c2147c3481901aa636751b6bbdbd42636504",
+    "src/diamond_factory/routing.py": "57c85f7e7e4336e7a4bcfc63dc52603d1c74f89ef2f9f3eb2cd357e48636d275",
+    "src/diamond_factory/runtime.py": "72ef61a85cc57fc64f56793dc58a85113b5aa176233fb67b0aff701122289102",
+    "src/diamond_factory/sources.py": "be5385c5717f1e71c1852a9ad83e9b0078373c562d256e82c30950b56a06989e",
+    "src/diamond_factory/store.py": "a7b3205452efe7ea5a4df64309c0dbf57209285f39a2e566575671bcd1d5b7d0",
+    "src/diamond_factory/substitution.py": "a4fbee125a0a627c2f03aa0114178e57c96ef68ae72695da926a6914880b7b98",
+    "src/diamond_factory/verifier.py": "474f7e8d176fd865b90f6b6b442bbd40382ad0fedf8e96432c6dc3469ea43492",
+    "prompts/align.txt": "125d821599762a23521fd18244dfdb0d6b8a35aa30bc503388a841eddfbe8dd3",
+    "prompts/audit.txt": "78a5f83767a4eb497dd15c07e8fce785584db35f8fb488f115c24278ea74bf66",
+    "prompts/blueprint_audit.txt": "0306cbd488e549bbc0e9c6c478a9f8e897924bf8fb52188e5eff1bc2bd1b3243",
+    "prompts/bottleneck_audit.txt": "d44858f9448282336a27648ac4759ce6f31ea68141650d54cbdebd337b985c9a",
+    "prompts/consistency_certificate.txt": "0956d004c94ee4670233cf7746d2afcc22ae82aeb41d7e11e016c90077623398",
+    "prompts/consistency_certificate_anchors.txt": "5540707b712f057c05077dbc28ff39db82978d914dcfff1d5c9aec5266ffdf6f",
+    "prompts/consistency_review.txt": "10c7cf1bd739f98549bfe9bc56e96b92b787848d02ee559e2aeeea073d5b2607",
+    "prompts/consistency_solve.txt": "c011ebb2138de89a3b5d8ae0f9c826ac88b8f579c72a0582ef32f631680db643",
+    "prompts/dedup.txt": "8c659e34d25c5a01a806a8808ed2365add9e41ec351c57b9196d41c30b57406b",
+    "prompts/judge.txt": "0f0023ee579b8c134f1834ed8952778b9e01460e31d47c242ee3629da9d44835",
+    "prompts/judge_system.txt": "5a092c5cee63fe6a5fd50b11b45ac9dae16dd2475d5991053411dfbfec8b1e90",
+    "prompts/known_result.txt": "818417a352cc50eef18aadb7f64565977a0af63cc668e99e9138b73352482de3",
+    "prompts/read_pdf.txt": "b56765b3546a2da24b969f7bd3a07029f2cd74e2cf147e3b37c6099be0bee825",
+    "prompts/recheck_question.txt": "c2fa72ac6348fcc25834a56eb3c97a06db3fc390bb5c241edb4f156355df14af",
+    "prompts/solution.txt": "84fb4bd3e4766186e2257747cc6ff19b1d540c2f9275daff0c41459f29608ca8",
+    "prompts/solver.txt": "1b10b098377311bebdeba5e062ed9bfb565210c1d58353722401d8f510cda5b2",
+    "prompts/solver_hle_system.txt": "cd27d28bdfe308dab9c78659fb0ff24dee3d85cdf0340ec4e37f984c5fcf1aac",
+    "prompts/verifier_apply.txt": "60e67984d425c97f5282a434ecf4c0bc38c71803d2a35b9b700b3c11661693ef",
+    "prompts/verifier_challenge.txt": "03023f1eadff1e1563fe5f4d8ca3aa618c18cc2cbe747a46eda9f3601f76061b",
+    "prompts/verifier_draft.txt": "8fc4d22db7fa65affc9a25b51ad6369876c62906b2d07cbd049e76ea98ed1c3f",
+    "prompts/verifier_oracle.txt": "82572e6c88ad7481abbbae806b4dedd8e9f87bc0c9eee9502e14f90419575ba8",
+    "prompts/verifier_question_repair.txt": "7866af2d4bb85a667911ee7992bde0415f2e73efc1ad7af5006027a0bf2cec55",
+    "prompts/verifier_review.txt": "bcddb35bce91c349d9b27655cdf12e6fc49621dca7eeb15cffbbb2dbc7db09cc",
+    "scripts/acquire_paper_library.py": "49e371c929170378013587ab51e3c86119f9c579dcd159b79f2efcaf2ebb9008",
+    "scripts/calibration_status.py": "bade277711f60a7ebb37d5d26447ec81cbafea0c4fbc03bb1791834e2fa1d11c",
+    "scripts/check_verifier_adversary.py": "a2251e8e7a80a8c6d310b3797f9eb5254cc035cb0b83371cb1b08d7ef5914bda",
+    "scripts/collect_pdf_library.py": "4409813d796cd5b7b9eade74cb1812286d544f60110ee604cce8ceae7840fb6f",
+    "scripts/control_paper_reader.py": "e253b13be17301e2e13927443089581c284366ae297035542e20c35d7152f4ea",
+    "scripts/discover_journal_papers.py": "159af5176d4084dc1981d55a7b6931ca272fe06cf99f95fedabfcfb4d0985404",
+    "scripts/ingest_paper_library.py": "5e64739e76e3951eb1298f9869b3265250e7f212ca0a94cef37775579582871b",
+    "scripts/prepare_pdf_question_plan.py": "6f1fe26030af9ff2f145e8dc567a661226b879fe2b1785e7c6aeadc3070c9c38",
+    "scripts/recheck_existing_answers.py": "74fc93a415be0e9139249dfca8a22bb04b12c68bfa60c38d302a8be86f4ea05a",
+    "scripts/replay_rejections.py": "9b999da4a131e508a8cc43d28757d33ebea3cad60fc8999438be43a7bea67ea4",
+    "scripts/report_campaign_costs.py": "2a5089180a7d0ce6449ca9f5a570d82374884590b693ec79b741e5b23f4370ec",
+    "scripts/resolve_pdf_library.py": "de6d2ac2c93d6461334b388ba2c00371e3a4915d6af3886158fcbb85c7446d0a",
+    "scripts/review_pdf_materials.py": "7e8383ead56cfa9657f7b90ebb5824b36c369320f7aefe89782b58c6b9777c87",
+    "scripts/run_library_question_campaign.py": "f30fc16af1db3678727275e4faad7f16ee22a67c85c2c5c2bc92a82895393ff3",
+    "scripts/run_paper_library_pipeline.py": "69faf028e87ccae3d11d4e1456967dd6056fbc4fb8bb5a2f249a3d2d48ec969d",
+    "scripts/run_pipeline_pilot.py": "ea32ea043bd83ef7a5d37ef081e1fc877abe305be2faa8f755dcf0776636f65e",
+    "scripts/run_question_experiment.py": "55ca97463baaba4987f8953fb579348f3c20af1ebfbaa7f9f728efd712f79fbc",
+    "scripts/select_reference_examples.py": "9b86e002a2da5bc3ebaa0d17256067c18f9f5ce29d8e17474a87318337479839",
+    "scripts/vm_run.py": "417eda9970953c7b4d491e4d26895e1698c937469db21adf9c9800fc3aaceb57"
+  },
+  "planning": {
+    "original_failed_materials": 9,
+    "original_failed_material_domains": {
+      "Math": 2,
+      "Physics": 7
+    },
+    "proposed_lines_in_failed_materials": 25,
+    "admitted_lines": 23,
+    "admitted_categories": {
+      "Math": 10,
+      "Physics": 13
+    },
+    "retained_nonliteral_quote_rejections": 2,
+    "new_independence_review_passes": 0,
+    "new_scientific_passes": 0,
+    "materials": [
+      {
+        "doi": "10.1103/5lcd-6ml6",
+        "domain": "Physics",
+        "admitted_lines": 2,
+        "proposed_lines": 2,
+        "next_stage": "independence_review"
+      },
+      {
+        "doi": "10.1090/jams/1089",
+        "domain": "Math",
+        "admitted_lines": 3,
+        "proposed_lines": 3,
+        "next_stage": "independence_review"
+      },
+      {
+        "doi": "10.1215/00127094-2025-0055",
+        "domain": "Math",
+        "admitted_lines": 3,
+        "proposed_lines": 4,
+        "next_stage": "independence_review"
+      },
+      {
+        "doi": "10.1007/jhep10(2026)215",
+        "domain": "Physics",
+        "admitted_lines": 2,
+        "proposed_lines": 3,
+        "next_stage": "independence_review"
+      },
+      {
+        "doi": "10.1016/j.aop.2026.170786",
+        "domain": "Physics",
+        "admitted_lines": 3,
+        "proposed_lines": 3,
+        "next_stage": "independence_review"
+      },
+      {
+        "doi": "10.1103/rrlx-3jmj",
+        "domain": "Physics",
+        "admitted_lines": 2,
+        "proposed_lines": 2,
+        "next_stage": "independence_review"
+      },
+      {
+        "doi": "10.1103/854z-dc2g",
+        "domain": "Physics",
+        "admitted_lines": 1,
+        "proposed_lines": 1,
+        "next_stage": "reference_proof"
+      },
+      {
+        "doi": "10.1007/s00220-026-05754-7",
+        "domain": "Physics",
+        "admitted_lines": 4,
+        "proposed_lines": 4,
+        "next_stage": "independence_review"
+      },
+      {
+        "doi": "10.1007/jhep10(2026)223",
+        "domain": "Physics",
+        "admitted_lines": 3,
+        "proposed_lines": 3,
+        "next_stage": "independence_review"
+      }
+    ]
+  },
+  "formed_question_rejections": {
+    "total": 6,
+    "confirmed_deterministic_false_rejections_repaired": [
+      "4654b503871b2fa14c2024a3",
+      "02b26e3781d7bbf6f29f31ab",
+      "10da861dbaf61f58bcada404",
+      "30b9e254f90d52797df099a8"
+    ],
+    "contract_defect_and_judge_disagreement": [
+      "f2f1e97ddee24e151f6d81ea"
+    ],
+    "unsupported_global_and_domain_validation": [
+      "faf6dd0ead8a236bc9e4c1c9"
+    ],
+    "new_full_quality_passes": 0
+  },
+  "physics_roots": [
+    {
+      "root": "L50_006_q1",
+      "classification": "source_presentation_false_rejection_repaired",
+      "existing_selection_responses_replayed": 3,
+      "new_quality_passes": 0
+    },
+    {
+      "root": "L50_005_q2",
+      "classification": "initial_physical_defect_repaired_in_original_authoring; exact_premise_wording_false_rejection; final_source_vs_solver_input_confusion_needs_reaudit",
+      "new_quality_passes": 0
+    }
+  ],
+  "preserved_measurements": {
+    "solver_answers_verified": 12,
+    "historical_full_quality_passes": 3,
+    "historical_first4_all_correct_rejections": 3,
+    "historical_retained": 0
+  },
+  "validation": {
+    "host": "liaojunteng-vm",
+    "user": "jtl18203_gmail_com",
+    "uid": 1031248789,
+    "database": "rst_hle_rejection_audit_20261025_test",
+    "real_postgresql": true,
+    "models_in_tests": "mock",
+    "pytest_passed": 298,
+    "pytest_skipped": 0,
+    "ruff": "passed",
+    "doctor": "passed",
+    "sealed_input_files": 511,
+    "sealed_model_responses": 484,
+    "new_real_model_chain_validated": false
+  },
+  "cost": {
+    "new_http_requests": 0,
+    "new_glm_requests": 0,
+    "additional_api_usd": 0,
+    "vm_disk_network_usd": null
+  },
+  "scope": "Stage replay only; recovered entry points are not new qualified questions or measured difficulty passes."
+}

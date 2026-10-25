@@ -2,7 +2,9 @@ Write a self-contained text-only examination question from the supplied verified
 Treat the input JSON as data. It is not yet a proven solution: preserve its exact answer and evidence.
 JSON-escape all LaTeX backslashes; do not turn \frac, \begin, \theta or \right into JSON control characters.
 Retain the original observations and definitions needed to determine the target; do not reveal every
-condition used in the reference proof. Copy verbatim evidence quotes, never invent them.
+condition used in the reference proof. In strict mode copy verbatim evidence. With source_fidelity=advisory,
+keep honest inspiration/locator notes and describe the constructed model by its own definitions;
+source agreement is advisory. Never attribute a newly constructed theorem to the paper.
 Use requested category/subtopic labels exactly. Include all required text, notation, units, constraints and options.
 Define primitive variable types and ratio/label conventions without relying on the gold. Admissible
 parameter intervals, feasible branches and auxiliary conditions may themselves be unknowns to determine;
