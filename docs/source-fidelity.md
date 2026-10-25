@@ -1,5 +1,7 @@
 # 论文启发与题目自洽分开验收
 
+首20份在新协议下继续生产、复用旧答卷与待审种子的方式见[续产](continuation.md)。
+
 用户2026-10-25调整口径：论文用于发现机制和构造材料，题目不必逐字或逐结论复现PDF。新论文库管线默认使用[新配置](../configs/library-source-inspired.toml)，`source_fidelity="advisory"`；旧配置缺省仍为`strict`，历史run不追溯改判。
 
 | 检查 | 新口径 |

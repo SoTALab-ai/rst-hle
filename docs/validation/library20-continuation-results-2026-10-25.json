@@ -1,0 +1,135 @@
+{
+  "run_id": "library20-continue-20261025-v1-part01",
+  "code_commit": "25f83b9",
+  "code_archive_sha256": "60ba34c69ca599229d300877a879ec278931b9d5912c8a855bbb182a16c43298",
+  "started_at": "2026-10-25T04:25:58Z",
+  "terminal_at": "2026-10-25 06:22:36.405916+00:00",
+  "verified_at": "2026-10-25T06:26:55.514159+00:00",
+  "state": "completed_with_errors",
+  "pilot_only": true,
+  "delivery_items": 0,
+  "materials": 20,
+  "original_proposals": 50,
+  "active_roots": 47,
+  "historical_closed_4_of_4_roots": 3,
+  "old_solver_answers_preserved_without_rerun": 12,
+  "formed_candidate_versions": 25,
+  "roots_without_persisted_candidate": 22,
+  "quality_rejected_versions": 17,
+  "validation_incomplete_versions": 5,
+  "pre_quality_passed": 3,
+  "first4_all_correct_rejected": 2,
+  "complete16_too_easy_rejected": 1,
+  "complete16_in_band": 0,
+  "retained_after_postreview_and_dedup": 0,
+  "solver_deadline_incorrect_samples": 0,
+  "new_solver_answer_samples": 24,
+  "by_category": {
+    "Math": {
+      "materials": 10,
+      "original_proposals": 35,
+      "historical_closed_4_of_4": 3,
+      "active_roots": 32,
+      "formed_candidate_versions": 13,
+      "roots_without_persisted_candidate": 19,
+      "pre_quality_passed": 1,
+      "quality_rejected_versions": 12,
+      "validation_incomplete_versions": 0,
+      "first4_all_correct_rejected": 1,
+      "complete16_versions": 0,
+      "complete16_correct_counts": [],
+      "complete16_in_band": 0,
+      "retained": 0,
+      "new_solver_answers": 4
+    },
+    "Physics": {
+      "materials": 10,
+      "original_proposals": 15,
+      "historical_closed_4_of_4": 0,
+      "active_roots": 15,
+      "formed_candidate_versions": 12,
+      "roots_without_persisted_candidate": 3,
+      "pre_quality_passed": 2,
+      "quality_rejected_versions": 5,
+      "validation_incomplete_versions": 5,
+      "first4_all_correct_rejected": 1,
+      "complete16_versions": 1,
+      "complete16_correct_counts": [
+        12
+      ],
+      "complete16_in_band": 0,
+      "retained": 0,
+      "new_solver_answers": 20
+    }
+  },
+  "incomplete_technical_categories": {
+    "generator_invalid_schema": 1,
+    "generator_invalid_verifier_coverage_or_anchor": 3,
+    "consistency_response_length": 1
+  },
+  "quality_rejection_reason_labels_nonexclusive": {
+    "verifier_adversary": 11,
+    "audit_failed": 1,
+    "substitution_unsupported": 2,
+    "bottleneck_mask_failed": 2,
+    "certificate_translation_unverified": 1,
+    "evidence_source_missing": 1
+  },
+  "authoring_rejected_stage_events_overlaps_persisted_candidates": 25,
+  "blueprint_repair_feedback_events": 77,
+  "candidate_repair_feedback_events": 36,
+  "main_http_by_role": {
+    "solver": {
+      "http_attempts": 24,
+      "known_cost_usd": 4.635842090000001,
+      "unknown_usage_attempts": 0
+    },
+    "generator": {
+      "http_attempts": 220,
+      "known_cost_usd": 1.2351207499999994,
+      "unknown_usage_attempts": 0
+    },
+    "consistency": {
+      "http_attempts": 528,
+      "known_cost_usd": 1.4125195000000017,
+      "unknown_usage_attempts": 0
+    },
+    "auditor": {
+      "http_attempts": 50,
+      "known_cost_usd": 0.159223,
+      "unknown_usage_attempts": 0
+    },
+    "judge": {
+      "http_attempts": 252,
+      "known_cost_usd": 0.060628175000000006,
+      "unknown_usage_attempts": 0
+    }
+  },
+  "reader": {
+    "complete_materials": 50,
+    "control_state": "stopped",
+    "new_question_campaign_for_additional50": false
+  },
+  "cost": {
+    "baseline_library_and_original_trial_usd": 6.358060365,
+    "continuation_planning_usd": 0.0020976,
+    "continuation_main_usd": 7.503333515,
+    "independent_gold_probe_usd": 0.0079766,
+    "incremental_including_diagnostic_usd": 7.513407715,
+    "cumulative_known_api_usd": 13.87146808,
+    "rmb_reference_exchange_rate": 6.7,
+    "cumulative_rmb_reference": 92.938836136,
+    "new_http_attempts_including_diagnostic": 1084,
+    "unknown_usage_attempts": 0,
+    "unsettled_reserved_attempts": 0,
+    "vm_disk_network_usd": null,
+    "known_api_cost_per_retained_question_usd": null
+  },
+  "coverage_notes": [
+    "质量退回含科学问题与验证合同未完成，未将全部退回认定为科学错题。",
+    "五条技术未完成均没有难度答卷；接口/格式/截断不计答错。",
+    "旧批次使用整代首轮屏障；逐题并行新调度未热部署，也未为验证重购GLM。",
+    "完整16次只有物理12/16，按偏简单拒绝；本批未进入1–8/16后审与留存。",
+    "同论文谱系相关，外部训练评测库去重未配置；费用为冻结价格usage估算，非供应商账单。"
+  ]
+}

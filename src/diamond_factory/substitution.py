@@ -183,7 +183,7 @@ class Arithmetic:
                 return lhs*rhs
             if isinstance(node.op, ast.Div):
                 return lhs/rhs
-            if isinstance(node.op, ast.Pow) and isinstance(lhs, Exact) and -8 <= (n := integer(rhs)) <= 8:
+            if isinstance(node.op, ast.Pow) and isinstance(lhs, Exact) and -16 <= (n := integer(rhs)) <= 16:
                 return lhs**n
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and not node.keywords and len(node.args) == 1:
             functions = {"mat": lambda x: Matrix(tuple(tuple(row) for row in x)),

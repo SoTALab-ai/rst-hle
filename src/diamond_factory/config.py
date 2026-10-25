@@ -27,6 +27,7 @@ class Settings(StrictModel):
     judge: ModelConfig
     judge_schema_repairs: int = Field(default=1, ge=0, le=2)
     consistency_schema_repairs: int = Field(default=1, ge=0, le=2)
+    certificate_max_repairs: int = Field(default=0, ge=0, le=2)
     early_screen_samples: Literal[0, 4] = 0
     difficulty_profile_path: str | None = None
     require_solution_design: bool = False
@@ -34,9 +35,11 @@ class Settings(StrictModel):
     preverify_blueprint: bool = False
     require_stepwise_blueprint_review: bool = False
     require_known_result: bool = False
+    use_locked_proof_draft: bool = False
     source_fidelity: Literal["strict", "advisory"] = "strict"
     require_bottleneck_mask: bool = False
     require_verifier_adversary: bool = False
+    freeze_question_at_verifier: bool = True
     verifier_max_revisions: int = Field(default=2, ge=0, le=2)
     quotas_path: str = "configs/quotas.v3.json"
     prompts_dir: str = "prompts"
@@ -69,6 +72,8 @@ class Settings(StrictModel):
 
     @model_validator(mode="after")
     def validate_role_capacity(self):
+        if self.use_locked_proof_draft and not self.require_known_result:
+            raise ValueError("Locked proof drafts require a locked known result")
         if self.source_fidelity == "advisory" and not (
                 self.require_stepwise_blueprint_review and self.require_known_result
                 and self.require_verifier_adversary):

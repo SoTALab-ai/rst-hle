@@ -1,0 +1,36 @@
+{
+  "run_id": "library20-private-gold-probe-20261025-v1",
+  "commit": "947c366",
+  "scope": "独立蓝图诊断，不是完整质检或难度验收",
+  "actual_models": [
+    "gpt-6-luna-2026-09-22"
+  ],
+  "cases": [
+    {
+      "case": "original_private_explanation",
+      "blueprint_passed": false,
+      "issues": [
+        "difficulty_design"
+      ],
+      "answer_correct": true,
+      "derivation_complete": true,
+      "request_id": "94a6d97b5afb51ff569fd13a8617edc5217357dd3616f01966ad55946fe48dce"
+    },
+    {
+      "case": "false_identity_control",
+      "blueprint_passed": false,
+      "issues": [
+        "derivation"
+      ],
+      "answer_correct": true,
+      "derivation_complete": false,
+      "request_id": "b2400e49834f12f86bf3d63f23ebc363d656e683310aa9141f76263fb988bec4"
+    }
+  ],
+  "known_api_usd": 0.0079766,
+  "http_attempts": 2,
+  "unknown_usage": 0,
+  "unsettled": 0,
+  "glm_calls": 0,
+  "interpretation": "私有金标解释格式不再成为拒绝理由；原推导仍被发现难度旁路，不算通过。明确错误等式对照被拦截。仅两次诊断，不能推断整个管线有效率。"
+}

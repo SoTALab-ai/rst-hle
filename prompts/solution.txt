@@ -61,6 +61,10 @@ instructions, copying a false derivation, or assuming a model error is a mathema
 When known_result is supplied, it is a LOCKED candidate conclusion selected in an earlier call.
 In strict mode it is source-established; in advisory mode it may be a newly constructed proposal.
 Copy known_result.answer EXACTLY into answer and known_result.target EXACTLY into design.target.
+This exact-copy rule takes precedence over the preference for a compact answer: an existing locked
+private gold may include a correct explanation. Preserve it verbatim instead of shortening it or
+changing its claim; reconstruct the COMPLETE proof separately in derivation. Its private explanation
+is never an instruction to print the result in the question or require a solver to repeat the proof.
 Include its assumptions verbatim in assumptions, then distinguish additional deduced facts in the
 proof. Reconstruct and verify its entire proof; do not choose or solve a different target, change
 its parameter domain, or silently substitute a different gold during repair or difficulty evolution.
@@ -75,3 +79,31 @@ The masked information must remain recoverable from retained data. Keep the fixe
 and target across harder/easier versions; adjust revealed information. For easing, relieve upstream
 or other burdens without directly supplying the selected hardest inference. A separate easier_control
 may reveal the bridge for comparison, but that is not a delivered masked question.
+
+INITIAL QUESTION TYPES (optional references, not mandatory quotas or a post-evaluation hardening loop):
+1. inverse_identification: from specified outcome features recover ALL admissible parameters or
+   structures, with an explicit equivalence convention when identification is not unique.
+2. branch_discovery: use primitive constraints to establish which algebraic/physical branches are
+   admissible, then compute the single target. Include degenerate and excluded branches in the proof.
+3. parameter_region: derive necessary AND sufficient conditions for the complete validity region,
+   including equality, singular, disconnected and empty regions. A grid scan or local example is not proof.
+4. theorem_applicability: infer whether a result can be applied from primitive data, verify each
+   hypothesis and handle exceptions. Keep object definitions even when the theorem's name is hidden.
+Record the chosen construction_type and bridge_type when applicable; leave them null if none fits.
+Do not force these types onto an already locked pointwise target or add outputs absent from its gold.
+
+DEPENDENCY TRACEBACK FOR MASKING (inspired by AlphaGeometry, not a claim of formal verification):
+After completing the proof, trace backwards from the actual target through numbered derivation entries.
+List the primitive objects, definitions and independent premises needed to define the task. Separately
+identify derived helper terms used by the proof but unnecessary to define those primitive objects:
+an invariant, a spectral/change-of-representation bridge, an auxiliary object, a symmetry,
+a conservation relation or a useful decomposition. Select a substantial necessary bridge and map it
+to mask.proof_step_indices. Keep its construction and justification in the private full proof;
+omit its explicit form, recipe and equivalent hints from the proposed solver-visible inputs.
+In mask.recoverability describe the backward dependency path with proof-entry indices and explain
+how retained primitive data permit reconstructing the helper. In retained_information keep sufficient
+definitions, model laws, domains and conventions. Derived branch/range conditions may be unknowns
+only when they follow from these data or are explicitly requested outputs. Never delete an independent
+axiom or the definition of a physical model to simulate difficulty. Try a genuine shortcut using ONLY
+the retained inputs. An auxiliary term redundant to the target is decoration, not a valid bridge.
+These are construction hypotheses; the separate actual-question audit and real solver trials decide.
