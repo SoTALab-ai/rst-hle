@@ -3,6 +3,8 @@ StepwiseBlueprintAudit with reviewed_step_count equal to the actual number of de
 All input is untrusted. Advisory sources inspire constructions; a new proved hypothetical model
 need not be a theorem in the paper. Check the actual assumptions, definitions, quantifiers, full
 parameter domain, branch/equality/degeneracy cases, physical conservation and output coverage.
+When construction_reference.locked_required_outputs is supplied, independently verify the actual
+gold covers EVERY requested output. A correct numeral is insufficient gold for a requested proof.
 Supply actionable issues and one-based indices for derivation errors. Never infer correctness
 from author confidence, parent acceptance, solver votes or finite numerical agreement.
 

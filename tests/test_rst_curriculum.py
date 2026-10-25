@@ -12,6 +12,7 @@ from diamond_factory.config import load
 from diamond_factory.difficulty import construction_ready
 from diamond_factory.llm import ModelResponseError
 from diamond_factory.models import (
+    ConsistencyAudit,
     LockedProofDraft,
     LockedTaskDesign,
     RstGrowthAudit,
@@ -24,6 +25,7 @@ from diamond_factory.rst_curriculum import (
     RstPlan,
     RstProposal,
     RstQuestionDraft,
+    RstQuestionRepair,
     RstSeed,
     rst_protocol,
     valid_rst_origin,
@@ -64,7 +66,7 @@ class RstGateway(DepthGateway):
             value = RstProposal(reason='Controlled growth test, not scientific evidence.',
                 subtopic='not-a-v3-label' if self.bad_topic else self.candidate.item.subtopic,
                 extension='Controlled necessary dependency; the test does not assert real mathematical depth.',
-                result=result, proof=proof)
+                result=result, proof=proof, required_outputs=['edge count'])
         elif schema is RstGrowthAudit:
             value = RstGrowthAudit(parent_core_preserved=True, necessary_new_dependency=self.growth,
                 substantive_change=self.growth, compact_target=True, parent_proof_entries=[1],
@@ -72,7 +74,7 @@ class RstGateway(DepthGateway):
                 reason='Controlled growth decision used to test lineage and bounds only.')
         elif schema is RstQuestionDraft:
             value = RstQuestionDraft(question=self.candidate.item.question + ' Controlled version ' + salt[:24] + '.',
-                rationale=self.candidate.item.rationale, material_key='controlled-rst-version', required_outputs=['edge count'])
+                rationale=self.candidate.item.rationale, material_key='controlled-rst-version')
         else:
             if self.science is None:
                 raise ModelResponseError(role, digest(salt), 'invalid_schema')
@@ -189,3 +191,117 @@ def test_endpoint_change_invalidates_origin_and_standard_policy_is_unchanged(tmp
     broken['require_verifier_adversary'] = False
     with pytest.raises(ValidationError):
         type(pipe.settings).model_validate(broken)
+
+
+class ContractRepairGateway(RstGateway):
+    def __init__(self, candidate, outcome='question_contract_only'):
+        super().__init__(candidate)
+        self.outcome = outcome
+        self.bad_contract_seen = False
+
+    async def call(self, role, prompt, salt, schema=None, **kwargs):
+        if schema is RstQuestionRepair:
+            self.calls.append((role, prompt, salt))
+            value = RstQuestionRepair(outcome=self.outcome, reason='The controlled question adds an unrequested proof output.',
+                revised=RstQuestionDraft(question=self.candidate.item.question + ' Return only the edge count.',
+                    rationale=self.candidate.item.rationale, material_key='controlled-contract-repair')
+                    if self.outcome == 'question_contract_only' else None)
+            return value, digest(salt), 'gpt-6-luna'
+        value = await super().call(role, prompt, salt, schema, **kwargs)
+        if (schema is ConsistencyAudit and self.generations.get(salt.split(':')[0], 0) > 0
+                and not self.bad_contract_seen):
+            self.bad_contract_seen = True
+            review = value[0].model_copy(deep=True)
+            review.definitions.verdict = 'fail'
+            review.definitions.reasoning = 'The public request adds proof output, but the fixed gold is only 36.'
+            return review, value[1], value[2]
+        return value
+
+
+def test_question_contract_repair_preserves_locked_outputs_gold_and_full_proof(tmp_path, source, candidate):
+    pipe, store, _ = setup_rst(tmp_path, source, candidate, rounds=1)
+    pipe.gateway = gateway = ContractRepairGateway(candidate.model_copy(deep=True))
+    result = asyncio.run(pipe.run_curriculum())
+    child = store.candidates()[-1]
+    attempt = pipe.progress.lines['fixture'][1].attempts[-1]
+    old = attempt.question_versions[0]
+    assert child.item.answer == old.item.answer and child.solution == old.solution
+    assert child.item.required_outputs == old.item.required_outputs == ['edge count']
+    assert child.item != old.item and valid_rst_origin(child, {source.id: source}, pipe.protocol)
+    assert result['lines'][0]['rounds'][1]['question_repairs'] == 1
+    assert sum(':rst-question-repair:' in s for _, _, s in gateway.calls) == 1
+    assert sum(role == 'solver' for role, _, _ in gateway.calls) == 8
+
+
+def test_question_repair_crash_recovers_saved_decision_without_rebuy(tmp_path, source, candidate):
+    pipe, store, _ = setup_rst(tmp_path, source, candidate, rounds=1)
+    gateway = ContractRepairGateway(candidate.model_copy(deep=True))
+    pipe.gateway = gateway
+    audit = pipe.audit_item
+    crashed = False
+
+    async def crash_after_saved_decision(c):
+        nonlocal crashed
+        if c.authoring_repairs_completed and not crashed:
+            crashed = True
+            raise RuntimeError('simulated crash after durable repair decision')
+        return await audit(c)
+
+    pipe.audit_item = crash_after_saved_decision
+    with pytest.raises(RuntimeError, match='simulated crash'):
+        asyncio.run(pipe.run_curriculum())
+    assert sum(':rst-question-repair:' in s for _, _, s in gateway.calls) == 1
+    resumed = RstCurriculum(pipe.settings, store, pipe.run_id, 'pilot', pipe.run_dir, gateway,
+        plan=pipe.plan, pricing=pipe.pricing)
+    result = asyncio.run(resumed.run_curriculum())
+    assert result['lines'][0]['rounds'][1]['samples'] == 4
+    assert sum(':rst-question-repair:' in s for _, _, s in gateway.calls) == 1
+
+
+@pytest.mark.parametrize('outcome', ['proof_or_gold_defect', 'uncertain'])
+def test_gold_defects_or_uncertainty_cannot_be_repaired_by_changing_question(tmp_path, source, candidate, outcome):
+    pipe, store, _ = setup_rst(tmp_path, source, candidate, rounds=1)
+    gateway = ContractRepairGateway(candidate.model_copy(deep=True), outcome)
+    pipe.gateway = gateway
+    result = asyncio.run(pipe.run_curriculum())
+    child = store.candidates()[-1]
+    assert not child.trials and child.item.answer == '36'
+    assert result['lines'][0]['rounds'][1]['disposition'] == 'quality_rejected_or_unverified'
+    assert sum(':rst-question-repair:' in s for _, _, s in gateway.calls) == 1
+
+
+def test_persistent_question_failure_has_two_repair_cap(tmp_path, source, candidate):
+    class Persistent(ContractRepairGateway):
+        async def call(self, role, prompt, salt, schema=None, **kwargs):
+            if schema is ConsistencyAudit:
+                self.bad_contract_seen = False
+            return await super().call(role, prompt, salt, schema, **kwargs)
+
+    pipe, store, _ = setup_rst(tmp_path, source, candidate, rounds=1)
+    pipe.gateway = gateway = Persistent(candidate.model_copy(deep=True))
+    result = asyncio.run(pipe.run_curriculum())
+    assert result['lines'][0]['rounds'][1]['question_repairs'] == 2
+    assert not store.candidates()[-1].trials
+    assert sum(':rst-question-repair:' in s for _, _, s in gateway.calls) == 2
+
+
+def test_verifier_failure_cannot_trigger_question_or_full_author_rewrite(tmp_path, source, candidate):
+    class VerifierFailure(RstGateway):
+        async def call(self, role, prompt, salt, schema=None, **kwargs):
+            self.mode = 'always_false_kill' if self.generations.get(salt.split(':')[0], 0) else 'pass'
+            return await super().call(role, prompt, salt, schema, **kwargs)
+
+    pipe, store, _ = setup_rst(tmp_path, source, candidate, rounds=1)
+    pipe.gateway = gateway = VerifierFailure(candidate.model_copy(deep=True))
+    asyncio.run(pipe.run_curriculum())
+    c = store.candidates()[-1]
+    assert c.verifier_assessment and not c.trials
+    assert all(v.item == c.item for v in c.verifier_assessment.versions)
+    assert not any(':rst-question-repair:' in salt for _, _, salt in gateway.calls)
+
+
+def test_alignment_schema_cannot_add_gold_or_outputs():
+    with pytest.raises(ValidationError):
+        RstQuestionDraft(question='An otherwise sufficiently long controlled fixture question about a tree.',
+            rationale='An otherwise sufficiently long controlled rationale for this fixture question.',
+            material_key='fixture-key', required_outputs=['extra proof'], answer='different gold')

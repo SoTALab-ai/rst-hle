@@ -12,7 +12,7 @@ from .consistency import QualityRejected
 from .costs import measure_cost
 from .experiment import QuestionExperiment
 from .gates import sample_outcomes
-from .llm import BudgetExceeded, ModelResponseError
+from .llm import BudgetExceeded, CacheIntegrityError, ModelResponseError
 from .models import (
     Audit,
     Candidate,
@@ -81,6 +81,7 @@ class RstProposal(StrictModel):
     reason: str = Field(min_length=20)
     subtopic: str
     extension: str = Field(min_length=30)
+    required_outputs: list[str] = Field(default_factory=list)
     result: KnownResult | None
     proof: LockedProofDraft | None
 
@@ -90,6 +91,8 @@ class RstProposal(StrictModel):
             raise ValueError('Proposed needs both result and proof; unavailable needs neither')
         if self.outcome == 'unavailable' and (self.result or self.proof):
             raise ValueError('Unavailable must not invent a partial result')
+        if self.outcome == 'proposed' and not self.required_outputs:
+            raise ValueError('A proposed target must lock its required outputs before alignment')
         return self
 
 
@@ -97,7 +100,18 @@ class RstQuestionDraft(StrictModel):
     question: str = Field(min_length=50)
     rationale: str = Field(min_length=50)
     material_key: str = Field(min_length=5)
-    required_outputs: list[str] = Field(min_length=1)
+
+
+class RstQuestionRepair(StrictModel):
+    outcome: Literal['question_contract_only', 'proof_or_gold_defect', 'uncertain']
+    reason: str = Field(min_length=20)
+    revised: RstQuestionDraft | None
+
+    @model_validator(mode='after')
+    def bounded_scope(self):
+        if (self.outcome == 'question_contract_only') != (self.revised is not None):
+            raise ValueError('Only a question-contract repair may emit a revised question')
+        return self
 
 
 class RstSeed(StrictModel):
@@ -136,6 +150,15 @@ class RstAttempt(StrictModel):
     blueprint: StepwiseBlueprintAudit | None = None
     growth: RstGrowthAudit | None = None
     errors: list[str] = Field(default_factory=list)
+    question_versions: list[Candidate] = Field(default_factory=list, max_length=2)
+    question_repair_requests: list[str] = Field(default_factory=list, max_length=2)
+    question_repair_decisions: list[RstQuestionRepair] = Field(default_factory=list, max_length=2)
+
+    @model_validator(mode='after')
+    def complete_question_history(self):
+        if not (len(self.question_versions) == len(self.question_repair_requests) == len(self.question_repair_decisions)):
+            raise ValueError('Question repair checkpoint must preserve snapshot, decision and request together')
+        return self
 
 
 class RstRound(StrictModel):
@@ -189,6 +212,7 @@ class RstCurriculum(Pipeline):
                 rows.append({"generation": record.generation, "parent_id": record.parent_id,
                     "candidate_id": record.candidate_id, "disposition": record.disposition,
                     "proposal_attempts": len(record.attempts), "proposal_errors": [a.errors for a in record.attempts],
+                    "question_repairs": sum(len(a.question_repair_requests) for a in record.attempts),
                     "samples": len(sample_outcomes(c)) if c else 0, "answered": len(c.trials) if c else 0,
                     "deadline_incorrect": len(c.deadline_outcomes) if c else 0,
                     "correct": sum(t.judgment.correct == 'yes' for t in c.trials) if c else 0,
@@ -210,7 +234,8 @@ class RstCurriculum(Pipeline):
             s for s in self.store.sources() if s.id == c.source_ids[0])
         c.audit, _, _ = await self.gateway.call('auditor', self.prompts['audit'] + '\n' + json.dumps({
             "item": c.item.model_dump(), "solution": c.solution.model_dump(), "source_fidelity": c.source_fidelity,
-            "source": source.model_dump()}, ensure_ascii=False), c.id + ':rst-question-audit', Audit)
+            "known_result": c.known_result.model_dump(), "locked_required_outputs": c.item.required_outputs,
+            "source": source.model_dump()}, ensure_ascii=False), c.id + ':rst-question-audit:' + digest(c.item.model_dump()), Audit)
 
     async def seed(self, spec, row):
         source = next(s for s in self.store.sources() if s.id == spec.candidate.source_ids[0])
@@ -287,7 +312,8 @@ class RstCurriculum(Pipeline):
                     self.checkpoint()
                     continue
                 review, bid, bmodel = await self.review_blueprint(solution, source.model_dump(), target,
-                    cid + ':rst-child-science', proposal.result)
+                    cid + ':rst-child-science', proposal.result,
+                    construction_reference={'locked_required_outputs': proposal.required_outputs})
                 attempt.blueprint = review
                 if not review.passed(source_fidelity='advisory'):
                     attempt.errors = ['child_science_rejected']
@@ -305,10 +331,11 @@ class RstCurriculum(Pipeline):
                     continue
                 draft, aid, _ = await self.gateway.call('generator', self.prompts['rst_align'] + '\n' +
                     json.dumps({"solution": solution.model_dump(), "known_result": proposal.result.model_dump(),
-                        "target": target}, ensure_ascii=False), cid + ':rst-align', RstQuestionDraft)
+                        "target": target, "locked_required_outputs": proposal.required_outputs},
+                        ensure_ascii=False), cid + ':rst-align', RstQuestionDraft)
                 item = Question(**draft.model_dump(), answer=solution.answer, answer_type='exactMatch',
                     category=category, subtopic=proposal.subtopic, assumptions=solution.assumptions,
-                    evidence=solution.evidence)
+                    evidence=solution.evidence, required_outputs=proposal.required_outputs)
                 c = Candidate(id=cid, parent_id=parent.id, root_id=parent.root_id, generation=row.generation,
                     operator=operator, source_ids=[source.id], source_fidelity='advisory', solution=solution,
                     item=item, known_result=proposal.result, blueprint_audit=review, blueprint_request=bid,
@@ -333,8 +360,55 @@ class RstCurriculum(Pipeline):
         self.checkpoint()
         return None
 
+    async def prepare_for_measure(self, c, row):
+        while True:
+            attempt = row.attempts[-1] if row.attempts else None
+            if attempt and attempt.question_repair_decisions:
+                decision = attempt.question_repair_decisions[-1]
+                if decision.outcome != 'question_contract_only':
+                    return False
+                old = attempt.question_versions[-1]
+                rid = attempt.question_repair_requests[-1]
+                expected = Question.model_validate({**old.item.model_dump(), **decision.revised.model_dump()})
+                if c.solution != old.solution or c.known_result != old.known_result:
+                    raise CacheIntegrityError('Locked RST proof/gold changed during question repair')
+                if c.item == old.item and c.rst_origin.alignment_request == old.rst_origin.alignment_request:
+                    c.item = expected
+                    c.consistency = c.bottleneck_assessment = c.preflight_repair = None
+                    c.status, c.reasons = 'quality_seed', []
+                    c.authoring_repairs_completed = len(attempt.question_repair_requests)
+                    c.rst_origin.alignment_request = rid
+                    c.rst_origin.contract_sha256 = contract(c)
+                    await self.audit_item(c)
+                    self.store.save(c)
+                    self.log('rst_question_contract_repaired', candidate=c.id,
+                        revision=c.authoring_repairs_completed, golden_changed=False,
+                        proof_changed=False, verifier_entered=False)
+                    self.checkpoint()
+                elif c.item != expected or c.rst_origin.alignment_request != rid:
+                    raise CacheIntegrityError('Unrecorded RST question mutation during repair recovery')
+            if await self.preflight(c):
+                return True
+            # 子题无样本且尚未进入verifier才可定向修题面；证书失败不能让作者改题规避。
+            advice = c.preflight_repair
+            repairable = ((advice and advice.owner == 'author') or
+                          (c.reasons and all(r.startswith('audit_failed:') for r in c.reasons)))
+            if (not attempt or not repairable or c.trials or c.deadline_outcomes or c.verifier_assessment
+                    or c.verifier_history or len(attempt.question_repair_requests) >= min(2, self.settings.max_repairs)):
+                return False
+            index = len(attempt.question_repair_requests)
+            decision, rid, _ = await self.gateway.call('generator', self.prompts['rst_question_repair'] + '\n' +
+                json.dumps({'item': c.item.model_dump(), 'known_result': c.known_result.model_dump(),
+                    'solution': c.solution.model_dump(), 'locked_required_outputs': c.item.required_outputs,
+                    'failures': c.reasons, 'classification': advice.model_dump() if advice else None},
+                    ensure_ascii=False), f'{c.id}:rst-question-repair:{index}', RstQuestionRepair)
+            attempt.question_versions.append(c.model_copy(deep=True))
+            attempt.question_repair_requests.append(rid)
+            attempt.question_repair_decisions.append(decision)
+            self.checkpoint()
+
     async def measure(self, c, row):
-        if not await self.preflight(c):
+        if not await self.prepare_for_measure(c, row):
             row.disposition = 'quality_rejected_or_unverified'
             self.checkpoint()
             return False
