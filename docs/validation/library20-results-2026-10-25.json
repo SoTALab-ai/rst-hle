@@ -1,0 +1,90 @@
+{
+  "run_id": "library20-theory-20261025-v1-part01",
+  "code_commit": "9f1eeda",
+  "state": "completed_with_errors",
+  "finished_at_cst": "2026-10-25T03:34:11+08:00",
+  "reconciled_at_cst": "2026-10-25T10:40:09+08:00",
+  "materials_attempted": 20,
+  "material_domains": {
+    "Math": 10,
+    "Physics": 10
+  },
+  "materials_planned": 11,
+  "materials_planning_failed": 9,
+  "planning_failures": {
+    "v3_category_subtopic_mismatch": 3,
+    "source_quote_not_verbatim": 6
+  },
+  "planned_independent_roots": 25,
+  "planned_categories": {
+    "Math": 23,
+    "Physics": 2
+  },
+  "roots_without_formed_candidate": 16,
+  "formed_versions": 9,
+  "formed_categories": {
+    "Math": 9,
+    "Physics": 0
+  },
+  "complete_prefilter_pass_including_verifier": 3,
+  "quality_rejected_versions": 3,
+  "verifier_coverage_or_anchor_incomplete_versions": 3,
+  "solver_questions": 3,
+  "solver_attempts": 12,
+  "solver_correct_answers": 12,
+  "solver_deadlines": 0,
+  "per_question_results": [
+    {
+      "correct": 4,
+      "sample_count": 4,
+      "decision": "too_easy_rejected"
+    },
+    {
+      "correct": 4,
+      "sample_count": 4,
+      "decision": "too_easy_rejected"
+    },
+    {
+      "correct": 4,
+      "sample_count": 4,
+      "decision": "too_easy_rejected"
+    }
+  ],
+  "full16_questions": 0,
+  "difficulty_qualified_roots": 0,
+  "retained_after_pipeline": 0,
+  "delivery_items": 0,
+  "reader": {
+    "state": "stopped_at_material_limit",
+    "complete_materials": 50,
+    "domains": {
+      "Math": 27,
+      "Physics": 23
+    },
+    "stopped_at_cst": "2026-10-25T03:17:13+08:00",
+    "extra_from_inflight": 0,
+    "cancelled_inflight_calls": 0,
+    "http_attempts_durably_received": 1444,
+    "denied_unsubmitted_reservations": 37
+  },
+  "cost": {
+    "currency": "USD",
+    "known_cost_usd": 6.358060365,
+    "rmb_reference": 42.5990044455,
+    "material_acquisition_probe_reading_usd": 4.623406775,
+    "material_acquisition_probe_reading_rmb": 30.9768253925,
+    "planning_and_question_trial_usd": 1.73465359,
+    "planning_and_question_trial_rmb": 11.622179053,
+    "http_attempts": 2153,
+    "unknown_usage_attempts": 0,
+    "unsettled_reserved_attempts": 0,
+    "vm_storage_network_cost": null,
+    "note": "Returned usage at frozen gateway prices, not an invoice. Failed/rejected/retried calls included."
+  },
+  "limits": [
+    "Same-paper candidates are correlated.",
+    "Machine QA is not expert or formal scientific proof.",
+    "Verifier incomplete/translation unsupported is not a proved scientific error.",
+    "No 16-sample difficulty estimate obtained."
+  ]
+}
