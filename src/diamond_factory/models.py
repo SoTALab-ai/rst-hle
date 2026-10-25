@@ -164,10 +164,12 @@ class BlueprintAudit(StrictModel):
     reviewed_step_count: int | None = Field(default=None, ge=1)
     issues: list[BlueprintIssue] = Field(default_factory=list)
     assumption_correspondence: list[AssumptionCorrespondence] = Field(default_factory=list)
+    source_notes: list[str] = Field(default_factory=list)
 
-    def passed(self):
-        return (self.valid and self.answer_correct and self.derivation_complete and self.source_grounded
-                and not self.issues)
+    def passed(self, *, source_fidelity="strict"):
+        issues = [i for i in self.issues if source_fidelity == "strict" or i.part != "source"]
+        return (self.valid and self.answer_correct and self.derivation_complete
+                and (self.source_grounded or source_fidelity == "advisory") and not issues)
 
 
 class StepwiseBlueprintAudit(BlueprintAudit):
@@ -176,7 +178,7 @@ class StepwiseBlueprintAudit(BlueprintAudit):
 
     @model_validator(mode="after")
     def actionable_issues(self):
-        if not self.passed() and not self.issues:
+        if not (self.valid and self.answer_correct and self.derivation_complete) and not self.issues:
             raise ValueError("A rejected proof must include actionable issues")
         for issue in self.issues:
             if issue.part == "derivation" and issue.step_index is None:
@@ -556,6 +558,8 @@ class Candidate(StrictModel):
     generation: int
     operator: str
     source_ids: list[str]
+    source_fidelity: Literal["strict", "advisory"] = "strict"
+    source_notes: list[str] = Field(default_factory=list)
     solution: Solution
     item: Question
     audit: Audit

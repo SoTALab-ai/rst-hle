@@ -5,10 +5,10 @@ from .gates import correct_count, evidence_errors, sample_outcomes
 from .models import digest
 
 
-def known_result_errors(result, sources, solution=None, blueprint=None):
+def known_result_errors(result, sources, solution=None, blueprint=None, *, source_fidelity="strict"):
     if result is None:
         return ["missing_known_result"]
-    errors = evidence_errors(result.evidence, sources)
+    errors = evidence_errors(result.evidence, sources) if source_fidelity == "strict" else []
     if result.source_id not in sources or any(e.source_id != result.source_id for e in result.evidence):
         errors.append("known_result_source_mismatch")
     if solution is not None:
@@ -21,7 +21,7 @@ def known_result_errors(result, sources, solution=None, blueprint=None):
         links = blueprint.assumption_correspondence if blueprint else []
         mapped = {a.source_assumption for a in links if a.equivalent
                   and a.solution_assumption in solution.assumptions}
-        if missing and (not blueprint or not blueprint.passed()
+        if missing and (not blueprint or not blueprint.passed(source_fidelity=source_fidelity)
                         or blueprint.reviewed_step_count != len(solution.derivation)
                         or len({a.source_assumption for a in links}) != len(links)
                         or not missing <= mapped):
@@ -43,15 +43,18 @@ def bottleneck_mask_errors(solution):
 
 
 def bottleneck_input(candidate, sources):
-    return digest({"item": candidate.item.model_dump(), "solution": candidate.solution.model_dump(),
+    data = {"item": candidate.item.model_dump(), "solution": candidate.solution.model_dump(),
                    "known_result": candidate.known_result.model_dump() if candidate.known_result else None,
-                   "sources": {sid: sources[sid].sha256 for sid in candidate.source_ids}})
+                   "sources": {sid: sources[sid].sha256 for sid in candidate.source_ids}}
+    if candidate.source_fidelity != "strict":
+        data["source_fidelity"] = candidate.source_fidelity
+    return digest(data)
 
 
-def blueprint_stamp(solution, source_data, target, known_result, prompt, model_config):
+def blueprint_stamp(solution, source_data, target, known_result, prompt, model_config, source_fidelity="strict"):
     return digest({"solution": solution.model_dump(), "source": source_data, "target": target,
                    "known_result": known_result.model_dump() if known_result else None,
-                   "prompt": prompt, "model": model_config,
+                   "prompt": prompt, "model": model_config, "source_fidelity": source_fidelity,
                    "contract_code": {name: Path(__file__).with_name(name).read_text()
                                      for name in ("difficulty.py", "provenance.py")}})
 
@@ -70,22 +73,26 @@ def valid_bottleneck(candidate, sources, prompt=None, model_config=None):
 
 def construction_ready(candidate, sources, settings, prompts):
     """导出只检查现有有效收据，不购买新的审查，也不接受旧通过标记。"""
+    if candidate.source_fidelity != settings.source_fidelity:
+        return False
     if settings.require_verifier_adversary:
         from .verifier import has_valid_verifier, protocol_hash
         if not has_valid_verifier(candidate, sources, expected_protocol=protocol_hash(prompts, settings)):
             return False
     if settings.require_known_result:
         result = candidate.known_result
-        if (known_result_errors(result, sources, candidate.solution, candidate.blueprint_audit)
+        if (known_result_errors(result, sources, candidate.solution, candidate.blueprint_audit,
+                                source_fidelity=settings.source_fidelity)
                 or candidate.source_ids != [result.source_id]
-                or not candidate.blueprint_audit or not candidate.blueprint_audit.passed()
+                or not candidate.blueprint_audit or not candidate.blueprint_audit.passed(
+                    source_fidelity=settings.source_fidelity)
                 or candidate.blueprint_audit.reviewed_step_count != len(candidate.solution.derivation)):
             return False
         source = sources[result.source_id]
         expected = blueprint_stamp(candidate.solution,
             {**source.model_dump(), "text": source.text[:settings.max_source_chars]},
             {"category": candidate.item.category, "subtopic": candidate.item.subtopic}, result,
-            prompts["blueprint_audit"], settings.consistency.model_dump())
+            prompts["blueprint_audit"], settings.consistency.model_dump(), settings.source_fidelity)
         if candidate.blueprint_fingerprint != expected:
             return False
     return (not settings.require_bottleneck_mask or valid_bottleneck(

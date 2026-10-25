@@ -202,6 +202,33 @@ def test_pg_invalid_sibling_does_not_drop_valid_roots_or_skip_review(pg, tmp_pat
     assert 'Unsupported quotation' not in json.dumps(calls[1])
 
 
+def test_pg_advisory_planning_keeps_nonliteral_inspiration_as_note(pg, tmp_path, monkeypatch):
+    import httpx
+    from test_gateway import install_mock
+
+    from diamond_factory.config import load
+
+    settings = load('configs/library-source-inspired.toml')
+    proposal = line().model_copy(update={'source_quote': 'A self-contained constructed variant inspired by the source.'})
+    calls = []
+
+    def handler(request):
+        payload = json.loads(request.content)
+        calls.append(payload)
+        assert 'source_fidelity' in payload['messages'][-1]['content']
+        return httpx.Response(200, json={'model': payload['model'], 'choices': [{'message': {'content':
+            PaperOutline(outcome='ready', lines=[proposal],
+                reason='A hypothetical construction will undergo full independent proof review.').model_dump_json()},
+            'finish_reason': 'stop'}], 'usage': {'prompt_tokens': 10, 'completion_tokens': 20}})
+
+    install_mock(monkeypatch, handler)
+    milestone = MaterialMilestone(library_run_id='library', required_materials=1, papers=[paper()])
+    plans, report = asyncio.run(plan_questions(pg, milestone, settings, rates(), tmp_path/'planning', 'plan'))
+    assert len(plans[0].roots) == 1 and len(calls) == 1
+    assert report['papers'][0]['line_admission'][0]['source_notes']
+    assert 'INSPIRATION' in plans[0].roots[0].focus and not pg.candidates()
+
+
 def test_material_versions_cannot_inflate_trigger_count():
     first = paper()
     revision = first.model_copy(update={"id": "different-metadata-version", "doi": "10.1000/FIXTURE"})

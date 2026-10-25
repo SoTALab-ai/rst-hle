@@ -31,9 +31,13 @@ def evidence_errors(evidence, sources: dict[str, Source]) -> list[str]:
     return errors
 
 
-def static_errors(candidate: Candidate, sources: dict, quotas: dict) -> list[str]:
+def static_errors(candidate: Candidate, sources: dict, quotas: dict, *, source_fidelity=None) -> list[str]:
     q = candidate.item
-    errors = evidence_errors(q.evidence + candidate.solution.evidence, sources)
+    fidelity = source_fidelity or candidate.source_fidelity
+    evidence = q.evidence + candidate.solution.evidence
+    # 引用是否逐字对应降为提示；未登记来源仍是结构错误，不能伪造材料身份。
+    errors = (evidence_errors(evidence, sources) if fidelity == "strict" else
+              ["evidence_source_missing"] if any(e.source_id not in sources for e in evidence) else [])
     def has_control(value):
         if isinstance(value,str):
             return bool(re.search(r"[\x00-\x08\x0b\x0c\x0e-\x1f]|\r(?!\n)",value))

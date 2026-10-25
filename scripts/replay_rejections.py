@@ -17,11 +17,12 @@ def main():
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--quotas", type=Path, default=Path("configs/quotas.v3.json"))
+    parser.add_argument("--source-fidelity", choices=("strict", "advisory"), default="strict")
     args = parser.parse_args()
     if args.output.resolve().is_relative_to(args.evidence.resolve()):
         parser.error("Cannot write into frozen evidence")
     result = replay_rejections(args.evidence, args.manifest_sha256, args.run_id,
-                              json.loads(args.quotas.read_text()))
+                              json.loads(args.quotas.read_text()), source_fidelity=args.source_fidelity)
     result["replay_code_sha256"] = {str(p): hashlib.sha256(p.read_bytes()).hexdigest()
         for root in (Path("src/diamond_factory"), Path("prompts"), Path("scripts"))
         for p in sorted(root.rglob("*")) if p.is_file() and p.suffix in (".py", ".txt")}

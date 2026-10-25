@@ -34,6 +34,7 @@ class Settings(StrictModel):
     preverify_blueprint: bool = False
     require_stepwise_blueprint_review: bool = False
     require_known_result: bool = False
+    source_fidelity: Literal["strict", "advisory"] = "strict"
     require_bottleneck_mask: bool = False
     require_verifier_adversary: bool = False
     verifier_max_revisions: int = Field(default=2, ge=0, le=2)
@@ -68,6 +69,10 @@ class Settings(StrictModel):
 
     @model_validator(mode="after")
     def validate_role_capacity(self):
+        if self.source_fidelity == "advisory" and not (
+                self.require_stepwise_blueprint_review and self.require_known_result
+                and self.require_verifier_adversary):
+            raise ValueError("Advisory provenance requires answer locking, independent proof review and verifier adversary")
         if self.solver_concurrency is not None and self.solver_concurrency>self.concurrency:
             raise ValueError("solver_concurrency must not exceed global concurrency")
         if self.require_difficulty_design and (not self.require_solution_design or not self.difficulty_profile_path):

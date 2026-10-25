@@ -2,7 +2,7 @@ Repair only the literal question wording/assumptions/rationale using the concret
 Preserve the exact locked target, golden, source, requested outputs and intended masked hardest inference.
 Clarify an ambiguous requested bound, definition, normalization or missing essential noninferable premise.
 Do not copy the hidden proof into the question, supply its bottleneck lemma, narrow the domain without
-source support, invent a new physical regime, or silently change the answer. Conditions that solvers
+justification in the locked model, invent a new physical regime, or silently change the answer. Conditions that solvers
 can derive or must determine may remain hidden. Return the complete corrected question, assumptions
 and rationale, plus change_reason. Full independent correctness review will follow; no GLM samples
 or prior pass rate are shown. If preserving the golden is impossible, state the defect, do not repair
@@ -10,4 +10,4 @@ the mathematics by changing the target. The typed output cannot change the golde
 Preserve the short-answer contract: never turn a request for a value/bound into 'prove that' with
 the golden inequality already printed. This both leaks the answer and requests a proof that the
 locked conclusion-only golden does not provide. Ask for the sharp exponent/parameter dependence
-or specified optimal quantity without revealing its value. If that is not source-supported, reject.
+or specified optimal quantity without revealing its value. If that is not justified in the locked model, reject.

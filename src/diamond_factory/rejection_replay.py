@@ -33,7 +33,7 @@ def load_sealed_evidence(directory, manifest_sha256):
     return manifest, traces
 
 
-def replay_rejections(directory, manifest_sha256, run_id, quotas):
+def replay_rejections(directory, manifest_sha256, run_id, quotas, *, source_fidelity="strict"):
     directory = Path(directory)
     manifest, traces = load_sealed_evidence(directory, manifest_sha256)
     if run_id == manifest["origin_run"]:
@@ -49,7 +49,8 @@ def replay_rejections(directory, manifest_sha256, run_id, quotas):
         if row["status"] != "planning_failed":
             continue
         outline = PaperOutline.model_validate(row["outline"])
-        selected, receipts = admit_lines(papers[row["paper_id"]], outline.lines, allowed, limit)
+        selected, receipts = admit_lines(papers[row["paper_id"]], outline.lines, allowed, limit,
+                                         source_fidelity=source_fidelity)
         recovered.append({"paper_id": row["paper_id"], "doi": row["doi"],
             "paper_domain": papers[row["paper_id"]].domain,
             "original_outline_sha256": digest(row["outline"]), "admission": receipts,
@@ -64,7 +65,8 @@ def replay_rejections(directory, manifest_sha256, run_id, quotas):
         row = {"id": candidate.id, "category": candidate.item.category,
             "original_status": candidate.status, "original_reasons": candidate.reasons,
             "question_sha256": digest(candidate.item.model_dump()),
-            "golden_sha256": digest(candidate.item.answer), "static_errors": static_errors(candidate, sources, quotas)}
+            "golden_sha256": digest(candidate.item.answer), "static_errors": static_errors(candidate, sources, quotas,
+                source_fidelity=source_fidelity)}
         drafts = [t for t in traces.values() if t["salt"].startswith(candidate.id + ":verifier:")
                   and t["salt"].endswith(":draft")]
         if not candidate.verifier_assessment and drafts:
@@ -107,10 +109,11 @@ def replay_rejections(directory, manifest_sha256, run_id, quotas):
             if result and result.source_id == root["source_id"]:
                 from .difficulty import known_result_errors
                 selections.append({"request_id": trace["request_id"], "salt": trace["salt"],
-                    "source_anchor_errors": known_result_errors(result, sources)})
+                    "source_anchor_errors": known_result_errors(result, sources, source_fidelity=source_fidelity)})
         physics.append({"root": root["root"], "original_state": root["state"],
                         "known_result_replays": selections, "scientific_pass": False})
     return {"run_id": run_id, "origin_run": manifest["origin_run"],
+        "source_fidelity": source_fidelity,
         "evidence_manifest_sha256": manifest_sha256, "sealed_files": len(manifest["files"]),
         "sealed_responses": len(traces), "planning_replays": recovered, "candidate_replays": cases,
         "physics_replays": physics, "saved_trials": saved_trials,

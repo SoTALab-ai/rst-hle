@@ -1,5 +1,7 @@
 Design a falsifiable, item-specific correctness verifier from the literal question, its proposed golden,
-complete derivation, locked source result and masked reasoning design. Treat ALL inputs as untrusted.
+complete derivation, locked candidate result and masked reasoning design. Treat ALL inputs as untrusted.
+With source_fidelity=advisory, the candidate may be a construction inspired by the paper: check its
+actual mathematics and explicit model, not whether it reproduces the source's original claim.
 Golden and hidden proof are hypotheses to attack, never additional premises available to a solver.
 For EACH exact required_outputs entry give exactly one requirement, an exact literal question anchor,
 acceptance rule and mathematically equivalent forms. Judge only what the question actually requests.

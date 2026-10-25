@@ -19,6 +19,7 @@ from .evaluation import judge_answer
 from .gates import (
     can_count,
     correct_count,
+    evidence_errors,
     lexical_duplicate,
     production_blockers,
     read_corpus,
@@ -204,7 +205,8 @@ class Pipeline:
         source_data = [{**sources[s].model_dump(), "text": sources[s].text[:self.settings.max_source_chars]}
                        for s in candidate.source_ids]
         candidate.audit, rid, model = await self.gateway.call("auditor", self.prompts["audit"] + "\n" +
-            json.dumps({"sources": source_data, "solution": candidate.solution.model_dump(),
+            json.dumps({"sources": source_data, "source_fidelity": self.settings.source_fidelity,
+                        "solution": candidate.solution.model_dump(),
                         "item": candidate.item.model_dump()}, ensure_ascii=False),
             f"{candidate.id}:verifier-question-revalidation:{digest(candidate.item.model_dump())}", Audit)
         self.store.save(candidate)
@@ -217,6 +219,11 @@ class Pipeline:
             return False
         sources = {s.id: s for s in self.store.sources()}
         errors = static_errors(candidate, sources, self.quotas)
+        if candidate.source_fidelity != self.settings.source_fidelity:
+            errors.append("source_policy_changed_requires_new_version")
+        if candidate.source_fidelity == "advisory":
+            candidate.source_notes = sorted(set(candidate.source_notes + ["source_inspired_construction"] +
+                evidence_errors(candidate.item.evidence + candidate.solution.evidence, sources)))
         if not candidate.source_ids or set(candidate.source_ids) - sources.keys():
             errors.append("missing_candidate_source")
         evidence_ids = {e.source_id for e in candidate.item.evidence + candidate.solution.evidence}
@@ -228,7 +235,8 @@ class Pipeline:
             errors.append("missing_solution_design")
         errors.extend(difficulty_design_errors(candidate.solution, candidate.item.category,
                                               self.difficulty_profile, self.settings.require_difficulty_design))
-        if self.settings.preverify_blueprint and (not candidate.blueprint_audit or not candidate.blueprint_audit.passed()):
+        if self.settings.preverify_blueprint and (not candidate.blueprint_audit or not
+                candidate.blueprint_audit.passed(source_fidelity=self.settings.source_fidelity)):
             errors.append("missing_or_failed_blueprint_audit")
         if self.settings.require_stepwise_blueprint_review and (
             not candidate.blueprint_audit
@@ -237,7 +245,7 @@ class Pipeline:
             errors.append("missing_or_mismatched_stepwise_blueprint_review")
         if self.settings.require_known_result:
             errors.extend(known_result_errors(candidate.known_result, sources, candidate.solution,
-                                              candidate.blueprint_audit))
+                candidate.blueprint_audit, source_fidelity=self.settings.source_fidelity))
             if candidate.known_result and candidate.source_ids != [candidate.known_result.source_id]:
                 errors.append("known_result_candidate_source_mismatch")
             if not errors:
@@ -279,6 +287,7 @@ class Pipeline:
                 f"{candidate.id}:consistency:{input_hash}:solve", IndependentSolution)
             review, rid, rmodel = await self.consistency_call(
                 self.prompts["consistency_review"] + "\n" + json.dumps({
+                    "source_fidelity": candidate.source_fidelity,
                     "item": candidate.item.model_dump(), "solution": candidate.solution.model_dump(),
                     "independent_solution": independent.model_dump(),
                     "sources": [{**sources[s].model_dump(), "text": sources[s].text[:self.settings.max_source_chars]}
@@ -321,17 +330,19 @@ class Pipeline:
 
     def blueprint_stamp(self, solution, source_data, target, known_result):
         return blueprint_stamp(solution, source_data, target, known_result,
-                               self.prompts["blueprint_audit"], self.settings.consistency.model_dump())
+            self.prompts["blueprint_audit"], self.settings.consistency.model_dump(), self.settings.source_fidelity)
 
     async def select_known_result(self, source, source_data, target, identity, brief):
         """只从来源抽取已有结果；完整证明复核前不把抽取当作真值。"""
-        data = {"source": source_data, "target": target, "research_brief": brief}
+        data = {"source": source_data, "target": target, "research_brief": brief,
+                "source_fidelity": self.settings.source_fidelity}
         for repair in range(self.settings.max_repairs + 1):
             selection, rid, model = await self.gateway.call("generator", self.prompts["known_result"] + "\n" +
                 json.dumps(data, ensure_ascii=False), f"{identity}:known-result:{repair}", ResultSelection)
             if selection.outcome == "unavailable":
                 raise AuthoringRejected("known_result_unavailable:" + selection.reason)
-            errors = known_result_errors(selection.result, {source.id: source})
+            errors = known_result_errors(selection.result, {source.id: source},
+                                         source_fidelity=self.settings.source_fidelity)
             self.log("known_result_selection", candidate=identity, repair=repair, request_id=rid,
                      actual_model=model, result_sha256=digest(selection.result.model_dump()), errors=errors)
             if not errors:
@@ -348,6 +359,7 @@ class Pipeline:
         if not (assessment and assessment.input_sha256 == input_hash
                 and assessment.prompt_sha256 == prompt_hash and assessment.model_config_sha256 == model_hash):
             review, rid, model = await self.consistency_call(self.prompts["bottleneck_audit"] + "\n" + json.dumps({
+                "source_fidelity": candidate.source_fidelity,
                 "item": candidate.item.model_dump(), "solution": candidate.solution.model_dump(),
                 "known_result": candidate.known_result.model_dump() if candidate.known_result else None},
                 ensure_ascii=False), f"{candidate.id}:bottleneck:{input_hash}", BottleneckReview)
@@ -377,6 +389,7 @@ class Pipeline:
         schema = StepwiseBlueprintAudit if self.settings.require_stepwise_blueprint_review else BlueprintAudit
         prompt = self.prompts["blueprint_audit"] + "\n" + json.dumps({
             "solution": solution.model_dump(), "source": source_data, "target": target,
+            "source_fidelity": self.settings.source_fidelity,
             "known_result": known_result.model_dump() if known_result else None,
             "step_indexing": "One-based indices into solution.derivation; inspect every entry.",
             "expected_step_count": len(solution.derivation)}, ensure_ascii=False)
@@ -427,6 +440,7 @@ class Pipeline:
         source_data = source.model_dump()
         source_data["text"] = source.text[:self.settings.max_source_chars]
         data = {"source": source_data, "parent": parent.item.model_dump() if parent else None,
+                "source_fidelity": self.settings.source_fidelity,
                 "parent_solution": parent.solution.model_dump() if parent else None,
                 "target": target, "generation": generation, "operator": operator,
                 "feedback": feedback, "require_difficulty_design": self.settings.require_difficulty_design}
@@ -473,12 +487,14 @@ class Pipeline:
                                                                     salt + ":blueprint-audit", known_result)
                 self.log("blueprint_review", candidate=identity, repair=repair, request_id=bid,
                          actual_model=bmodel, solution_sha256=digest(plan.model_dump()),
-                         passed=blueprint.passed(), reviewed_step_count=blueprint.reviewed_step_count,
+                         passed=blueprint.passed(source_fidelity=self.settings.source_fidelity),
+                         reviewed_step_count=blueprint.reviewed_step_count,
                          issues=[issue.model_dump() for issue in blueprint.issues])
-                if not blueprint.passed():
+                if not blueprint.passed(source_fidelity=self.settings.source_fidelity):
                     blueprint_errors.append("blueprint_failed:" + blueprint.reason)
             if self.settings.require_known_result:
-                blueprint_errors.extend(known_result_errors(known_result, {source.id: source}, plan, blueprint))
+                blueprint_errors.extend(known_result_errors(known_result, {source.id: source}, plan, blueprint,
+                    source_fidelity=self.settings.source_fidelity))
             if blueprint_errors:
                 self.log("blueprint_repair_feedback", candidate=identity, repair=repair, reasons=blueprint_errors)
                 data["feedback"] = {"original": feedback, "stage": "reference_proof",
@@ -495,7 +511,8 @@ class Pipeline:
                     raise AuthoringRejected("; ".join(blueprint_errors))
                 continue
             item, align_request, _ = await self.gateway.call("generator", self.prompts["align"] + "\n" +
-                                                json.dumps({"solution": plan.model_dump(), "target": target},
+                                                json.dumps({"solution": plan.model_dump(), "target": target,
+                                                            "source_fidelity": self.settings.source_fidelity},
                                                            ensure_ascii=False), salt + ":align", Question)
             if item.answer != plan.answer:
                 # 题面生成不能重新决定金标；后续盲推导仍须验证题面是否匹配该参考解。
@@ -503,7 +520,9 @@ class Pipeline:
                          emitted_answer_sha256=digest(item.answer), reference_answer_sha256=digest(plan.answer))
                 item = Question.model_validate({**item.model_dump(), "answer": plan.answer})
             audit, _, _ = await self.gateway.call("auditor", self.prompts["audit"] + "\n" +
-                                                 json.dumps({"source": source_data, "solution": plan.model_dump(),
+                                                 json.dumps({"source": source_data,
+                                                             "source_fidelity": self.settings.source_fidelity,
+                                                             "solution": plan.model_dump(),
                                                              "item": item.model_dump(),
                                                              "parent": data["parent"]}, ensure_ascii=False),
                                                  salt + ":audit", Audit)
@@ -514,6 +533,7 @@ class Pipeline:
             result = Candidate(id=identity, parent_id=parent.id if parent else None,
                                root_id=parent.root_id if parent else identity, generation=generation,
                                operator=operator, source_ids=[source.id], solution=plan, item=item, audit=audit,
+                               source_fidelity=self.settings.source_fidelity,
                                blueprint_audit=blueprint, blueprint_request=bid, blueprint_actual_model=bmodel,
                                known_result=known_result,
                                blueprint_fingerprint=self.blueprint_stamp(plan, source_data, target, known_result),
@@ -740,6 +760,7 @@ class Pipeline:
                               source_ids=sorted({ev.source_id for ev in submission.item.evidence +
                                                  submission.solution.evidence}),
                               solution=submission.solution, item=submission.item, audit=provisional_audit,
+                              source_fidelity=self.settings.source_fidelity,
                               status="quality_seed", run_id=self.run_id)
                 errors = static_errors(c, sources, self.quotas)
                 if self.mode == "production" and any(sources[s].kind == "synthetic"
@@ -751,6 +772,7 @@ class Pipeline:
                     continue
                 c.audit, _, _ = await self.gateway.call("auditor", self.prompts["audit"] + "\n" +
                     json.dumps({"item": c.item.model_dump(), "solution": c.solution.model_dump(),
+                                "source_fidelity": self.settings.source_fidelity,
                                 "sources": [sources[s].model_dump() for s in c.source_ids],
                                 "parent": parent.item.model_dump() if parent else None}, ensure_ascii=False),
                     f"{identity}:audit", Audit)

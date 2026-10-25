@@ -30,15 +30,19 @@ PROMPTS = ("verifier_draft", "verifier_challenge", "verifier_oracle", "verifier_
 
 def context_hash(candidate, sources):
     # 题面版本另存；外部证明/来源变化不能挪用旧对抗检查点。
-    return digest({"solution": candidate.solution.model_dump(),
+    data = {"solution": candidate.solution.model_dump(),
                    "known_result": candidate.known_result.model_dump() if candidate.known_result else None,
-                   "source_hashes": {sid: sources[sid].sha256 for sid in candidate.source_ids}})
+                   "source_hashes": {sid: sources[sid].sha256 for sid in candidate.source_ids}}
+    if candidate.source_fidelity != "strict":
+        data["source_fidelity"] = candidate.source_fidelity
+    return digest(data)
 
 
 def protocol_hash(prompts, settings):
     return digest({"prompts": {name: digest(prompts[name]) for name in PROMPTS},
                    "models": {r: getattr(settings, r).model_dump() for r in ("generator", "consistency", "judge")},
                    "max_revisions": settings.verifier_max_revisions,
+                   "source_fidelity": settings.source_fidelity,
                    "code": Path(__file__).read_text(),
                    "provenance_code": Path(__file__).with_name("provenance.py").read_text()})
 
@@ -162,7 +166,7 @@ class VerifierBuilder:
         self.p = pipeline
 
     def packet(self, c, sources):
-        return {"item": c.item.model_dump(), "initial_golden": {
+        return {"item": c.item.model_dump(), "source_fidelity": c.source_fidelity, "initial_golden": {
                     "known_result": c.known_result.model_dump() if c.known_result else None,
                     "solution": c.solution.model_dump(),
                     "blueprint_review": c.blueprint_audit.model_dump() if c.blueprint_audit else None},

@@ -1,6 +1,6 @@
 # RST → HLE-style Question Factory
 
-从数学/理论物理论文构造可追溯题目：预建论文库，锁定来源已有答案与完整推导，挖空最难推理，通过独立科学检查后测量难度。目前仍是实验管线，尚未证明能稳定生产HLE Diamond题目。
+从数学/理论物理论文构造可追溯题目：预建论文库，从候选答案与完整推导出发，挖空最难推理，通过独立科学检查后测量难度。按用户最新口径，论文作为启发，允许自洽的新构造，来源逐字/逐结论一致性只记提示；实际题面、推导和golden必须一致。目前仍是实验管线，尚未证明能稳定生产HLE Diamond题目。
 
 当前模型：作者和审查为gpt-6-luna，解题为GLM5.2无工具、600秒墙钟；官方HLE模板由gpt-6-luna medium判分。首4次全对直接拒绝，出现错答或解题墙钟超时才补至16次；1–8/16进入后置复核，0/16先排错再降难，不执行加难。
 
@@ -12,6 +12,7 @@
 - [架构与模块归属](docs/synthesis-architecture.md)、[验证方法与个人VM](docs/local-validation.md)。
 - [论文下载](docs/pdf-paper-library.md)、[直接读取入库](docs/paper-library-ingestion.md)、[读取上限与20份试产](docs/reader-limits.md)、[数据库](docs/database.md)。
 - [出题设计](docs/question-design.md)、[科学检查](docs/consistency.md)、[verifier对抗](docs/verifier-adversary.md)。
+- [来源启发与自洽验收](docs/source-fidelity.md)：新论文库默认`configs/library-source-inspired.toml`；严格模式保留给历史配置。
 - [实验协议](docs/theory-experiment.md)、[历史结果](docs/validation/README.md)、[验收](docs/acceptance.md)。
 
 ## 本地开始

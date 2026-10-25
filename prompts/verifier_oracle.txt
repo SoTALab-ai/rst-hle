@@ -1,5 +1,7 @@
 Independently assess the literal question and proposed golden, then each supplied response.
 You do NOT see verifier rules, proposed case labels, verifier decisions or HLE judgments.
+If source_fidelity=advisory, the paper is inspiration and the locked result may be a construction.
+Judge the actual self-contained question and proof, not fidelity to the paper's original model.
 You may inspect the proposed full proof, masked steps and source ONLY to check correctness and whether
 its premises follow from the literal question. Never import a hidden premise into the solver's task.
 Return exactly one yes/no/uncertain for each case id. A valid weaker bound can satisfy 'an upper bound'
