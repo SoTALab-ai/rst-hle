@@ -40,6 +40,43 @@ def draft_for(solution):
     return LockedProofDraft.model_validate(data)
 
 
+@pytest.mark.parametrize('kind', ['inverse_identification', 'branch_discovery', 'parameter_region', 'theorem_applicability'])
+def test_optional_initial_templates_preserve_locked_target_and_metadata(candidate, source, kind):
+    prepare(candidate, source)
+    draft = draft_for(candidate.solution)
+    draft.design.construction_type = kind
+    draft.design.bridge_type = 'representation'
+    result = draft.bind(candidate.known_result)
+    assert result.design.construction_type == kind and result.design.bridge_type == 'representation'
+    assert result.design.target == candidate.known_result.target and result.answer == candidate.known_result.answer
+    candidate.solution = result
+    restored = type(candidate).model_validate_json(candidate.model_dump_json())
+    assert restored.solution.design == result.design
+
+
+def test_initial_template_references_reach_selection_before_target_lock(tmp_path, settings, source, candidate):
+    enable(settings)
+    prepare(candidate, source)
+    pipe, _, gateway = setup_pipeline(tmp_path, settings, source, candidate)
+    seen = []
+
+    async def select(role, prompt, salt, schema=None, **kwargs):
+        assert schema is ResultSelection
+        packet = json.loads(prompt.splitlines()[-1])
+        assert 'known_result' not in packet  # 目标尚未锁定，完整区域可以在这一阶段选择。
+        references = packet['construction_reference']
+        seen.extend(t['id'] for t in references['construction_templates'])
+        assert {b['id'] for b in references['bridge_forms']} >= {'representation', 'auxiliary_object', 'invariant'}
+        return ResultSelection(outcome='found', result=candidate.known_result,
+            reason='A controlled initial target for the selection contract.'), 'r', 'gpt-6-luna'
+
+    gateway.call = select
+    selected = asyncio.run(pipe.select_known_result(source, source.model_dump(),
+        {'category': 'Math', 'subtopic': '组合与图论'}, 'initial', None))
+    assert selected == candidate.known_result
+    assert set(seen) == {'inverse_identification', 'branch_discovery', 'parameter_region', 'theorem_applicability'}
+
+
 def test_locked_schema_cannot_rewrite_answer_target_or_premises(candidate, source):
     prepare(candidate, source)
     candidate.known_result.answer += ' The private proof explains this result.'

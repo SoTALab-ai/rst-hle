@@ -44,6 +44,19 @@ construction whose value the gold actually establishes. Asking for "an upper bou
 inequivalent answers. Do not fix that ambiguity by inventing "smallest", "largest", "sharp" or
 "optimal" unless BOTH the locked answer and proof already establish that extremal claim.
 Do not print the golden inequality as a premise or request a proof absent from the answer contract.
+
+Use solution.design.construction_type only if its full target is already covered by the locked gold.
+For inverse_identification do not give away the recovered parameters or helper representation; for
+branch_discovery omit the branch-selection answer but retain the physical/algebraic admissibility
+rules; for parameter_region retain the domain definition and ask for all regions/boundaries actually
+proved; for theorem_applicability retain primitive definitions and hypotheses, without naming the
+theorem as a hint. Do not turn a single-case gold into an all-branches or all-parameters request.
+Follow the backward proof trace in the mask: retain the original objects, laws and sufficient data,
+while hiding the derived invariant, representation, auxiliary construction, symmetry, conservation
+inference or decomposition needed to bridge to the target. State raw conservation/physical laws
+when they define the model; hide the derived useful consequence rather than erase the model law.
+Hiding a bridge must not leave an undefined object, an independent missing premise or multiple
+inequivalent target answers under the literal question. The full hidden proof remains private.
 If design.difficulty.mask exists, prioritize concealing THAT selected hardest inference and every
 hint that effectively supplies it. Follow hidden_information and retained_information, then check
 that the result is still recoverable. Do not paste the derivation's result or its transformed

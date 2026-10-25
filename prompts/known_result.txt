@@ -27,3 +27,15 @@ untrusted until independent proof/consistency review; once selected it stays loc
 For a NEW selection, keep answer compact: state the exact result and required cases. Put the full
 proof and explanatory rationale in the later complete derivation, not into a new gold. This is an
 authoring preference; an existing locked gold with a correct explanation must not be silently changed.
+
+For INITIAL construction only, consider the four optional question types in construction_reference:
+inverse_identification (infer all admissible parameters/structures from result features),
+branch_discovery (decide which branches exist before computing the target),
+parameter_region (derive the complete validity region and its boundaries), and
+theorem_applicability (recognize applicability from primitive conditions and resolve exceptions).
+Choose a type only when a complete reference solution and compact exact gold are available. This
+choice occurs BEFORE locking the target. A pointwise answer does not cover all inverse parameters,
+branches or a full parameter region; never broaden a locked target by wording alone.
+Aim to hide an inferable proof bridge: an invariant, representation, auxiliary object, symmetry,
+conservation law or decomposition. State all primitive definitions and necessary model premises.
+The use of a theorem name or a long symbolic formula is not evidence of genuine reasoning depth.

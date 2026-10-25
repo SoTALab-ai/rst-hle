@@ -1,4 +1,5 @@
 source_fidelity = "advisory"
+certificate_max_repairs = 1
 require_verifier_adversary = true
 freeze_question_at_verifier = true
 verifier_max_revisions = 2

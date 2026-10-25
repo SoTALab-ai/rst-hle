@@ -19,3 +19,14 @@ with a blank while revealing the computation. Primitive definitions can be retai
 consequences are difficult. Keep ratio directions, domains and physical conventions unambiguous.
 Every check returns pass/fail/uncertain with reasoning and concrete witness or missing justification.
 No check may be not_applicable. A pass does not prove HLE difficulty; real solver trials follow.
+
+Inspect the actual dependency traceback, not just construction_type/bridge_type labels. The mask
+should hide a derived invariant, representation, auxiliary construction, symmetry, conservation
+consequence or decomposition, while the primitive definitions and independent premises remain
+sufficient. A supplied change-of-basis recipe or an equivalent spectral identity can leak the bridge.
+For inverse tasks test admissible alternative reconstructions; for branch/region tasks check all
+boundary and degenerate cases; for theorem-recognition tasks retain the object's definition and
+test the hypotheses and exceptions. Do not demand that the solver be told the derived branch/range.
+Use ONLY literal retained inputs for bypass claims. A different proof of the same conceptual bridge
+does not by itself defeat the mask. An auxiliary object that can be removed without affecting the
+target is vacuous. Model-described traceback is not a formal symbolic proof or a measured difficulty.

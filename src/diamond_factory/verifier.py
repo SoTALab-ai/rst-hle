@@ -28,6 +28,7 @@ PROMPTS = ("verifier_draft", "verifier_challenge", "verifier_oracle", "verifier_
            "verifier_anchors",
            "verifier_review", "verifier_question_repair", "judge", "judge_system", "audit",
            "consistency_solve", "consistency_review", "consistency_certificate", "consistency_certificate_anchors",
+           "consistency_certificate_repair",
            "bottleneck_audit")
 
 

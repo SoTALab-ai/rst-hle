@@ -65,3 +65,14 @@ with the exact source_assumption and solution_assumption strings, equivalent boo
 reason. Missing/stronger/weaker or uncertain premises are not equivalent and must block approval.
 Do not invent a mapping to bypass a real domain change. An empty list is sufficient when all locked
 assumptions are copied exactly. This mapping does not override any other proof/difficulty issue.
+
+If construction_type is supplied, audit the corresponding scope: inverse identification must cover
+all admissible parameters/structures (or stated equivalence classes); branch discovery must handle
+all allowed and exceptional branches; a parameter-region claim needs both necessity and sufficiency
+and complete boundaries; theorem applicability must establish each required hypothesis and exceptions.
+Do not infer these from one numerical test or a successful generic branch. The fixed gold must cover
+the actual full target. These type names and bridge_type are authoring references, not difficulty proof.
+Check the proposed dependency traceback against the numbered full proof. A helper may be moved from
+solver inputs into the solution only if it can be constructed from retained primitive data and does
+not change the theorem's truth conditions. A minimal-looking dependency path is not necessarily unique
+or globally minimal; inspect alternative paths rather than certifying necessity from the graph alone.
