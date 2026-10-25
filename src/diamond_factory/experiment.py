@@ -1,4 +1,4 @@
-"""Bounded, breadth-first paper-to-question experiments with a 4 -> 16 sampling gate."""
+"""出题与逐题4→16评测分池并行；每代保留有界降难及统一收尾。"""
 import asyncio
 import json
 import math
@@ -27,6 +27,7 @@ class ExperimentPlan(StrictModel):
     roots: list[RootPlan] = Field(min_length=1, max_length=100)
     max_revisions: int = Field(default=2, ge=0, le=3)
     root_workers: int = Field(default=4, ge=1, le=16)
+    evaluation_workers: int = Field(default=2, ge=1, le=16)
     visible_cost_limit_usd: float | None = Field(default=90.0, gt=0)
     resume_request_run_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]+$")
     authoring_seeds: dict[str, AuthoringSeed] = Field(default_factory=dict)
@@ -191,16 +192,19 @@ class QuestionExperiment(Pipeline):
                 raise ValueError("Missing full text or invalid v3 target for "+r.name)
         self.start({"command":"paper-question-experiment","plan_sha256":digest(self.plan.model_dump()),
                     "pricing_sha256":digest(self.pricing)})
-        permits = asyncio.Semaphore(self.plan.root_workers)
+        # 作者/质检不占评测池；单题补测不等待其他题，也不占作者槽位。
+        author_permits = asyncio.Semaphore(self.plan.root_workers)
+        evaluation_permits = asyncio.Semaphore(self.plan.evaluation_workers)
 
         async def prefix(root,generation):
-            async with permits:
+            async with author_permits:
                 existing = [c for c in self.store.candidates() if c.run_id==self.run_id and
                             c.root_id==self.root_identity(root,sources)]
                 parent = next((c for c in existing if c.generation==generation-1),None) if generation else None
                 allowed = ("ease",) if self.settings.difficulty_policy == "ease_only" else (
                     "preliminary_harden", "harden", "ease")
-                if generation and (parent is None or branch(parent) not in allowed):
+                if generation and (parent is None or branch(parent) not in allowed or
+                        self.plan_state.get(root.name, {}).get("phase") in ("prefix_failed", "evaluation_failed")):
                     return None
                 if any(c.status in ("screened","accepted") for c in existing):
                     return None
@@ -210,12 +214,8 @@ class QuestionExperiment(Pipeline):
                     extra = {"seed": seed} if seed else {}
                     c = await self.generate(sources[root.source_id],parent,target,generation,0,
                                             brief=self.brief(root,parent), **extra)
-                    if c.status == "rejected":
-                        return c
-                    if len(sample_outcomes(c)) < 16:
-                        n = await self.sample(c,4)
-                        if n == 4:
-                            await self.evaluate(c)
+                    if c.status != "rejected":
+                        self.plan_state[root.name] = {"phase": "ready_for_evaluation", "candidate": c.id}
                     return c
                 except QualityRejected:
                     return next((c for c in self.store.candidates() if c.run_id == self.run_id
@@ -233,29 +233,58 @@ class QuestionExperiment(Pipeline):
                 finally:
                     self.snapshot()
 
-        async def finish(c):
-            if c is None or c.status=="rejected" or branch(c)=="preliminary_harden":
+        async def finish(root, c):
+            if c is None or c.status=="rejected":
                 return
-            async with permits:
+            async with evaluation_permits:
+                phase = "screening_first4"
+                self.plan_state[root.name] = {"phase": phase, "candidate": c.id}
                 try:
+                    if len(sample_outcomes(c)) < self.settings.samples:
+                        first = await self.sample(c, self.settings.early_screen_samples)
+                        if first == self.settings.early_screen_samples:
+                            await self.evaluate(c)
+                            self.plan_state[root.name] = {"phase": "finished", "candidate": c.id,
+                                                          "decision": branch(c)}
+                            return
+                        phase = "supplementing"
+                        self.plan_state[root.name] = {"phase": phase, "candidate": c.id}
+                        self.log("experiment_supplement_started", root=root.name, candidate=c.id,
+                            completed_samples=len(sample_outcomes(c)),
+                            missing_samples=self.settings.samples-len(sample_outcomes(c)))
                     n = await self.sample(c)
+                    phase = "postreview"
+                    self.plan_state[root.name] = {"phase": phase, "candidate": c.id}
                     if 0 <= n <= 8 and not await self.final_audit(c):
+                        self.plan_state[root.name] = {"phase": "finished", "candidate": c.id,
+                                                      "decision": branch(c)}
                         return
                     # Dedup finalization is serialized so two parallel candidates cannot miss each other.
                     async with self.finalize_lock:
                         await self.evaluate(c)
+                    self.plan_state[root.name] = {"phase": "finished", "candidate": c.id,
+                                                  "decision": branch(c)}
                 except QualityRejected:
+                    self.plan_state[root.name] = {"phase": "finished", "candidate": c.id,
+                                                  "decision": branch(c)}
                     return
                 except (ModelResponseError,SampleIncomplete) as error:
-                    self.log("experiment_candidate_incomplete",candidate=c.id,reason=str(error)[:180])
+                    failed = "prefix_failed" if phase == "screening_first4" else "evaluation_failed"
+                    self.plan_state[root.name] = {"phase": failed, "candidate": c.id,
+                                                  "stage": phase, "reason": str(error)[:180]}
+                    self.log("experiment_candidate_incomplete",root=root.name,candidate=c.id,
+                             stage=phase,reason=str(error)[:180])
                 finally:
                     self.snapshot()
+
+        async def one_question(root, generation):
+            # 保留每代公平规划；同代内一题首轮有错即补测，不设置批次首轮屏障。
+            await finish(root, await prefix(root, generation))
 
         try:
             for generation in range(self.plan.max_revisions+1):
                 self.log("experiment_round",generation=generation,roots=len(self.plan.roots))
-                rows = await gather_cancel_on_error(*(prefix(r,generation) for r in self.plan.roots))
-                await gather_cancel_on_error(*(finish(c) for c in rows))
+                await gather_cancel_on_error(*(one_question(r,generation) for r in self.plan.roots))
         except BaseException as error:
             self.metadata("budget_exhausted" if isinstance(error,BudgetExceeded) else "interrupted")
             self.snapshot()
@@ -263,6 +292,7 @@ class QuestionExperiment(Pipeline):
         final = self.snapshot()
         missing = (final["roots_with_generated_question"]<len(self.plan.roots) or any(
             v["decision"]=="incomplete" for r in final["roots"] for v in r["versions"]) or
-            any(state.get("phase")=="prefix_failed" for state in self.plan_state.values()))
+            any(state.get("phase") in ("prefix_failed", "evaluation_failed")
+                for state in self.plan_state.values()))
         self.metadata("completed_with_errors" if missing else "completed")
         return self.snapshot()
