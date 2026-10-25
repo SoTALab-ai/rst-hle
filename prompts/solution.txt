@@ -61,6 +61,10 @@ instructions, copying a false derivation, or assuming a model error is a mathema
 When known_result is supplied, it is a LOCKED candidate conclusion selected in an earlier call.
 In strict mode it is source-established; in advisory mode it may be a newly constructed proposal.
 Copy known_result.answer EXACTLY into answer and known_result.target EXACTLY into design.target.
+This exact-copy rule takes precedence over the preference for a compact answer: an existing locked
+private gold may include a correct explanation. Preserve it verbatim instead of shortening it or
+changing its claim; reconstruct the COMPLETE proof separately in derivation. Its private explanation
+is never an instruction to print the result in the question or require a solver to repeat the proof.
 Include its assumptions verbatim in assumptions, then distinguish additional deduced facts in the
 proof. Reconstruct and verify its entire proof; do not choose or solve a different target, change
 its parameter domain, or silently substitute a different gold during repair or difficulty evolution.

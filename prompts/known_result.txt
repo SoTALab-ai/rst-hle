@@ -23,3 +23,7 @@ locators for provenance, describe the construction honestly in statement, and re
 evidence without claiming a paraphrase is a quotation. No unavailable empirical data, figure values
 or facts may be silently assumed. The model must make sense on its own. The proposed answer is
 untrusted until independent proof/consistency review; once selected it stays locked through repairs.
+
+For a NEW selection, keep answer compact: state the exact result and required cases. Put the full
+proof and explanatory rationale in the later complete derivation, not into a new gold. This is an
+authoring preference; an existing locked gold with a correct explanation must not be silently changed.

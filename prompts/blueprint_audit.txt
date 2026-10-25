@@ -21,8 +21,16 @@ the exact claim being challenged, evidence (failed identity, admissible countere
 justification or explicit uncertainty), and an actionable repair_requirement. A rejection requires
 at least one issue; an approval has an empty issues list. Do not manufacture a counterexample when
 you cannot establish a claim: describe the unresolved justification as such. Do not rely on prior
-reviews, author confidence or proposed question difficulty. Check that the answer field is only
-the gold result, not a proposed question or proof outline. A revision must fix downstream steps too.
+reviews, author confidence or proposed question difficulty. Check that answer states the actual
+gold result, not a proposed question or instructions. An existing LOCKED private gold may also
+contain a correct explanation/proof sketch: that text is not solver-visible and is NOT by itself a
+blocking answer or difficulty defect. Do not require deleting it while the author is required to
+copy the locked answer exactly. Independently check that its result and any ancillary claims are
+correct and cover the actual target; contradictions, missing cases and an absent result still block.
+A future question asking for a proof must actually request that output and have a suitable grading
+contract; conversely, an explanation in the private gold does not require a short-result solver to
+reproduce that explanation. Do not infer answer leakage from private gold text. The later actual
+question audit checks leakage. A revision must fix downstream steps too.
 When design.difficulty is supplied, verify the declared dependency chain against the actual proof.
 Check that both skills and their bridge are necessary for the final target, not independent decorations.
 Test the baseline shortcut against the proposed admissible counterexample and ensure the reference
