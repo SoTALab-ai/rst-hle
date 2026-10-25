@@ -211,6 +211,8 @@ class DifficultyAdversary:
             result = version.proposal.result
             solution = version.proposal.proof.bind(result)
             errors = known_result_errors(result, {source.id: source}, source_fidelity=p.settings.source_fidelity)
+            if prior and version.proposal == prior.proposal:
+                errors.append("unchanged_difficulty_proposal")
             errors += bottleneck_mask_errors(solution)
             errors += difficulty_design_errors(solution, target["category"], p.difficulty_profile, True)
             if not errors and version.blueprint is None:
@@ -224,7 +226,9 @@ class DifficultyAdversary:
                 challenge, rid, model = await p.consistency_call(p.prompts["difficulty_challenge"] + "\n" +
                     json.dumps({"stage": "before_lock", "reference_cards": reference,
                         "solution": solution.model_dump(), "provisional_result": result.model_dump(),
-                        "solver_inputs": solution.design.difficulty.mask.retained_information}, ensure_ascii=False),
+                        "solver_inputs": solution.design.difficulty.mask.retained_information,
+                        "prior_challenges": [v.challenge.model_dump() for v in campaign.versions[:index]
+                                             if v.challenge]}, ensure_ascii=False),
                     f"{identity}:depth-design:{index}:challenge", DifficultyChallenge)
                 self.check_mapping(challenge, solution, rid)
                 version.challenge, version.challenge_request, version.challenge_actual_model = challenge, rid, model
@@ -343,7 +347,9 @@ class DifficultyAdversary:
                     "stage": "actual_question", "reference_cards": references(p.settings, candidate.item.category),
                     "question": candidate.item.question, "required_outputs": candidate.item.required_outputs,
                     "solution": candidate.solution.model_dump(), "locked_result": candidate.known_result.model_dump(),
-                    "independent_solution": candidate.consistency.independent_solution.model_dump()}, ensure_ascii=False),
+                    "independent_solution": candidate.consistency.independent_solution.model_dump(),
+                    "prior_challenges": [{"previous_question": r.item.question, "challenge": r.challenge.model_dump()}
+                                         for r in candidate.difficulty_rounds]}, ensure_ascii=False),
                     f"{candidate.id}:depth-question:{input_hash}", DifficultyChallenge)
                 self.check_mapping(challenge, candidate.solution, rid)
                 current = DifficultyQuestionRound(input_sha256=input_hash,

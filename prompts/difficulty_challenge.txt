@@ -6,6 +6,9 @@ If stage=before_lock, the result is PROVISIONAL. Use ONLY mask.retained_informat
 primitive solver inputs for a shortcut claim; source text and private proof intermediates are not
 solver-visible. Inspect the COMPLETE proof and compare the actual inference burden to reference
 cards. Do not demand their particular techniques or impose a step-count/length/skill quota.
+Recheck every established prior_challenges route against the NEW retained inputs. Prior questions,
+helpers and proof intermediates are private history, not extra premises of the current question.
+Explain whether each formerly valid shortcut still applies; a revision alone is not an improvement.
 If stage=actual_question, ONLY the literal question is solver-visible. A saved independent_solution
 was produced in a separate blind context. Reuse and verify its route against the actual question;
 do not treat it as gold, demand it repeat the author proof, or import omitted premises from the gold.
