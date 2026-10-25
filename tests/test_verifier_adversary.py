@@ -95,6 +95,9 @@ class Adversary(FakeGateway):
 
 def prepared(tmp_path, settings, source, candidate, mode="pass"):
     settings.require_verifier_adversary = True
+    # 这些专门的旧协议测试保留题面修复能力；新协议默认冻结题面。
+    if mode == 'question_repair':
+        settings.freeze_question_at_verifier = False
     pipe, store, _ = setup_pipeline(tmp_path, settings, source, candidate)
     pipe.gateway = Adversary(candidate.model_copy(deep=True), mode)
     return pipe, store, pipe.gateway
@@ -234,11 +237,20 @@ def test_literal_anchor_failure_has_bounded_format_repair_without_semantic_chang
     pipe, _, gateway = prepared(tmp_path, settings, source, candidate)
     original = gateway.call
     bad_request = []
+    saved_rules = []
 
     async def bad_anchor(role, prompt, salt, schema=None, **kwargs):
+        from diamond_factory.models import VerifierLocatorPatches
+        if schema is VerifierLocatorPatches:
+            gateway.calls.append((role, prompt, salt))
+            data = json.loads(prompt.splitlines()[-1])
+            assert data['invalid_locator_indices'] == [['conditions', 0]]
+            return VerifierLocatorPatches.model_validate({'patches': [{'group': 'conditions', 'index': 0,
+                'question_anchor': '37 vertices'}]}), digest(salt), 'gpt-6-luna'
         value, rid, model = await original(role, prompt, salt, schema, **kwargs)
         if schema is VerifierSpec and salt.endswith(":draft"):
             value = value.model_copy(deep=True)
+            saved_rules.append(value.conditions[0].model_dump(exclude={'question_anchor'}))
             value.conditions[0].question_anchor = "an invented paraphrase of the conditions"
             bad_request.append(rid)
         elif schema is VerifierSpec:
@@ -250,7 +262,13 @@ def test_literal_anchor_failure_has_bounded_format_repair_without_semantic_chang
     gateway.call = bad_anchor
     assert asyncio.run(pipe.preflight(candidate))
     assert len(bad_request) == 1 and len(candidate.verifier_assessment.versions) == 1
-    assert any(":draft-anchor-repair:" in s for _, _, s in gateway.calls)
+    assert any(":literal-locators:" in s for _, _, s in gateway.calls)
+    version = candidate.verifier_assessment.versions[0]
+    from diamond_factory.verifier import anchor_repairs_valid
+    assert anchor_repairs_valid(version)
+    assert version.anchor_repairs[-1].request_id
+    original_rule = version.spec.conditions[0].model_dump(exclude={'question_anchor'})
+    assert original_rule == saved_rules[0]
 
 
 def test_initial_audit_ambiguity_can_enter_question_repair_but_not_skip_audit(tmp_path, settings, source, candidate):

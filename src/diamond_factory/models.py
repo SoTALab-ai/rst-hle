@@ -140,6 +140,35 @@ class Solution(StrictModel):
     design: TaskDesign | None = None
 
 
+class LockedTaskDesign(StrictModel):
+    """作者只填写构造设计；目标由锁定提案提供，不能再次生成。"""
+    source_claim: str = Field(min_length=20)
+    claim_locator: str = Field(min_length=3)
+    underlying_conditions: list[str] = Field(min_length=1)
+    hidden_steps: list[str] = Field(min_length=1)
+    inferable_conditions: list[str]
+    preserved_invariants: list[str] = Field(min_length=1)
+    inverse_construction: str = Field(min_length=20)
+    answer_check: str = Field(min_length=20)
+    difficulty: DifficultyDesign | None = None
+
+
+class LockedProofDraft(StrictModel):
+    """模型不输出金标/目标/锁定前提；绑定后仍须独立审查完整推导。"""
+    topic: str
+    additional_assumptions: list[str]
+    derivation: list[str] = Field(min_length=2)
+    evidence: list[Evidence] = Field(min_length=1)
+    reasoning_delta: str = Field(min_length=20)
+    design: LockedTaskDesign
+
+    def bind(self, result: KnownResult) -> Solution:
+        return Solution(topic=self.topic, assumptions=list(dict.fromkeys(
+            [*result.assumptions, *self.additional_assumptions])), derivation=self.derivation,
+            answer=result.answer, evidence=self.evidence, reasoning_delta=self.reasoning_delta,
+            design=TaskDesign(target=result.target, **self.design.model_dump()))
+
+
 class BlueprintIssue(StrictModel):
     part: Literal["derivation", "answer", "assumptions", "source", "difficulty_design", "known_result"]
     step_index: int | None = Field(default=None, ge=1)
@@ -502,6 +531,16 @@ class VerifierReview(StrictModel):
     feedback: str = Field(min_length=20)
 
 
+class VerifierControlAttempt(StrictModel):
+    challenges: VerifierChallenges
+    oracle: VerifierOracle
+    challenge_request: str
+    oracle_request: str
+    challenge_actual_model: str
+    oracle_actual_model: str
+    coverage_errors: list[str]
+
+
 class VerifierRound(StrictModel):
     challenges: VerifierChallenges
     oracle: VerifierOracle
@@ -509,6 +548,8 @@ class VerifierRound(StrictModel):
     review: VerifierReview
     requests: dict[str, str]
     actual_models: dict[str, str]
+    # 生成失败的对照套件也保留，不据此放行或覆盖原费用。
+    control_attempts: list[VerifierControlAttempt] = Field(default_factory=list, max_length=3)
 
 
 class VerifierAnchorRepair(StrictModel):
@@ -519,6 +560,17 @@ class VerifierAnchorRepair(StrictModel):
     start: int = Field(ge=0)
     end: int = Field(gt=0)
     method: str
+    request_id: str = ""
+
+
+class VerifierLocatorPatch(StrictModel):
+    group: Literal["requirements", "conditions"]
+    index: int = Field(ge=0)
+    question_anchor: str = Field(min_length=5)
+
+
+class VerifierLocatorPatches(StrictModel):
+    patches: list[VerifierLocatorPatch] = Field(min_length=1, max_length=60)
 
 
 class VerifierVersion(StrictModel):
@@ -542,6 +594,7 @@ class VerifierAssessment(StrictModel):
     versions: list[VerifierVersion] = Field(min_length=1, max_length=3)
     status: Literal["pending", "passed", "rejected"] = "pending"
     reason: str = ""
+    frozen_item_sha256: str = ""
 
 
 class VerifierQuestionRepair(StrictModel):

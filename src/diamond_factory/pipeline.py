@@ -40,6 +40,7 @@ from .models import (
     ConsistencyAudit,
     DedupVerdict,
     IndependentSolution,
+    LockedProofDraft,
     Question,
     Record,
     ResultSelection,
@@ -189,6 +190,8 @@ class Pipeline:
             return False
         base_passed = pending or await self._preflight_correctness(candidate)
         if not base_passed:
+            if self.settings.freeze_question_at_verifier:
+                return False
             # 对抗可以澄清题面语义；不能绕过来源、结构、蓝图或精确反代失败。
             if (not self.settings.require_verifier_adversary or candidate.trials or candidate.deadline_outcomes
                     or not candidate.reasons or any(not reason.startswith("audit_failed:")
@@ -436,6 +439,10 @@ class Pipeline:
                 existing.authoring_complete = True
                 self.store.save(existing)
                 return existing
+            if self.settings.freeze_question_at_verifier and existing.verifier_assessment:
+                existing.authoring_complete = True
+                self.store.save(existing)
+                return existing
             existing.authoring_repairs_completed += 1
             existing.authoring_complete = existing.authoring_repairs_completed > self.settings.max_repairs
             self.store.save(existing)
@@ -477,15 +484,29 @@ class Pipeline:
         result = None
         for repair in range(first_repair,self.settings.max_repairs + 1):
             salt = f"{identity}:repair:{repair}"
+            reusable = result or existing
+            blueprint, bid, bmodel = None, "", ""
             if repair == 0 and seed and seed.solution is not None:
                 plan = seed.solution.model_copy(deep=True)
                 self.log("authoring_seed_reused", candidate=identity, seed_sha256=digest(seed.model_dump()),
                          origin_candidate=seed.original_candidate_id, original_requests=seed.original_request_ids,
                          prior_authoring_repairs=seed.prior_authoring_repairs, scientific_pass=False)
             else:
-                plan, _, _ = await self.gateway.call("generator", self.prompts["solution"] + "\n" +
-                    json.dumps(data, ensure_ascii=False), salt + ":solution", Solution)
-            blueprint, bid, bmodel = None, "", ""
+                if self.settings.use_locked_proof_draft:
+                    instruction = ("\nOUTPUT CONTRACT: return LockedProofDraft only. Do NOT emit answer, "
+                        "design.target or the locked assumptions. They are immutable program inputs. "
+                        "additional_assumptions contains only explicitly justified consequences, not new "
+                        "restrictions. Prove the supplied locked gold, including every case; if false, "
+                        "expose its contradiction in derivation instead of substituting another answer.")
+                    draft, rid, model = await self.gateway.call("generator", self.prompts["solution"] + instruction + "\n" +
+                        json.dumps(data, ensure_ascii=False), salt + ":locked-proof", LockedProofDraft)
+                    plan = draft.bind(known_result)
+                    self.log("locked_proof_bound", candidate=identity, repair=repair, request_id=rid,
+                        actual_model=model, draft_sha256=digest(draft.model_dump()),
+                        solution_sha256=digest(plan.model_dump()), golden_changed=False)
+                else:
+                    plan, _, _ = await self.gateway.call("generator", self.prompts["solution"] + "\n" +
+                        json.dumps(data, ensure_ascii=False), salt + ":solution", Solution)
             blueprint_errors = []
             if self.settings.require_solution_design and plan.design is None:
                 blueprint_errors.append("missing_solution_design")
@@ -526,6 +547,8 @@ class Pipeline:
             else:
                 item, align_request, _ = await self.gateway.call("generator", self.prompts["align"] + "\n" +
                                                 json.dumps({"solution": plan.model_dump(), "target": target,
+                                                            "repair_feedback": data.get("feedback"),
+                                                            "previous_question": reusable.item.model_dump() if reusable else None,
                                                             "source_fidelity": self.settings.source_fidelity},
                                                            ensure_ascii=False), salt + ":align", Question)
             if item.answer != plan.answer:
@@ -569,6 +592,12 @@ class Pipeline:
                     self.store.save(result)
                     return result
                 errors.extend(result.reasons)
+                if self.settings.freeze_question_at_verifier and result.verifier_assessment:
+                    # verifier阶段只能修规则。题面/推导缺陷退回上游，不能落入外层作者重写。
+                    result.authoring_complete = True
+                    self.store.save(result)
+                    self.log("verifier_terminal_no_author_rewrite", candidate=identity, reasons=result.reasons)
+                    return result
             result.status, result.reasons = "rejected", errors
             result.authoring_repairs_completed = repair+1
             result.authoring_complete = repair == self.settings.max_repairs

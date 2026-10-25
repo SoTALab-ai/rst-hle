@@ -9,7 +9,9 @@ from .models import (
     VerifierAnchorRepair,
     VerifierAssessment,
     VerifierChallenges,
+    VerifierControlAttempt,
     VerifierDecision,
+    VerifierLocatorPatches,
     VerifierObservation,
     VerifierOracle,
     VerifierQuestionRepair,
@@ -23,6 +25,7 @@ from .provenance import match_quote
 from .runtime import gather_cancel_on_error
 
 PROMPTS = ("verifier_draft", "verifier_challenge", "verifier_oracle", "verifier_apply",
+           "verifier_anchors",
            "verifier_review", "verifier_question_repair", "judge", "judge_system", "audit",
            "consistency_solve", "consistency_review", "consistency_certificate", "consistency_certificate_anchors",
            "bottleneck_audit")
@@ -42,6 +45,7 @@ def protocol_hash(prompts, settings):
     return digest({"prompts": {name: digest(prompts[name]) for name in PROMPTS},
                    "models": {r: getattr(settings, r).model_dump() for r in ("generator", "consistency", "judge")},
                    "max_revisions": settings.verifier_max_revisions,
+                   "freeze_question_at_verifier": settings.freeze_question_at_verifier,
                    "source_fidelity": settings.source_fidelity,
                    "code": Path(__file__).read_text(),
                    "provenance_code": Path(__file__).with_name("provenance.py").read_text()})
@@ -93,7 +97,18 @@ def anchor_repairs_valid(version):
         if version.spec_raw_sha256 and digest(raw.model_dump()) != version.spec_raw_sha256:
             return False
         expected, receipts = repair_spec_anchors(raw, version.item)
-        return expected == version.spec and receipts == version.anchor_repairs
+        if receipts != version.anchor_repairs[:len(receipts)]:
+            return False
+        for receipt in version.anchor_repairs[len(receipts):]:
+            row = getattr(expected, receipt.group)[receipt.index]
+            if (receipt.method != "model_literal_locator" or not receipt.request_id
+                    or row.question_anchor != receipt.original or len(receipt.literal) < 5
+                    or receipt.original in version.item.question
+                    or version.item.question[receipt.start:receipt.end] != receipt.literal
+                    or version.item.question.count(receipt.literal) != 1):
+                return False
+            row.question_anchor = receipt.literal
+        return expected == version.spec
     except IndexError:
         return False
 
@@ -108,9 +123,40 @@ def spec_errors(spec, item):
     return errors
 
 
+def control_coverage_errors(challenges, oracle, item):
+    """只按独立oracle核定的对照计数；作者标签不提供通过资格。"""
+    ids = {c.id: c for c in challenges.cases}
+    cases = {c.id: c for c in oracle.cases}
+    if len(cases) != len(oracle.cases) or set(cases) != {"golden", *ids}:
+        return ["oracle_control_mapping_mismatch"]
+    errors = []
+    if sum(c.verdict == "yes" for name, c in cases.items() if name != "golden") < 2:
+        errors.append("insufficient_positive_controls")
+    negative = [ids[name] for name, c in cases.items() if c.verdict == "no" and name in ids]
+    if len(negative) < 2:
+        errors.append("insufficient_negative_controls")
+    if {c.target_output_index for c in negative} != set(range(len(item.required_outputs))):
+        errors.append("negative_output_coverage_incomplete")
+    return errors
+
+
 def round_errors(result, item):
     """不相信模型的总pass：程序核对控制、覆盖、误杀/漏检及HLE兼容。"""
     errors = []
+    if result.control_attempts:
+        previous = None
+        for attempt in result.control_attempts:
+            if attempt.coverage_errors != control_coverage_errors(attempt.challenges, attempt.oracle, item):
+                errors.append("control_repair_receipt_mismatch")
+            if previous:
+                before = previous.challenges.cases
+                original = {c.id: c.verdict for c in previous.oracle.cases}
+                if (attempt.challenges.cases[:len(before)] != before
+                        or any(original.get(c.id, c.verdict) != c.verdict for c in attempt.oracle.cases)):
+                    errors.append("control_repair_changed_previous_case_or_oracle")
+            previous = attempt
+        if previous.challenges != result.challenges or previous.oracle != result.oracle:
+            errors.append("control_repair_final_mapping_mismatch")
     oracle = result.oracle
     if any(getattr(oracle, name).verdict != "pass" for name in
            ("question_complete", "target_unambiguous", "golden_valid", "hidden_steps_recoverable")):
@@ -156,6 +202,9 @@ def has_valid_verifier(candidate, sources, *, expected_protocol=None):
     if expected_protocol and assessment.protocol_sha256 != expected_protocol:
         return False
     final = assessment.versions[-1]
+    if assessment.frozen_item_sha256 and (assessment.frozen_item_sha256 != digest(candidate.item.model_dump())
+            or any(digest(v.item.model_dump()) != assessment.frozen_item_sha256 for v in assessment.versions)):
+        return False
     return (not final.revalidation_pending and final.item == candidate.item and final.result is not None
             and anchor_repairs_valid(final) and not spec_errors(final.spec, candidate.item)
             and not round_errors(final.result, candidate.item))
@@ -170,6 +219,9 @@ class VerifierBuilder:
                     "known_result": c.known_result.model_dump() if c.known_result else None,
                     "solution": c.solution.model_dump(),
                     "blueprint_review": c.blueprint_audit.model_dump() if c.blueprint_audit else None},
+                "mutation_policy": ("FROZEN: question, golden and full proof cannot change. Repair verifier "
+                    "or controls only. A question/proof defect must reject this version with upstream feedback."
+                    if self.p.settings.freeze_question_at_verifier else "Legacy question repair protocol"),
                 "sources": [{**sources[s].model_dump(), "text": sources[s].text[:self.p.settings.max_source_chars]}
                             for s in c.source_ids]}
 
@@ -193,6 +245,28 @@ class VerifierBuilder:
                 return VerifierVersion(item=c.item.model_copy(deep=True), spec=spec,
                     spec_request=rid, spec_actual_model=model, spec_raw_sha256=raw_sha256,
                     anchor_repairs=anchor_repairs)
+            if errors == ["verifier_condition_or_output_not_anchored"] and repair < self.p.settings.consistency_schema_repairs:
+                # 只修引用位置，不让模型重写已经形成的验收规则或重新决定gold。
+                bad = [(g, i) for g in ("requirements", "conditions")
+                       for i, row in enumerate(getattr(spec, g)) if row.question_anchor not in c.item.question]
+                patches, aid, _ = await self.p.consistency_call(self.p.prompts["verifier_anchors"] + "\n" +
+                    json.dumps({"question": c.item.question, "verifier": spec.model_dump(),
+                                "invalid_locator_indices": bad}, ensure_ascii=False),
+                    self.salt(c, index, f"literal-locators:{repair}"), VerifierLocatorPatches)
+                if sorted((x.group, x.index) for x in patches.patches) != sorted(bad):
+                    raise ModelResponseError("consistency", aid, "invalid_verifier_locator_mapping")
+                for patch in patches.patches:
+                    literal = patch.question_anchor
+                    if c.item.question.count(literal) != 1:
+                        raise ModelResponseError("consistency", aid, "nonliteral_or_ambiguous_verifier_locator")
+                    row = getattr(spec, patch.group)[patch.index]
+                    start = c.item.question.index(literal)
+                    anchor_repairs.append(VerifierAnchorRepair(group=patch.group, index=patch.index,
+                        original=row.question_anchor, literal=literal, start=start, end=start+len(literal),
+                        method="model_literal_locator", request_id=aid))
+                    row.question_anchor = literal
+                return VerifierVersion(item=c.item.model_copy(deep=True), spec=spec, spec_request=rid,
+                    spec_actual_model=model, spec_raw_sha256=raw_sha256, anchor_repairs=anchor_repairs)
             if repair == self.p.settings.consistency_schema_repairs:
                 raise ModelResponseError("generator", rid, "invalid_verifier_coverage_or_anchor")
             # 原输出已有收据，续跑只读复用；锚点格式修复不得改数学验收语义。
@@ -211,21 +285,44 @@ class VerifierBuilder:
         packet = self.packet(c, sources)
         packet["verifier"] = version.spec.model_dump()
         packet["output_index_map"] = dict(enumerate(c.item.required_outputs))
-        challenges, cid, cm = await p.consistency_call(p.prompts["verifier_challenge"] + "\n" +
-            json.dumps(packet, ensure_ascii=False), self.salt(c, index, "challenge"), VerifierChallenges)
-        if any(case.target_output_index >= len(c.item.required_outputs) or case.response == c.item.answer
-               for case in challenges.cases):
-            raise ModelResponseError("consistency", cid, "invalid_verifier_challenges")
-        responses = [{"id": "golden", "response": c.item.answer}] + [
-            {"id": case.id, "response": case.response} for case in challenges.cases]
-        oracle_packet = self.packet(c, sources)
-        # 刻意不传挑战者标签、规则和任何判分结果。
-        oracle_packet["responses"] = responses
-        oracle, oid, om = await p.consistency_call(p.prompts["verifier_oracle"] + "\n" +
-            json.dumps(oracle_packet, ensure_ascii=False), self.salt(c, index, "oracle"), VerifierOracle)
-        by_id = {o.id: o for o in oracle.cases}
-        if len(by_id) != len(oracle.cases) or set(by_id) != {r["id"] for r in responses}:
-            raise ModelResponseError("consistency", oid, "invalid_verifier_oracle_case_mapping")
+        attempts = []
+        for repair in range(p.settings.consistency_schema_repairs + 1):
+            suffix = "" if repair == 0 else f"-controls-repair:{repair}"
+            challenges, cid, cm = await p.consistency_call(p.prompts["verifier_challenge"] + "\n" +
+                json.dumps(packet, ensure_ascii=False), self.salt(c, index, "challenge" + suffix), VerifierChallenges)
+            if any(case.target_output_index >= len(c.item.required_outputs) or case.response == c.item.answer
+                   for case in challenges.cases):
+                raise ModelResponseError("consistency", cid, "invalid_verifier_challenges")
+            if attempts and challenges.cases[:len(attempts[-1].challenges.cases)] != attempts[-1].challenges.cases:
+                raise ModelResponseError("consistency", cid, "control_repair_changed_existing_case")
+            responses = [{"id": "golden", "response": c.item.answer}] + [
+                {"id": case.id, "response": case.response} for case in challenges.cases]
+            oracle_packet = self.packet(c, sources)
+            # 刻意不传挑战者标签、规则、前次oracle或任何判分结果。
+            oracle_packet["responses"] = responses
+            oracle, oid, om = await p.consistency_call(p.prompts["verifier_oracle"] + "\n" +
+                json.dumps(oracle_packet, ensure_ascii=False), self.salt(c, index, "oracle" + suffix), VerifierOracle)
+            by_id = {o.id: o for o in oracle.cases}
+            if len(by_id) != len(oracle.cases) or set(by_id) != {r["id"] for r in responses}:
+                raise ModelResponseError("consistency", oid, "invalid_verifier_oracle_case_mapping")
+            if attempts and any(by_id[o.id].verdict != o.verdict for o in attempts[-1].oracle.cases):
+                raise ModelResponseError("consistency", oid, "control_repair_changed_prior_oracle_verdict")
+            errors = control_coverage_errors(challenges, oracle, c.item)
+            attempts.append(VerifierControlAttempt(challenges=challenges, oracle=oracle,
+                challenge_request=cid, oracle_request=oid, challenge_actual_model=cm, oracle_actual_model=om,
+                coverage_errors=errors))
+            sound = all(getattr(oracle, k).verdict == "pass" for k in
+                        ("question_complete", "target_unambiguous", "golden_valid", "hidden_steps_recoverable"))
+            if not errors or not sound or len(challenges.cases) >= 12 or repair == p.settings.consistency_schema_repairs:
+                break
+            p.log("verifier_control_suite_repair", candidate=c.id, revision=index, repair=repair,
+                  errors=errors, challenge_request=cid, oracle_request=oid, question_changed=False)
+            packet["control_generation_feedback"] = {"errors": errors,
+                "previous_challenges": challenges.model_dump(), "oracle": oracle.model_dump(),
+                "instruction": "APPEND controls only. Preserve every previous case, id, label, response, "
+                    "index and rationale exactly and in order. Add complete genuinely valid equivalent "
+                    "answers or invalid near misses needed for coverage. No question, gold or verifier changes. "
+                    "Return the complete appended suite with at most 12 cases; labels are not oracle truth."}
 
         async def one(response):
             verdict, vid, vm = await p.consistency_call(p.prompts["verifier_apply"] + "\n" + json.dumps({
@@ -246,7 +343,7 @@ class VerifierBuilder:
             json.dumps(review_packet, ensure_ascii=False), self.salt(c, index, "review"), VerifierReview)
         return VerifierRound(challenges=challenges, oracle=oracle, observations=observations, review=review,
             requests={"challenge": cid, "oracle": oid, "review": rid},
-            actual_models={"challenge": cm, "oracle": om, "review": rm})
+            actual_models={"challenge": cm, "oracle": om, "review": rm}, control_attempts=attempts)
 
     def save(self, c):
         self.p.store.save(c)
@@ -274,7 +371,8 @@ class VerifierBuilder:
         if not assessment:
             version = await self.draft(c, sources, 0)
             assessment = VerifierAssessment(context_sha256=context_hash(c, sources), protocol_sha256=protocol,
-                                            versions=[version])
+                versions=[version], frozen_item_sha256=digest(c.item.model_dump())
+                if p.settings.freeze_question_at_verifier else "")
             c.verifier_assessment = assessment
             self.save(c)
         if assessment.status == "rejected":
@@ -283,8 +381,12 @@ class VerifierBuilder:
             version = assessment.versions[-1]
             index = len(assessment.versions) - 1
             if version.revalidation_pending:
+                if p.settings.freeze_question_at_verifier:
+                    return self.reject(c, "frozen_item_requires_upstream_new_version")
                 if not await revalidate(c):
-                    return self.reject(c, "question_repair_failed_full_correctness_review")
+                    failures = list(c.reasons)
+                    p.log("verifier_question_revalidation_failed", candidate=c.id, reasons=failures)
+                    return self.reject(c, "question_repair_failed_full_correctness_review:" + ";".join(failures))
                 version.revalidation_pending = False
                 self.save(c)
             if version.result is None:
@@ -300,6 +402,10 @@ class VerifierBuilder:
                 return True
             if result.oracle.golden_valid.verdict != "pass":
                 return self.reject(c, "invalid_or_uncertain_golden")
+            if p.settings.freeze_question_at_verifier and (
+                    result.review.action == "repair_question" or any(getattr(result.oracle, name).verdict != "pass"
+                        for name in ("question_complete", "target_unambiguous", "hidden_steps_recoverable"))):
+                return self.reject(c, "upstream_defect_requires_new_version:" + ";".join(errors))
             if index >= p.settings.verifier_max_revisions:
                 return self.reject(c, "two_revision_limit_or_configured_limit:" + ";".join(errors))
             action = result.review.action

@@ -37,6 +37,13 @@ outputs of its intermediate steps. Do not reveal the skill names, pattern IDs, b
 counterexample explanation or easier-control hint in the question. These are author/auditor metadata.
 Retain clear observable definitions, averaging conventions, domains and multiplicity conventions;
 their ambiguity must never stand in for the intended reasoning bottleneck.
+When repair_feedback or previous_question is supplied, repair the concrete question defect directly,
+preserving the verified proof and locked answer. Do not rebuild the target from scratch.
+For bounds and asymptotic estimates, identify a unique quantity/coefficient or an explicitly specified
+construction whose value the gold actually establishes. Asking for "an upper bound" permits weaker
+inequivalent answers. Do not fix that ambiguity by inventing "smallest", "largest", "sharp" or
+"optimal" unless BOTH the locked answer and proof already establish that extremal claim.
+Do not print the golden inequality as a premise or request a proof absent from the answer contract.
 If design.difficulty.mask exists, prioritize concealing THAT selected hardest inference and every
 hint that effectively supplies it. Follow hidden_information and retained_information, then check
 that the result is still recoverable. Do not paste the derivation's result or its transformed
