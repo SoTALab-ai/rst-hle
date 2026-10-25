@@ -1,10 +1,12 @@
 """前置verifier的有限对抗；所有模型意见与执行记录均可证伪、可恢复。"""
 import json
+import re
 from pathlib import Path
 
 from .evaluation import judge_answer
 from .llm import ModelResponseError
 from .models import (
+    VerifierAnchorRepair,
     VerifierAssessment,
     VerifierChallenges,
     VerifierDecision,
@@ -17,6 +19,7 @@ from .models import (
     VerifierVersion,
     digest,
 )
+from .provenance import match_quote
 from .runtime import gather_cancel_on_error
 
 PROMPTS = ("verifier_draft", "verifier_challenge", "verifier_oracle", "verifier_apply",
@@ -27,16 +30,72 @@ PROMPTS = ("verifier_draft", "verifier_challenge", "verifier_oracle", "verifier_
 
 def context_hash(candidate, sources):
     # 题面版本另存；外部证明/来源变化不能挪用旧对抗检查点。
-    return digest({"solution": candidate.solution.model_dump(),
+    data = {"solution": candidate.solution.model_dump(),
                    "known_result": candidate.known_result.model_dump() if candidate.known_result else None,
-                   "source_hashes": {sid: sources[sid].sha256 for sid in candidate.source_ids}})
+                   "source_hashes": {sid: sources[sid].sha256 for sid in candidate.source_ids}}
+    if candidate.source_fidelity != "strict":
+        data["source_fidelity"] = candidate.source_fidelity
+    return digest(data)
 
 
 def protocol_hash(prompts, settings):
     return digest({"prompts": {name: digest(prompts[name]) for name in PROMPTS},
                    "models": {r: getattr(settings, r).model_dump() for r in ("generator", "consistency", "judge")},
                    "max_revisions": settings.verifier_max_revisions,
-                   "code": Path(__file__).read_text()})
+                   "source_fidelity": settings.source_fidelity,
+                   "code": Path(__file__).read_text(),
+                   "provenance_code": Path(__file__).with_name("provenance.py").read_text()})
+
+
+def repair_spec_anchors(spec, item):
+    """仅把定位引文投影为题面原文；规则/条件/金标不变，后续对抗仍必需。
+
+    来源引文不允许语法改写。verifier定位另容忍英文冠词首字母及
+    is a/be a的语法差异，不据此认可条件的真值或可推出性。
+    """
+    repaired, receipts = spec.model_copy(deep=True), []
+    for group in ("requirements", "conditions"):
+        for index, row in enumerate(getattr(repaired, group)):
+            original = row.question_anchor
+            if original in item.question:
+                continue
+            match = match_quote(original, item.question, unique=True)
+            method = "presentation"
+            if match is None:
+                variants = [re.sub(r"^(A|An|The)(?= [a-z]{3})", lambda m: m[0].lower(), original)]
+                if " is a " in original:
+                    variants.append(original.replace(" is a ", " be a ", 1))
+                matches = [m for v in variants if v != original
+                           and (m := match_quote(v, item.question, unique=True))]
+                spans = {(m.start, m.end) for m in matches}
+                if len(spans) != 1:
+                    continue
+                match, method = matches[0], "locator_grammar"
+            # 定位必须唯一；不能靠选择某个近似命中来附会条件。
+            if len(match.literal) < 5 or item.question.count(match.literal) != 1:
+                continue
+            row.question_anchor = match.literal
+            receipts.append(VerifierAnchorRepair(group=group, index=index, original=original,
+                literal=match.literal, start=match.start, end=match.end, method=method))
+    return repaired, receipts
+
+
+def anchor_repairs_valid(version):
+    if version.anchor_repairs and not version.spec_raw_sha256:
+        return False
+    raw = version.spec.model_copy(deep=True)
+    try:
+        for receipt in version.anchor_repairs:
+            row = getattr(raw, receipt.group)[receipt.index]
+            if row.question_anchor != receipt.literal:
+                return False
+            row.question_anchor = receipt.original
+        if version.spec_raw_sha256 and digest(raw.model_dump()) != version.spec_raw_sha256:
+            return False
+        expected, receipts = repair_spec_anchors(raw, version.item)
+        return expected == version.spec and receipts == version.anchor_repairs
+    except IndexError:
+        return False
 
 
 def spec_errors(spec, item):
@@ -98,7 +157,8 @@ def has_valid_verifier(candidate, sources, *, expected_protocol=None):
         return False
     final = assessment.versions[-1]
     return (not final.revalidation_pending and final.item == candidate.item and final.result is not None
-            and not spec_errors(final.spec, candidate.item) and not round_errors(final.result, candidate.item))
+            and anchor_repairs_valid(final) and not spec_errors(final.spec, candidate.item)
+            and not round_errors(final.result, candidate.item))
 
 
 class VerifierBuilder:
@@ -106,7 +166,7 @@ class VerifierBuilder:
         self.p = pipeline
 
     def packet(self, c, sources):
-        return {"item": c.item.model_dump(), "initial_golden": {
+        return {"item": c.item.model_dump(), "source_fidelity": c.source_fidelity, "initial_golden": {
                     "known_result": c.known_result.model_dump() if c.known_result else None,
                     "solution": c.solution.model_dump(),
                     "blueprint_review": c.blueprint_audit.model_dump() if c.blueprint_audit else None},
@@ -120,10 +180,13 @@ class VerifierBuilder:
             stage = "draft" if repair == 0 else f"draft-anchor-repair:{repair}"
             spec, rid, model = await self.p.gateway.call("generator", self.p.prompts["verifier_draft"] + "\n" +
                 json.dumps(packet, ensure_ascii=False), self.salt(c, index, stage), VerifierSpec)
+            raw_sha256 = digest(spec.model_dump())
+            spec, anchor_repairs = repair_spec_anchors(spec, c.item)
             errors = spec_errors(spec, c.item)
             if not errors:
                 return VerifierVersion(item=c.item.model_copy(deep=True), spec=spec,
-                                       spec_request=rid, spec_actual_model=model)
+                    spec_request=rid, spec_actual_model=model, spec_raw_sha256=raw_sha256,
+                    anchor_repairs=anchor_repairs)
             if repair == self.p.settings.consistency_schema_repairs:
                 raise ModelResponseError("generator", rid, "invalid_verifier_coverage_or_anchor")
             # 原输出已有收据，续跑只读复用；锚点格式修复不得改数学验收语义。

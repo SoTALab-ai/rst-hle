@@ -157,6 +157,7 @@ def main():
                 rows.append({"id": c.id, **c.item.model_dump(), "lineage": {"root": c.root_id,
                              "parent": c.parent_id, "generation": c.generation},
                              "correct_count": correct_count(sample_outcomes(c)),
+                             "source_fidelity": c.source_fidelity, "source_notes": c.source_notes,
                              "consistency": c.consistency.model_dump(),
                              "verifier_history": [a.model_dump() for a in c.verifier_history],
                              "verifier_assessment": (c.verifier_assessment.model_dump()

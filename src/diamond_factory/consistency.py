@@ -14,6 +14,8 @@ def consistency_input(candidate, sources):
             "sources": {sid: sources[sid].sha256 for sid in candidate.source_ids}}
     if candidate.known_result:
         data["known_result"] = candidate.known_result.model_dump()
+    if candidate.source_fidelity != "strict":
+        data["source_fidelity"] = candidate.source_fidelity
     return digest(data)
 
 
@@ -30,7 +32,8 @@ def has_valid_consistency(candidate, sources):
         if not has_valid_verifier(candidate, sources):
             return False
     evidence_ids = {e.source_id for e in candidate.item.evidence + candidate.solution.evidence}
-    if candidate.known_result and known_result_errors(candidate.known_result, sources, candidate.solution):
+    if candidate.known_result and known_result_errors(candidate.known_result, sources, candidate.solution,
+            candidate.blueprint_audit, source_fidelity=candidate.source_fidelity):
         return False
     if (candidate.solution.design and candidate.solution.design.difficulty
             and candidate.solution.design.difficulty.mask and not valid_bottleneck(candidate, sources)):

@@ -46,6 +46,17 @@ def test_pg_source_and_candidate_sample_roundtrip(pg, source, candidate):
         pg.sources()
 
 
+def test_pg_advisory_provenance_is_persisted_without_relabelling_sources(pg, source, candidate):
+    run_meta(pg)
+    pg.add_source(source)
+    candidate.source_fidelity = 'advisory'
+    candidate.source_notes = ['source_inspired_construction', 'evidence_quote_not_in_source']
+    pg.save(candidate)
+    loaded = pg.candidates()[0]
+    assert loaded.source_fidelity == 'advisory' and loaded.source_notes == candidate.source_notes
+    assert pg.sources()[0] == source
+
+
 def test_pg_preflight_certificate_roundtrip_and_content_binding(pg, tmp_path, settings, source, candidate):
     import asyncio
 
