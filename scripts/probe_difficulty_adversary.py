@@ -47,11 +47,13 @@ async def run(args):
               "difficulty_samples": 0, "difficulty_accepted": 0, "cases": []}
     try:
         with store.lock():
+            # 所有case共用同一冻结来源集合，避免后加来源导致先前run的续跑指纹变化。
+            for case in cases:
+                store.add_source(case.source)
             for case in cases:
                 run_id = args.run_prefix + "-" + case.id
                 directory = Path(args.directory) / case.id
                 directory.mkdir(parents=True, exist_ok=True)
-                store.add_source(case.source)
                 gateway = ProbeGateway(settings, directory / "requests", store, run_id,
                     pricing=pricing, visible_cost_limit_usd=None)
                 pipe = Pipeline(settings, store, run_id, "pilot", directory, gateway)
