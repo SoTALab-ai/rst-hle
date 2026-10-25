@@ -102,7 +102,7 @@ uv run python scripts/run_paper_library_pipeline.py \
 uv run python scripts/run_library_question_campaign.py \
   --library-run-id RUN-ID-read --materials 50 --wait \
   --run-prefix QUESTIONS-RUN-ID --directory work/questions/QUESTIONS-RUN-ID \
-  --rates work/private/prices.json --config configs/library-source-inspired.toml
+  --rates work/private/prices.json --config configs/library-difficulty-adversary.toml
 ```
 
 每篇由6Luna规划1–5条不同推理结构的已有结论，检查原文逐字锚点和完整选页；多题时另次调用审查重复结构。材料不足或规划失败可为0条并保留拒绝原因，不强凑题数。50篇最多250条计划，分片进入原`QuestionExperiment`，仍需锁定金标、完整证明、独立审查、最难步骤挖空、科学质检、反代、verifier对抗、GLM首4次筛选及16次验收。简单题拒绝；仅对过难题做降难。同论文题目相关，计划量不等于合格交付量。
@@ -122,4 +122,4 @@ uv run python scripts/report_campaign_costs.py \
 
 清单包含`scopes`（`database_url_env`、`objects`）及`stages`（`scope`、`stage`、`run_id`、`directory`、`config`、完整`pricing`快照）。只读查询，不调用模型。输出分阶段、分角色美元费用、人民币参考、HTTP次数、未知用量和在途预留。VM/存储/网络账单未取得时标null并说明未并入；不能把API估算叫完整账单。历史13页探针、重复版本和补采成本也应纳入同一轮累计。
 
-2026-10-25用户进一步放宽来源复现要求：上述逐字匹配规则保留给历史`strict`模式；新管线默认`configs/library-source-inspired.toml`，来源引文或结论差异仅作提示，允许由论文启发的新构造。实际题面、完整证明、金标、域条件与verifier的一致性仍为硬验收。详见[来源口径](source-fidelity.md)。
+2026-10-25用户进一步放宽来源复现要求：上述逐字匹配规则保留给历史strict模式；来源引文或结论差异仅作提示，允许由论文启发的新构造。随后授权的新首题入口默认configs/library-difficulty-adversary.toml，包含[两阶段难度对抗](difficulty-adversary.md)；旧library-source-inspired配置供历史协议与续产。题面、完整证明、金标、域条件与verifier的一致性仍为硬验收。详见[来源口径](source-fidelity.md)。
