@@ -38,6 +38,8 @@
 
 2026-10-26用户进一步明确：题面不得为好验证或自足而降低难度，论文能推出的结论即可作为正确性依据，只需把论文最难的一步留给解题者。新入口`configs/library-paper-hard-step.toml`（`correctness_basis=paper_grounded`）：只有具体错误（反例、矛盾、误用论文结论、多解见证）阻断；uncertain、验算未覆盖和6Luna深度意见只记录，难度由GLM实测；挖空泄露、verifier对抗、HLE判分与4→16规则不变。不与6Luna难度对抗同时启用。见[论文硬步](docs/paper-hard-step.md)。
 
+2026-10-26用户要求减少论文完整推导质检：paper_grounded的蓝图审查仅核引用与适用条件，使用独立短提示，不再要求6Luna重证论文或展开论文省略的代数。未能独立核实和对论文本身的一般质疑只作记录；转写/特化引入的具体错误仍阻断。历史快照与旧结果不追溯修改。
+
 2026-10-25用户进一步授权新首题的两阶段难度对抗：锁定前可用独立proposal身份提出更强的新构造，锁定后的题面阶段只改可推导提示与挖空，各最多两次修订。完整历史、科学复核和恢复收据必须保留。已有GLM成绩或已进入verifier的版本禁止据此加难；0/16子题仍只降难。新入口为`configs/library-difficulty-adversary.toml`，旧冻结配置保持原身份。见[难度对抗](docs/difficulty-adversary.md)。
 
 - 解题GLM5.2只看题面，不联网、不用工具，600秒墙钟限制包括重试，不发送客户端输出token上限。官方HLE判分模板/哈希不随意修改，当前judge为gpt-6-luna medium。

@@ -66,7 +66,7 @@ class AuthoringRejected(RuntimeError):
     pass
 
 
-# paper_grounded追加条款的阶段；每个名字对应prompts/hardstep_<name>.txt。
+# paper_grounded各阶段的专用条款；蓝图审查使用独立短提示，其余阶段追加条款。
 HARD_STEP_PROMPTS = ("known_result", "solution", "blueprint_audit", "align", "audit", "bottleneck_audit",
                      "consistency_solve", "consistency_review")
 
@@ -84,9 +84,12 @@ class Pipeline:
         self.basis = settings.correctness_basis
         self.defer_depth = settings.difficulty_adversary_mode == "shortcut_blocking" or self.basis == "paper_grounded"
         if self.basis == "paper_grounded":
-            # 只追加“论文硬步”条款，原提示保持不变；条款进入全部提示哈希与运行指纹。
+            # 蓝图只查引用与适用条件，避免旧“独立重证”指令与论文依据口径冲突。
+            # 其他阶段保留现有合同；全部提示仍进入哈希与运行指纹。
             for name in HARD_STEP_PROMPTS:
-                self.prompts[name] = self.prompts[name] + "\n\n" + self.prompts["hardstep_" + name]
+                dedicated = self.prompts["hardstep_" + name]
+                self.prompts[name] = (dedicated if name == "blueprint_audit" else
+                                      self.prompts[name] + "\n\n" + dedicated)
         self.difficulty_profile = (json.loads(Path(settings.difficulty_profile_path).read_text())
                                    if settings.difficulty_profile_path else None)
         self.gateway = gateway or Gateway(settings, run_dir / "requests", store=store, run_id=run_id)
@@ -456,14 +459,19 @@ class Pipeline:
 
     async def review_blueprint(self, solution, source_data, target, salt, known_result=None, construction_reference=None,
                                public_task=None):
-        """审完整证明；步骤映射不合法只修审查格式，不重购作者答案。"""
+        """论文依据模式只核引用与适用条件；步骤映射错误仍只修格式。"""
         schema = StepwiseBlueprintAudit if self.settings.require_stepwise_blueprint_review else BlueprintAudit
+        paper_basis = self.basis == "paper_grounded"
         prompt = self.prompts["blueprint_audit"] + "\n" + json.dumps({
             "solution": solution.model_dump(), "source": source_data, "target": target,
             "source_fidelity": self.settings.source_fidelity,
             "known_result": known_result.model_dump() if known_result else None,
-            "step_indexing": "One-based indices into solution.derivation; inspect every entry.",
+            "step_indexing": ("One-based indices into solution.derivation; check cited applications, "
+                              "not independent proofs of the paper's results." if paper_basis else
+                              "One-based indices into solution.derivation; inspect every entry."),
             "expected_step_count": len(solution.derivation),
+            **({"correctness_basis": self.basis, "review_scope": "paper_reference_and_premises"}
+               if paper_basis else {}),
             **({"solver_visible_task": public_task} if public_task is not None else {}),
             **({"construction_reference": construction_reference} if construction_reference else {})}, ensure_ascii=False)
         for attempt in range(2):

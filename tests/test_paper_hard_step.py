@@ -1,5 +1,6 @@
 """论文硬步口径：只有具体错误阻断；不确定、未覆盖与深度意见只记录。"""
 import asyncio
+import json
 
 import pytest
 from conftest import passing_consistency
@@ -134,16 +135,49 @@ def test_paper_basis_config_loads_and_rejects_depth_adversary():
                                        "difficulty_references_path": "configs/difficulty-reference-cards.json"})
 
 
-def test_addenda_are_appended_only_under_paper_basis(tmp_path):
+def test_paper_reference_check_replaces_independent_proof_prompt_only_under_paper_basis(tmp_path):
     settings = load("configs/library-paper-hard-step.toml")
     baseline = load("configs/library-source-inspired.toml")
     grounded = Pipeline(settings, Store(tmp_path / "a.sqlite"), "a", "pilot", tmp_path / "a")
     plain = Pipeline(baseline, Store(tmp_path / "b.sqlite"), "b", "pilot", tmp_path / "b")
     for name in HARD_STEP_PROMPTS:
-        assert grounded.prompts[name].startswith(plain.prompts[name])
-        assert grounded.prompts[name].endswith(plain.prompts["hardstep_" + name])
+        if name == "blueprint_audit":
+            assert grounded.prompts[name] == plain.prompts["hardstep_" + name]
+            assert "In advisory mode the paper is INSPIRATION" not in grounded.prompts[name]
+            assert "Independently verify EVERY entry" not in grounded.prompts[name]
+        else:
+            assert grounded.prompts[name].startswith(plain.prompts[name])
+            assert grounded.prompts[name].endswith(plain.prompts["hardstep_" + name])
         assert "PAPER HARD-STEP MODE" not in plain.prompts[name]
     assert grounded.fingerprint != plain.fingerprint
+
+
+@pytest.mark.parametrize("basis", ["self_verified", PG])
+def test_blueprint_request_explicitly_binds_paper_reference_scope(tmp_path, settings, source, candidate, basis):
+    from diamond_factory.models import StepwiseBlueprintAudit
+
+    settings = settings.model_copy(update={"correctness_basis": basis,
+                                          "require_stepwise_blueprint_review": True})
+    pipe, _store, gateway = setup_pipeline(tmp_path, settings, source, candidate)
+    payloads = []
+
+    async def call(role, prompt, salt, schema=None, **kw):
+        payloads.append(json.loads(prompt.splitlines()[-1]))
+        return StepwiseBlueprintAudit(valid=True, answer_correct=True, derivation_complete=True,
+            source_grounded=True, reason="Reference application checked without independently proving the paper.",
+            reviewed_step_count=len(candidate.solution.derivation), issues=[]), "review", "gpt-6-luna"
+
+    gateway.call = call
+    result, _, _ = asyncio.run(pipe.review_blueprint(candidate.solution, source.model_dump(), {}, "check"))
+    assert result.passed(defer_depth=basis == PG)
+    data = payloads[0]
+    if basis == PG:
+        assert data["correctness_basis"] == PG
+        assert data["review_scope"] == "paper_reference_and_premises"
+        assert "not independent proofs" in data["step_indexing"]
+    else:
+        assert "correctness_basis" not in data and "review_scope" not in data
+        assert data["step_indexing"].endswith("inspect every entry.")
 
 
 def grounded_pipeline(tmp_path, settings, source, candidate, verdict):
