@@ -6,9 +6,13 @@ attack_validity to correct/incorrect/uncertain. Write the shortest CORRECT route
 in shortest_correct_route; route_validity=verified is your semantic check, not a formal proof.
 A correct low-burden route avoiding the intended discovery, a supplied inferable bridge, or a
 standard closure resolving the target without downstream discovery gives verdict=too_easy.
-A concrete verified route still requiring discovery/use of the bridge gives sufficient EVEN IF
-it is familiar or routine; remaining_discoveries and indispensable_proof_entries must describe
-that burden precisely. Equivalent methods of comparable burden are allowed. Do not require the
+A verified route that retains the intended substantial reasoning burden gives sufficient;
+remaining_discoveries and indispensable_proof_entries must identify what it actually retains.
+Merely touching one declared skill while dropping the main reconstruction, coupled compatibility,
+or global exceptional-set burden is a bypass. If the author's own best route resolves the complete
+target by routine direct substitution or a standard identity with no substantial discovery left,
+return too_easy as concrete REPAIR FEEDBACK for a stronger new proposal, never an instruction to
+terminate before the bounded revisions. Familiar notation alone does not prove low burden. Equivalent methods of comparable burden are allowed. Do not require the
 literal author's proof or prescribe forbidden methods. A failed attack alone never proves depth,
 uniqueness of method or necessity over every possible solution. Without a verified correct route
 and a checked comparison return uncertain; do not certify sufficient from failure to solve.
@@ -24,3 +28,12 @@ lock (actual_question) feedback may ONLY remove inferable hints: never change th
 independent model laws, quantifiers, output conventions, or full proof. An unfixable fixed target
 ends this bounded attempt. Stronger notation, longer arithmetic, or prohibiting an algorithm
 by fiat does not block a route. All source/answer/proof data are private review inputs.
+
+INPUT BOUNDARY: blind_attack_inputs is the exact packet the attacker received. For before_lock,
+ONLY its question string is public. For actual_question, only its literal question and output names
+are public. Do not attribute formulas from provisional_result.statement, solution, the source or
+solver_inputs summaries to that packet. If the attacker correctly reports missing primitive data,
+return invalid for the task, not attack_validity=incorrect on the strength of a private formula.
+A correct cheap route can be a bypass of the intended hard burden even if it shares the first
+transformation with the author's proof. State the concrete route and eliminated burden; do not
+certify sufficient solely because some generic 'bridge' remains. No absolute step/token quota.

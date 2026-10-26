@@ -6,9 +6,9 @@ from .models import DifficultyChallenge, DifficultyDiagnostic, ShortcutAttack, S
 
 
 def public_inputs(version):
-    proposal = version.proposal
-    return {"stage": "before_lock", "solver_inputs": proposal.proof.design.difficulty.mask.retained_information,
-            "target": proposal.result.target}
+    if not version.proposal.public_task:
+        raise ValueError("Shortcut attacks require the exact public task, not a retained-input summary")
+    return {"stage": "before_lock", "question": version.proposal.public_task}
 
 
 def public_question(item):

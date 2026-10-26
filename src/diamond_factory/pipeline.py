@@ -439,7 +439,8 @@ class Pipeline:
                  actual_model=assessment.actual_model)
         return passed
 
-    async def review_blueprint(self, solution, source_data, target, salt, known_result=None, construction_reference=None):
+    async def review_blueprint(self, solution, source_data, target, salt, known_result=None, construction_reference=None,
+                               public_task=None):
         """审完整证明；步骤映射不合法只修审查格式，不重购作者答案。"""
         schema = StepwiseBlueprintAudit if self.settings.require_stepwise_blueprint_review else BlueprintAudit
         prompt = self.prompts["blueprint_audit"] + "\n" + json.dumps({
@@ -448,6 +449,7 @@ class Pipeline:
             "known_result": known_result.model_dump() if known_result else None,
             "step_indexing": "One-based indices into solution.derivation; inspect every entry.",
             "expected_step_count": len(solution.derivation),
+            **({"solver_visible_task": public_task} if public_task is not None else {}),
             **({"construction_reference": construction_reference} if construction_reference else {})}, ensure_ascii=False)
         for attempt in range(2):
             review, rid, model = await self.consistency_call(

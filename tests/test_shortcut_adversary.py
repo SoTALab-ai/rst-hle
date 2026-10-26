@@ -13,6 +13,7 @@ from diamond_factory.llm import ModelResponseError
 from diamond_factory.models import (
     BlueprintIssue,
     DifficultyChallenge,
+    DifficultyProposal,
     ShortcutAttack,
     ShortcutRecheck,
     StepwiseBlueprintAudit,
@@ -46,7 +47,12 @@ class ShortcutGateway(DepthGateway):
             self.calls.append((role, prompt, salt))
             return challenge(self.diagnostic_verdict), digest(salt), "gpt-6-luna"
         value, rid, model = await super().call(role, prompt, salt, schema, **kwargs)
+        if schema is DifficultyProposal:
+            value = value.model_copy(update={"public_task": self.candidate.item.question})
+            self.cache[salt] = value, rid, model
         if schema is DifficultyChallenge and "prior_shortcut" in data:
+            assert set(data["blind_attack_inputs"]) in ({"stage", "question"},
+                                                       {"stage", "question", "required_outputs"})
             value = value.model_copy(deep=True)
             value.attack_validity = "correct"
             value.route_rechecks = [ShortcutRecheck(route_id=r["route_id"], verdict="blocked",
@@ -90,7 +96,8 @@ def test_early_depth_is_not_a_veto_and_all_prior_routes_are_rechecked(tmp_path, 
                      and not salt.endswith("audit"))
     assert first_mask > last_attack
     for packet in gateway.blind_packets:
-        assert set(packet) in ({"stage", "solver_inputs", "target"}, {"stage", "question", "required_outputs"})
+        assert set(packet) in ({"stage", "question"}, {"stage", "question", "required_outputs"})
+        assert packet["question"] in [r.item.question for r in result.difficulty_rounds] or packet["question"] == candidate.item.question
     assert not any(role == "solver" for role, _, _ in gateway.calls)
 
 
@@ -112,7 +119,7 @@ def test_missing_historical_shortcut_cannot_be_approved(tmp_path, source, candid
     assert not any(":verifier:" in salt or role == "solver" for role, _, salt in gateway.calls)
 
 
-@pytest.mark.parametrize("change", ["attack", "old_route", "diagnostic", "protocol", "strategy"])
+@pytest.mark.parametrize("change", ["attack", "old_route", "diagnostic", "protocol", "strategy", "public_task"])
 def test_attack_history_and_diagnostic_cannot_be_removed_or_reused_after_changes(tmp_path, source, candidate, change):
     pipe, _, _ = prepared(tmp_path, source, candidate, design=["too_easy", "sufficient"])
     result = generate(pipe, source)
@@ -120,6 +127,7 @@ def test_attack_history_and_diagnostic_cannot_be_removed_or_reused_after_changes
     if change == "attack": result.difficulty_rounds[-1].shortcut_attack = None
     elif change == "old_route": result.difficulty_origin.proposal_history.pop(0)
     elif change == "diagnostic": result.difficulty_diagnostic.input_sha256 = "changed"
+    elif change == "public_task": result.difficulty_origin.selected.proposal.public_task = None
     elif change == "strategy": result.difficulty_origin.strategy = "depth_gate"
     else: pipe.settings.difficulty_adversary_mode = "depth_gate"
     assert not construction_ready(result, {source.id: source}, pipe.settings, pipe.prompts)
@@ -171,3 +179,20 @@ def test_scientifically_valid_question_reaches_attack_despite_preliminary_shortc
     result = generate(pipe, source)
     assert len(result.difficulty_rounds) == 2 and result.difficulty_rounds[0].audit.no_shortcut is False
     assert result.status == "quality_seed" and construction_ready(result, {source.id: source}, pipe.settings, pipe.prompts)
+
+
+def test_missing_exact_public_task_never_becomes_a_privileged_blind_attack(tmp_path, source, candidate):
+    from diamond_factory.pipeline import AuthoringRejected
+    pipe, _, gateway = prepared(tmp_path, source, candidate)
+    original = gateway.call
+
+    async def call(role, prompt, salt, schema=None, **kwargs):
+        value, rid, model = await original(role, prompt, salt, schema, **kwargs)
+        if schema is DifficultyProposal:
+            value = value.model_copy(update={"public_task": None})
+        return value, rid, model
+
+    gateway.call = call
+    with pytest.raises(AuthoringRejected):
+        generate(pipe, source)
+    assert not gateway.blind_packets

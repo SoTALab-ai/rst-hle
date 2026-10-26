@@ -703,6 +703,7 @@ class DifficultyChallenge(StrictModel):
 
 
 class DifficultyProposal(StrictModel):
+    public_task: str | None = Field(default=None, min_length=50)
     result: KnownResult | None
     proof: LockedProofDraft | None
     outcome: Literal["proposed", "unavailable"] = "proposed"
@@ -712,7 +713,8 @@ class DifficultyProposal(StrictModel):
     def available_proposal(self):
         if (self.outcome == "proposed") != (self.result is not None and self.proof is not None):
             raise ValueError("A proposed construction needs both result and proof")
-        if self.outcome == "unavailable" and (self.result is not None or self.proof is not None):
+        if self.outcome == "unavailable" and (self.result is not None or self.proof is not None
+                                              or self.public_task is not None):
             raise ValueError("Unavailable must not invent a result or proof")
         return self
 

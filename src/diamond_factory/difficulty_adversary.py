@@ -112,7 +112,8 @@ def valid_origin(candidate, sources, expected_protocol, *, strategy="depth_gate"
             if entry.parent_proposal_id != parent:
                 return False
             parent = entry.proposal_id
-            if entry.challenge and (not shortcuts.record_valid(entry.shortcut_attack, shortcuts.public_inputs(entry))
+            if entry.challenge and (not entry.proposal.public_task
+                    or not shortcuts.record_valid(entry.shortcut_attack, shortcuts.public_inputs(entry))
                     or shortcuts.review_errors(entry.challenge, shortcuts.proposal_routes(
                         history[:history.index(entry)]))):
                 return False
@@ -293,13 +294,16 @@ class DifficultyAdversary:
             result = version.proposal.result
             solution = version.proposal.proof.bind(result)
             errors = known_result_errors(result, {source.id: source}, source_fidelity=p.settings.source_fidelity)
+            if self.blocking and not version.proposal.public_task:
+                errors.append("missing_shortcut_public_task")
             if prior and version.proposal == prior.proposal:
                 errors.append("unchanged_difficulty_proposal")
             errors += bottleneck_mask_errors(solution)
             errors += difficulty_design_errors(solution, target["category"], p.difficulty_profile, True)
             if not errors and version.blueprint is None:
                 review, rid, model = await p.review_blueprint(solution, source_data, target,
-                    f"{identity}:depth-design:{index}:science", result, construction_reference=reference)
+                    f"{identity}:depth-design:{index}:science", result, construction_reference=reference,
+                    public_task=version.proposal.public_task if self.blocking else None)
                 version.blueprint, version.blueprint_request, version.blueprint_actual_model = review, rid, model
                 self.save_campaign(campaign)
             if version.blueprint and not version.blueprint.passed(source_fidelity=p.settings.source_fidelity, defer_depth=self.blocking):
@@ -316,7 +320,8 @@ class DifficultyAdversary:
                         "solver_inputs": solution.design.difficulty.mask.retained_information,
                         "prior_challenges": [v.challenge.model_dump() for v in campaign.versions[:index]
                                              if v.challenge], **({"blind_attack": version.shortcut_attack.response.model_dump(),
-                        "prior_shortcut": prior_routes} if self.blocking else {})}, ensure_ascii=False),
+                        "prior_shortcut": prior_routes, "blind_attack_inputs": shortcuts.public_inputs(version)}
+                        if self.blocking else {})}, ensure_ascii=False),
                     f"{identity}:depth-design:{index}:challenge", DifficultyChallenge)
                 self.check_mapping(challenge, solution, rid)
                 version.challenge, version.challenge_request, version.challenge_actual_model = challenge, rid, model
@@ -457,7 +462,8 @@ class DifficultyAdversary:
                     "independent_solution": candidate.consistency.independent_solution.model_dump(),
                     "prior_challenges": [{"previous_question": r.item.question, "challenge": r.challenge.model_dump()}
                                          for r in candidate.difficulty_rounds],
-                    **({"blind_attack": blind.response.model_dump(), "prior_shortcut": routes} if self.blocking else {})}, ensure_ascii=False),
+                    **({"blind_attack": blind.response.model_dump(), "prior_shortcut": routes,
+                        "blind_attack_inputs": shortcuts.public_question(candidate.item)} if self.blocking else {})}, ensure_ascii=False),
                     f"{candidate.id}:depth-question:{input_hash}", DifficultyChallenge)
                 self.check_mapping(challenge, candidate.solution, rid)
                 if self.blocking and shortcuts.review_errors(challenge, routes):

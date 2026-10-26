@@ -88,3 +88,11 @@ Do not import quantifiers, conventions or premises from the private gold into de
 Check the requested category/subtopic before locking. A deeper new construction must still fit
 that declared route; if its actual subject changes, return an actionable assumptions issue before
 question generation rather than silently approving an incompatible classification.
+
+solver_visible_task is the EXACT public input contract for the next blind attack. Check it for
+scientific sufficiency, unique target and output scope. Neither the source, result.statement,
+result.assumptions, full proof nor mask.retained_information is solver-visible unless explicitly
+present in solver_visible_task. A placeholder naming an undefined matrix/function is insufficient.
+A necessary missing formula, ambiguous target such as 'any upper bound' against a sharp-only gold,
+or unavailable independent law is an actionable assumptions/known_result issue. This is a task
+validity check, not a depth veto; a well-defined routine task remains eligible for enhancement.
