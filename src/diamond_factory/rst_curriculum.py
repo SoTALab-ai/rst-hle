@@ -163,6 +163,9 @@ class RstAttempt(StrictModel):
     non_regression: RstNonRegressionAudit | None = None
     non_regression_request: str = ''
     non_regression_actual_model: str = ''
+    question_non_regression: RstNonRegressionAudit | None = None
+    question_non_regression_request: str = ''
+    question_non_regression_actual_model: str = ''
     errors: list[str] = Field(default_factory=list)
     question_versions: list[Candidate] = Field(default_factory=list, max_length=2)
     question_repair_requests: list[str] = Field(default_factory=list, max_length=2)
@@ -389,6 +392,9 @@ class RstCurriculum(Pipeline):
                     proposal=attempt.non_regression, proposal_request=attempt.non_regression_request,
                     proposal_actual_model=attempt.non_regression_actual_model,
                     question=check, question_request=nid, question_actual_model=nmodel)
+                # 下一提案收到实际题面的逐项反馈，而非仅看到前一份提案的通过意见。
+                attempt.question_non_regression = check
+                attempt.question_non_regression_request, attempt.question_non_regression_actual_model = nid, nmodel
                 errors = regression_errors(check, 'question')
                 if errors:
                     attempt.errors = errors

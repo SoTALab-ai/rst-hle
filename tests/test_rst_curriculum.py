@@ -371,6 +371,11 @@ def test_actual_wording_shortcut_is_checked_after_proposal_and_returned_as_new_a
     assert all(not valid_rst_origin(c, {source.id: source}, pipe.protocol) for c in children)
     assert all(not c.verifier_assessment and not c.trials for c in children)
     assert sum(role == 'solver' for role, _, _ in gateway.calls) == 4
+    payloads = [json.loads(p.splitlines()[-1]) for _, p, s in gateway.calls if s.endswith(':rst-grow')]
+    previous = payloads[1]['previous_attempt']
+    assert previous['question_non_regression']['phase'] == 'question'
+    assert previous['question_non_regression']['feedback']
+    assert previous['question_non_regression_request']
 
 
 def test_uncertain_burden_or_failed_model_never_becomes_a_solver_error(tmp_path, source, candidate):
