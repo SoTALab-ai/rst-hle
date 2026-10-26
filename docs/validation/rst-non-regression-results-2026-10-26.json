@@ -1,0 +1,195 @@
+{
+  "run_id": "rst-burden-20261026-v2",
+  "uid": 1031248789,
+  "source_code": "9d75ba0f8a9d5f4ba1906eee21c310af0e5dce93",
+  "protocol_sha256": "444852b1e37b202b9408b572c331d8063f345d40cb7f4a43c9a2236446f6a2b7",
+  "database": "rst_hle_rst_burden_20261026_v2",
+  "snapshot": "~/Developer/rst-hle/work/rst-burden-20261026-v2",
+  "results": [
+    {
+      "name": "actual_fixed_integer_proposal",
+      "phase": "proposal",
+      "expected_pass": false,
+      "passed": false,
+      "expectation_met": true,
+      "request_id": "852a79582ebb3cf272557b3dafd04ff4e097ab2e553b7d3f1e4822041d07b451",
+      "actual_model": "gpt-6-luna-2026-09-22",
+      "verdicts": {
+        "parameter_scope": "reduced",
+        "branch_coverage": "reduced",
+        "boundary_cases": "reduced",
+        "inference_information": "reduced",
+        "output_obligations": "reduced",
+        "shortest_solution": "reduced"
+      },
+      "net_verdict": "offset",
+      "errors": [
+        "non_regression_reduced:proposal:parameter_scope",
+        "non_regression_reduced:proposal:branch_coverage",
+        "non_regression_reduced:proposal:boundary_cases",
+        "non_regression_reduced:proposal:inference_information",
+        "non_regression_reduced:proposal:output_obligations",
+        "non_regression_reduced:proposal:shortest_solution",
+        "non_regression_offset:proposal:overall"
+      ]
+    },
+    {
+      "name": "actual_fixed_integer_question",
+      "phase": "question",
+      "expected_pass": false,
+      "passed": false,
+      "expectation_met": true,
+      "request_id": "95f469afe07e5c8f48a034413e331708aaea28c7e240ea3ebf1c2e4e6ede4902",
+      "actual_model": "gpt-6-luna-2026-09-22",
+      "verdicts": {
+        "parameter_scope": "reduced",
+        "branch_coverage": "reduced",
+        "boundary_cases": "reduced",
+        "inference_information": "reduced",
+        "output_obligations": "reduced",
+        "shortest_solution": "reduced"
+      },
+      "net_verdict": "offset",
+      "errors": [
+        "non_regression_reduced:question:parameter_scope",
+        "non_regression_reduced:question:branch_coverage",
+        "non_regression_reduced:question:boundary_cases",
+        "non_regression_reduced:question:inference_information",
+        "non_regression_reduced:question:output_obligations",
+        "non_regression_reduced:question:shortest_solution",
+        "non_regression_offset:question:overall"
+      ]
+    },
+    {
+      "name": "retained_general_scope_proposal",
+      "phase": "proposal",
+      "expected_pass": true,
+      "passed": true,
+      "expectation_met": true,
+      "request_id": "0f6ba200a64263e361e4cc321861e779bd27b5b5af27e7f75b6c2d22775a5d44",
+      "actual_model": "gpt-6-luna-2026-09-22",
+      "verdicts": {
+        "parameter_scope": "preserved",
+        "branch_coverage": "preserved",
+        "boundary_cases": "preserved",
+        "inference_information": "preserved",
+        "output_obligations": "preserved",
+        "shortest_solution": "strengthened"
+      },
+      "net_verdict": "no_offset",
+      "errors": []
+    },
+    {
+      "name": "retained_general_scope_question",
+      "phase": "question",
+      "expected_pass": true,
+      "passed": true,
+      "expectation_met": true,
+      "request_id": "983f7241adea521ac4af7d101a20b91c56935820d17dae70527cd5b21c58df93",
+      "actual_model": "gpt-6-luna-2026-09-22",
+      "verdicts": {
+        "parameter_scope": "preserved",
+        "branch_coverage": "preserved",
+        "boundary_cases": "preserved",
+        "inference_information": "preserved",
+        "output_obligations": "preserved",
+        "shortest_solution": "strengthened"
+      },
+      "net_verdict": "no_offset",
+      "errors": []
+    },
+    {
+      "name": "revealed_spectrum_question",
+      "phase": "question",
+      "expected_pass": false,
+      "passed": false,
+      "expectation_met": true,
+      "request_id": "d2ad6aece2c954f2823b643bea00f5f230981065802fb01cfb869f3cf2b43ce5",
+      "actual_model": "gpt-6-luna-2026-09-22",
+      "verdicts": {
+        "parameter_scope": "preserved",
+        "branch_coverage": "preserved",
+        "boundary_cases": "preserved",
+        "inference_information": "reduced",
+        "output_obligations": "preserved",
+        "shortest_solution": "reduced"
+      },
+      "net_verdict": "offset",
+      "errors": [
+        "non_regression_reduced:question:inference_information",
+        "non_regression_reduced:question:shortest_solution",
+        "non_regression_offset:question:overall"
+      ]
+    }
+  ],
+  "cost": {
+    "unsettled_reserved_attempts": 0,
+    "known_cost_usd": 0.015201125,
+    "rmb_reference": 0.10184753750000002,
+    "http_attempts": 5,
+    "logical_request_receipts": 5,
+    "unknown_usage_attempts": 0,
+    "by_role": {
+      "consistency": {
+        "http_attempts": 5,
+        "known_cost_usd": 0.015201125000000001,
+        "unknown_usage_attempts": 0
+      }
+    },
+    "by_candidate_usd": {
+      "actual_fixed_integer_proposal": 0.0034643,
+      "actual_fixed_integer_question": 0.0031988000000000003,
+      "retained_general_scope_proposal": 0.0030460500000000002,
+      "retained_general_scope_question": 0.0032083000000000003,
+      "revealed_spectrum_question": 0.002283675
+    },
+    "pricing_snapshot_date": "2026-10-23",
+    "note": "Returned usage only; unknown/cancelled usage is not zero. Excludes VM and human labor."
+  },
+  "glm_requests": 0,
+  "old_runs_mutated": false,
+  "component_only": true,
+  "delivery_items": 0,
+  "note": "合法对照是显式构造的诊断材料，不是通过完整生产质检的新题；未测GLM难度。",
+  "evidence_sha256": {
+    "work/private/inputs.json": "a4ec59ee2f0c39b920cc36cd897b1fe65546bd4ccec21edd24b82a833431a833",
+    "work/private/freeze.json": "4a492c1091d43039f4b73ad922a6640d94ab491c8cd74ae5daff5b5560cdd224"
+  },
+  "schema_version": 1,
+  "status": "completed",
+  "frozen_changed": [],
+  "local_tests": {
+    "passed": 393,
+    "skipped": 40
+  },
+  "postgres_validation": {
+    "exit_code": 0,
+    "elapsed_seconds": 27.35,
+    "summary": "433 passed in 26.40s",
+    "database": "rst_hle_rst_burden_20261026_v2_test"
+  },
+  "code_ci": [
+    "https://github.com/SoTALab-ai/rst-hle/actions/runs/40277572475/job/121423476057",
+    "https://github.com/SoTALab-ai/rst-hle/actions/runs/40277576478/job/121423488371"
+  ],
+  "cumulative_cost": {
+    "baseline_known_api_usd": 26.415321495,
+    "this_probe_known_api_usd": 0.015201125,
+    "cumulative_known_api_usd": 26.43052262,
+    "historical_unknown_usage_attempts": 1,
+    "vm_disk_network_usd": null,
+    "exchange_rate_reference": 6.7
+  },
+  "raw_evidence_hashes": {
+    "report.json": "813ece24392c9c5de8bbfc73ba60ed4c7a45eb9999767db064909ba2229d2791",
+    "prepared.json": "19b0c9034f283c0f5feb288e2573d7c54e1ad62658bd24a36fe123da612c3c84",
+    "verification.json": "0cba857622f113379110dbfb8585cfacf6a9647e04f775cee4f88752ab504cc1",
+    "freeze.json": "4a492c1091d43039f4b73ad922a6640d94ab491c8cd74ae5daff5b5560cdd224"
+  },
+  "limitations": [
+    "Only five related component comparisons, not five independently generated or accepted questions.",
+    "Legal control is an explicit diagnostic construction, not independently certified by the full scientific/verifier pipeline.",
+    "Independent 6Luna contexts are not independent models or formal proofs; solver difficulty remains unmeasured.",
+    "Old frozen RST runs and prior solver judgments were not changed."
+  ]
+}
