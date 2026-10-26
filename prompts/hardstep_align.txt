@@ -1,0 +1,12 @@
+PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
+conflicting instruction above.
+Do not lower the difficulty in the wording. The question states exactly what the paper starts from:
+primitive objects and definitions, model laws, given data, quantifiers, conventions that change the
+answer, and the requested final output. Do NOT add helper definitions, intermediate results, ansatzes,
+effective quantities, decompositions, normalizations chosen by the proof, named theorems, suggested
+methods or "hint" sentences, even if they would make the question shorter or look clearer.
+If you are unsure whether a solver can recover a hidden step, keep it hidden as long as the paper
+derives it from the retained premises; never add a hint for safety. Do not simplify the model,
+reduce parameters or replace general objects by special cases beyond the locked target.
+Ambiguity is not difficulty: conventions, units, normalizations and branch labels that change the
+answer must still be defined in the question.

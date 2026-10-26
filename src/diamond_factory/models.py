@@ -200,6 +200,7 @@ class BlueprintAudit(StrictModel):
     source_notes: list[str] = Field(default_factory=list)
 
     def passed(self, *, source_fidelity="strict", defer_depth=False):
+        # paper_grounded由调用方传defer_depth=True；深度意见只记录，科学问题照常阻断。
         issues = [i for i in self.issues if (source_fidelity == "strict" or i.part != "source")
                   and not (defer_depth and i.part == "target_depth")]
         return (self.valid and self.answer_correct and self.derivation_complete
@@ -245,7 +246,9 @@ class Audit(StrictModel):
     no_shortcut: bool
     reason: str = Field(min_length=10)
 
-    def passed(self, *, scientific_only=False) -> bool:
+    def passed(self, *, scientific_only=False, basis="self_verified") -> bool:
+        # paper_grounded下no_shortcut/substantive_delta是难度意见，只记录；难度由GLM实测。
+        scientific_only = scientific_only or basis == "paper_grounded"
         keys = ("valid", "self_contained", "uniquely_answerable", "answer_supported", "category_correct")
         return all(getattr(self, k) for k in (keys if scientific_only else
                    [k for k in type(self).model_fields if k != "reason"]))
@@ -282,8 +285,19 @@ class BottleneckReview(StrictModel):
     def check_names():
         return ("selection_supported", "hidden", "necessary", "recoverable", "not_answer_only")
 
-    def passed(self):
+    def passed(self, *, basis="self_verified"):
+        if basis == "paper_grounded":
+            # 挖空泄露（hidden）与只挖答案仍是硬条件；可恢复性只在给出具体缺失前提/多解见证时判fail。
+            # 选择依据与必要性属于难度意见，交给GLM实测。
+            return (self.hidden.verdict == "pass" and self.not_answer_only.verdict == "pass"
+                    and self.recoverable.verdict != "fail")
         return all(getattr(self, name).verdict == "pass" for name in self.check_names())
+
+    def blocking_checks(self, *, basis="self_verified"):
+        if basis == "paper_grounded":
+            return [name for name in ("hidden", "not_answer_only") if getattr(self, name).verdict != "pass"] + (
+                ["recoverable"] if self.recoverable.verdict == "fail" else [])
+        return [name for name in self.check_names() if getattr(self, name).verdict != "pass"]
 
 
 class BottleneckAssessment(StrictModel):
@@ -332,7 +346,10 @@ class SubstitutionReport(StrictModel):
     uncovered_outputs: list[str]
     reason: str
 
-    def passed(self):
+    def passed(self, *, basis="self_verified"):
+        if basis == "paper_grounded":
+            # 未覆盖只记录；忠实翻译下的真实反例仍阻断。
+            return self.verdict != "fail"
         return self.verdict in ("pass", "not_applicable")
 
 
@@ -352,15 +369,20 @@ class ConsistencyAudit(StrictModel):
                 raise ValueError("Core correctness checks cannot be skipped")
         return self
 
-    def passed(self) -> bool:
+    def passed(self, *, basis="self_verified") -> bool:
+        if basis == "paper_grounded":
+            # 只有具体错误（fail）阻断；uncertain表示未能核实，保留记录交给后续verifier与实测。
+            return all(getattr(self, name).verdict != "fail" for name in
+                       ("premises", "definitions", "parameter_domain", "reference_answer", "physical_regime"))
         return (all(getattr(self, name).verdict == "pass" for name in
                     ("premises", "definitions", "parameter_domain", "reference_answer"))
                 and self.physical_regime.verdict in ("pass", "not_applicable"))
 
-    def failures(self) -> list[str]:
+    def failures(self, *, basis="self_verified") -> list[str]:
+        blocking = ("fail",) if basis == "paper_grounded" else ("fail", "uncertain")
         return [name + ":" + check.verdict + ":" + check.reasoning
                 for name in ("premises", "definitions", "parameter_domain", "reference_answer", "physical_regime")
-                if (check := getattr(self, name)).verdict in ("fail", "uncertain")]
+                if (check := getattr(self, name)).verdict in blocking]
 
 
 class CertificateAudit(StrictModel):
@@ -421,7 +443,7 @@ class ConsistencyAssessment(StrictModel):
     certificate_attempts: list[CertificateAttempt] = Field(default_factory=list, max_length=3)
     certificate_repair_protocol_sha256: str = ""
 
-    def passed(self):
+    def passed(self, *, basis="self_verified"):
         if self.certificate_attempts:
             final = self.certificate_attempts[-1]
             if (final.certificate != self.certificate_audit or final.substitution != self.substitution
@@ -429,6 +451,10 @@ class ConsistencyAssessment(StrictModel):
                     or any(a.certificate.faithful_translation and a.substitution.verdict == "fail"
                            for a in self.certificate_attempts[:-1])):
                 return False
+        if basis == "paper_grounded":
+            # 证书未能忠实翻译时不执行算术，等同未覆盖；任何一次忠实反例在上方已阻断。
+            return (self.audit.passed(basis=basis) and self.certificate_audit is not None
+                    and (not self.certificate_audit.faithful_translation or self.substitution.passed(basis=basis)))
         return (self.audit.passed() and self.substitution.passed()
                 and self.certificate_audit is not None and self.certificate_audit.faithful_translation)
 
@@ -794,6 +820,7 @@ class Candidate(StrictModel):
     operator: str
     source_ids: list[str]
     source_fidelity: Literal["strict", "advisory"] = "strict"
+    correctness_basis: Literal["self_verified", "paper_grounded"] = "self_verified"
     source_notes: list[str] = Field(default_factory=list)
     origin_seed_sha256: str = ""
     origin_candidate_id: str | None = None

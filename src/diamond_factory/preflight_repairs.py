@@ -9,12 +9,12 @@ def certificate_repair_protocol(settings, prompts):
         "repair_prompt": prompts["consistency_certificate_repair"], "code": Path(__file__).read_text()})
 
 
-def classify_preflight(review, certificate, substitution):
+def classify_preflight(review, certificate, substitution, *, basis="self_verified"):
     cases = [r.name for r in substitution.results if r.verdict != "pass"]
     common = {"failed_cases": cases, "uncovered_outputs": substitution.uncovered_outputs}
-    if not review.passed():
+    if not review.passed(basis=basis):
         return PreflightRepairAdvice(category="scientific_review", owner="author",
-            findings=review.failures(), instruction="Repair the specified proof, premise or question defect "
+            findings=review.failures(basis=basis), instruction="Repair the specified proof, premise or question defect "
                 "before verifier entry; recheck dependent steps. Preserve locked gold and target. "
                 "If the locked result is false or the defect cannot be resolved, reject this construction.", **common)
     if not certificate.faithful_translation:

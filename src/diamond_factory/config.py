@@ -40,6 +40,8 @@ class Settings(StrictModel):
     require_bottleneck_mask: bool = False
     require_difficulty_adversary: bool = False
     difficulty_adversary_mode: Literal["depth_gate", "shortcut_blocking"] = "depth_gate"
+    # paper_grounded：以论文推导为正确性依据，只有具体错误才拦截；不确定、验算未覆盖和深度意见只记录。
+    correctness_basis: Literal["self_verified", "paper_grounded"] = "self_verified"
     difficulty_references_path: str | None = None
     difficulty_design_max_revisions: int = Field(default=2, ge=0, le=2)
     difficulty_mask_max_revisions: int = Field(default=2, ge=0, le=2)
@@ -79,6 +81,11 @@ class Settings(StrictModel):
     def validate_role_capacity(self):
         if self.difficulty_adversary_mode == "shortcut_blocking" and not self.require_difficulty_adversary:
             raise ValueError("Shortcut blocking requires the difficulty adversary")
+        if self.correctness_basis == "paper_grounded" and (
+                self.require_difficulty_adversary or not self.require_verifier_adversary
+                or not self.require_bottleneck_mask):
+            # 难度交给GLM实测，不再叠加6Luna深度否决；verifier与挖空审查保留。
+            raise ValueError("Paper-grounded basis measures depth with GLM and requires verifier and mask review")
         if self.require_difficulty_adversary and not (
                 self.source_fidelity == "advisory" and self.use_locked_proof_draft
                 and self.require_bottleneck_mask and self.require_verifier_adversary

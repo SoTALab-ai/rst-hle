@@ -1,0 +1,102 @@
+{
+  "run_id": "paper-reference-review-20261026-v1",
+  "code_commit": "463849c41a2c5933763c39e8c5de15ca71d1b6cc",
+  "base_commit": "53a78bb48abdbcb6cdb42ca1646d05a0ab330a89",
+  "upstream_pr": 18,
+  "host": "liaojunteng-vm",
+  "uid": 1031248789,
+  "database": "rst_hle_paper_reference_review_20261026_v1",
+  "test_database": "rst_hle_paper_reference_review_20261026_v1_test",
+  "snapshot": "~/Developer/rst-hle/work/paper-reference-review-20261026-v1",
+  "planned_component_cases": 3,
+  "formed_component_cases": 3,
+  "cases": [
+    {
+      "case": "liouville_original_reference",
+      "expected_pass": true,
+      "passed": true,
+      "request_id": "cd7e9549479a9cbb661947391941b89bf4f16931db151ef29bda42cd32bbffca",
+      "original_request_id": "3ff993b82c84dbd9bceb25a8dd8b49f13f0ab7d1cf7cc473a55cdb3231c22a1b",
+      "actual_model": "gpt-6-luna-2026-09-22",
+      "lock_errors": [],
+      "issue_parts": []
+    },
+    {
+      "case": "bec_original_reference",
+      "expected_pass": true,
+      "passed": true,
+      "request_id": "e3530ef675add6f70db9ca0e9fb6e9e65fc21a8919a7e213373843d9c3298170",
+      "original_request_id": "9f9734fd51ad10be294c06ccce2c364e3ff429bacf3bfb69e64d56100830a0cc",
+      "actual_model": "gpt-6-luna-2026-09-22",
+      "lock_errors": [],
+      "issue_parts": []
+    },
+    {
+      "case": "bec_shared_coupling_contradiction",
+      "expected_pass": false,
+      "passed": false,
+      "request_id": "3e18eed1a271856bc3cfc0f79904ddec7e7685857d1fb1100f41ad5ce5b2aac1",
+      "original_request_id": "ef7f068d99608e5e427b455cd3d475b960b8ffa8a87d9fc3207bd0761c9c7e49",
+      "actual_model": "gpt-6-luna-2026-09-22",
+      "lock_errors": [],
+      "issue_parts": [
+        "assumptions"
+      ]
+    }
+  ],
+  "matched_all_expected_results": true,
+  "new_solver_requests": 0,
+  "production_candidates": 0,
+  "full_question_quality_passed": 0,
+  "difficulty_accepted": 0,
+  "test_results": {
+    "local_passed": 392,
+    "local_skipped": 39,
+    "vm_postgres_passed": 431,
+    "vm_postgres_skipped": 0,
+    "ruff_passed": true,
+    "doctor_blockers": []
+  },
+  "instruction_words": {
+    "old": 1515,
+    "new": 273,
+    "reduction_percent": 82.0
+  },
+  "cost": {
+    "unsettled_reserved_attempts": 0,
+    "known_cost_usd": 0.0180204,
+    "rmb_reference": 0.12073668,
+    "http_attempts": 3,
+    "logical_request_receipts": 3,
+    "unknown_usage_attempts": 0,
+    "by_role": {
+      "consistency": {
+        "http_attempts": 3,
+        "known_cost_usd": 0.0180204,
+        "unknown_usage_attempts": 0
+      }
+    },
+    "pricing_snapshot_date": "2026-10-23",
+    "note": "Returned usage only; unknown/cancelled usage is not zero. Excludes VM and human labor."
+  },
+  "models": [
+    "gpt-6-luna-2026-09-22"
+  ],
+  "frozen_changed": [],
+  "request_seals": [
+    {
+      "request_id": "cd7e9549479a9cbb661947391941b89bf4f16931db151ef29bda42cd32bbffca",
+      "integrity_sha256": "a841ab5624195107d250f7f3408b21f5038fd076274736b07608b6ec3c3b6e51"
+    },
+    {
+      "request_id": "e3530ef675add6f70db9ca0e9fb6e9e65fc21a8919a7e213373843d9c3298170",
+      "integrity_sha256": "300f1c1f9f8f3d554d66326b71da79c3cdaea91a069a27d67be888d40699d6b9"
+    },
+    {
+      "request_id": "3e18eed1a271856bc3cfc0f79904ddec7e7685857d1fb1100f41ad5ce5b2aac1",
+      "integrity_sha256": "af343c46469b66784e631cfe4bbbdb8bdcb8d91d3c4780859e2142ac2c7208b5"
+    }
+  ],
+  "private_summary_sha256": "54d1504f1dc12fd3b44c9415a1cb3a9d358ba1da4994432d3e680cf0b2240d4b",
+  "scope": "Limited reference-and-premises review only; not an independent proof, full pipeline validation or difficulty measurement. Historical candidates and snapshots were not changed."
+}
