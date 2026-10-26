@@ -199,8 +199,9 @@ class BlueprintAudit(StrictModel):
     assumption_correspondence: list[AssumptionCorrespondence] = Field(default_factory=list)
     source_notes: list[str] = Field(default_factory=list)
 
-    def passed(self, *, source_fidelity="strict"):
-        issues = [i for i in self.issues if source_fidelity == "strict" or i.part != "source"]
+    def passed(self, *, source_fidelity="strict", defer_depth=False):
+        issues = [i for i in self.issues if (source_fidelity == "strict" or i.part != "source")
+                  and not (defer_depth and i.part == "target_depth")]
         return (self.valid and self.answer_correct and self.derivation_complete
                 and (self.source_grounded or source_fidelity == "advisory") and not issues)
 
@@ -244,8 +245,10 @@ class Audit(StrictModel):
     no_shortcut: bool
     reason: str = Field(min_length=10)
 
-    def passed(self) -> bool:
-        return all(getattr(self, k) for k in type(self).model_fields if k != "reason")
+    def passed(self, *, scientific_only=False) -> bool:
+        keys = ("valid", "self_contained", "uniquely_answerable", "answer_supported", "category_correct")
+        return all(getattr(self, k) for k in (keys if scientific_only else
+                   [k for k in type(self).model_fields if k != "reason"]))
 
 
 class IndependentSolution(StrictModel):
@@ -649,9 +652,38 @@ class AuthoringSeed(StrictModel):
     verifier_actual_model: str = ""
 
 
+class ShortcutRecheck(StrictModel):
+    route_id: str
+    verdict: Literal["blocked", "still_bypass", "same_burden", "uncertain"]
+    evidence: str = Field(min_length=20)
+
+
+class ShortcutAttack(StrictModel):
+    outcome: Literal["solved", "uncertain", "invalid"]
+    derivation: list[str] = Field(min_length=1)
+    answer: str
+    reason: str = Field(min_length=20)
+
+
+class ShortcutAttackRecord(StrictModel):
+    input_sha256: str
+    response: ShortcutAttack
+    request_id: str
+    actual_model: str
+
+
+class DifficultyDiagnostic(StrictModel):
+    input_sha256: str
+    assessment: "DifficultyChallenge"
+    request_id: str
+    actual_model: str
+
+
 class DifficultyChallenge(StrictModel):
     verdict: Literal["sufficient", "too_easy", "invalid", "uncertain"]
     shortest_correct_route: list[str] = Field(min_length=1)
+    route_rechecks: list[ShortcutRecheck] = Field(default_factory=list)
+    attack_validity: Literal["correct", "incorrect", "uncertain"] | None = None
     route_validity: Literal["verified", "invalid", "uncertain"]
     indispensable_proof_entries: list[Annotated[int, Field(ge=1)]]
     remaining_discoveries: list[str]
@@ -701,6 +733,7 @@ class DifficultyProposalVersion(StrictModel):
     graph_repair_request: str = ""
     graph_repair_actual_model: str = ""
     original_author_response_sha256: str = ""
+    shortcut_attack: ShortcutAttackRecord | None = None
 
 
 class DifficultyGraphPatch(StrictModel):
@@ -717,6 +750,8 @@ class DifficultyCampaign(StrictModel):
 
 
 class DifficultyOrigin(StrictModel):
+    strategy: Literal["depth_gate", "shortcut_blocking"] = "depth_gate"
+    proposal_history: list[DifficultyProposalVersion] = Field(default_factory=list, max_length=3)
     root_id: str
     source_sha256: str
     protocol_sha256: str
@@ -738,8 +773,9 @@ class DifficultyQuestionRound(StrictModel):
     item: Question
     solution: Solution
     audit: Audit
-    bottleneck: BottleneckAssessment
+    bottleneck: BottleneckAssessment | None
     consistency: ConsistencyAssessment
+    shortcut_attack: ShortcutAttackRecord | None = None
     challenge: DifficultyChallenge
     request_id: str
     actual_model: str
@@ -775,6 +811,7 @@ class Candidate(StrictModel):
     bottleneck_assessment: BottleneckAssessment | None = None
     difficulty_origin: DifficultyOrigin | None = None
     difficulty_rounds: list[DifficultyQuestionRound] = Field(default_factory=list, max_length=3)
+    difficulty_diagnostic: DifficultyDiagnostic | None = None
     trials: list[Trial] = Field(default_factory=list)
     deadline_outcomes: list[DeadlineOutcome] = Field(default_factory=list)
     status: Literal["quality_seed", "rejected", "screened", "accepted"]

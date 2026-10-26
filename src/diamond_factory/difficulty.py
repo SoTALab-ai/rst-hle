@@ -5,7 +5,7 @@ from .gates import correct_count, evidence_errors, sample_outcomes
 from .models import digest
 
 
-def known_result_errors(result, sources, solution=None, blueprint=None, *, source_fidelity="strict"):
+def known_result_errors(result, sources, solution=None, blueprint=None, *, source_fidelity="strict", defer_depth=False):
     if result is None:
         return ["missing_known_result"]
     errors = evidence_errors(result.evidence, sources) if source_fidelity == "strict" else []
@@ -21,7 +21,7 @@ def known_result_errors(result, sources, solution=None, blueprint=None, *, sourc
         links = blueprint.assumption_correspondence if blueprint else []
         mapped = {a.source_assumption for a in links if a.equivalent
                   and a.solution_assumption in solution.assumptions}
-        if missing and (not blueprint or not blueprint.passed(source_fidelity=source_fidelity)
+        if missing and (not blueprint or not blueprint.passed(source_fidelity=source_fidelity, defer_depth=defer_depth)
                         or blueprint.reviewed_step_count != len(solution.derivation)
                         or len({a.source_assumption for a in links}) != len(links)
                         or not missing <= mapped):
@@ -77,7 +77,8 @@ def construction_ready(candidate, sources, settings, prompts):
         return False
     if settings.require_difficulty_adversary:
         from .difficulty_adversary import has_valid_difficulty, protocol_hash
-        if not has_valid_difficulty(candidate, sources, protocol_hash(settings, prompts)):
+        if not has_valid_difficulty(candidate, sources, protocol_hash(settings, prompts),
+                                    strategy=settings.difficulty_adversary_mode):
             return False
     if settings.require_verifier_adversary:
         from .verifier import has_valid_verifier, protocol_hash
@@ -86,10 +87,12 @@ def construction_ready(candidate, sources, settings, prompts):
     if settings.require_known_result:
         result = candidate.known_result
         if (known_result_errors(result, sources, candidate.solution, candidate.blueprint_audit,
-                                source_fidelity=settings.source_fidelity)
+                                source_fidelity=settings.source_fidelity,
+                                defer_depth=settings.difficulty_adversary_mode == "shortcut_blocking")
                 or candidate.source_ids != [result.source_id]
                 or not candidate.blueprint_audit or not candidate.blueprint_audit.passed(
-                    source_fidelity=settings.source_fidelity)
+                    source_fidelity=settings.source_fidelity,
+                    defer_depth=settings.difficulty_adversary_mode == "shortcut_blocking")
                 or candidate.blueprint_audit.reviewed_step_count != len(candidate.solution.derivation)):
             return False
         source = sources[result.source_id]

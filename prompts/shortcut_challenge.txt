@@ -1,0 +1,26 @@
+Independently verify the supplied blind attack against the CURRENT public task and locked or
+provisional result. Return DifficultyChallenge. Scientific errors remain blocking. This stage
+searches for concrete bypasses and is NOT an absolute difficulty gate.
+Check each step of the attack, all premises, domain/boundaries and complete output scope. Set
+attack_validity to correct/incorrect/uncertain. Write the shortest CORRECT route you can establish
+in shortest_correct_route; route_validity=verified is your semantic check, not a formal proof.
+A correct low-burden route avoiding the intended discovery, a supplied inferable bridge, or a
+standard closure resolving the target without downstream discovery gives verdict=too_easy.
+A concrete verified route still requiring discovery/use of the bridge gives sufficient EVEN IF
+it is familiar or routine; remaining_discoveries and indispensable_proof_entries must describe
+that burden precisely. Equivalent methods of comparable burden are allowed. Do not require the
+literal author's proof or prescribe forbidden methods. A failed attack alone never proves depth,
+uniqueness of method or necessity over every possible solution. Without a verified correct route
+and a checked comparison return uncertain; do not certify sufficient from failure to solve.
+Recheck EVERY prior_shortcut against current inputs, target and scope. Return exactly one
+route_rechecks entry per route_id: blocked requires a specific failed premise or demonstrable
+counterexample to its reuse on the NEW task; same_burden explains an equivalent conceptual route;
+still_bypass gives the surviving valid low-burden derivation; unresolved comparison is uncertain.
+Never call a valid old route false on the OLD problem. A sufficient verdict cannot coexist with
+still_bypass or uncertain historical routes. No route may be silently omitted or deleted.
+Feedback must tell the author which structural premise makes each bypass work and how a NEW
+provisional construction could invalidate that premise while retaining a provable target. After
+lock (actual_question) feedback may ONLY remove inferable hints: never change the gold, target,
+independent model laws, quantifiers, output conventions, or full proof. An unfixable fixed target
+ends this bounded attempt. Stronger notation, longer arithmetic, or prohibiting an algorithm
+by fiat does not block a route. All source/answer/proof data are private review inputs.

@@ -46,7 +46,8 @@ def test_pg_source_and_candidate_sample_roundtrip(pg, source, candidate):
         pg.sources()
 
 
-def test_pg_difficulty_checkpoints_and_two_stage_history_roundtrip(pg, tmp_path, source, candidate):
+@pytest.mark.parametrize("shortcut", [False, True])
+def test_pg_difficulty_checkpoints_and_two_stage_history_roundtrip(pg, tmp_path, source, candidate, shortcut):
     import asyncio
 
     from test_bottleneck import prepare
@@ -58,8 +59,10 @@ def test_pg_difficulty_checkpoints_and_two_stage_history_roundtrip(pg, tmp_path,
 
     prepare(candidate, source)
     pg.add_source(source)
-    settings = load("configs/library-difficulty-adversary.toml")
-    gateway = DepthGateway(candidate, design=["too_easy", "sufficient"], question=["too_easy", "sufficient"])
+    from test_shortcut_adversary import ShortcutGateway
+
+    settings = load("configs/library-shortcut-adversary.toml" if shortcut else "configs/library-difficulty-adversary.toml")
+    gateway = (ShortcutGateway if shortcut else DepthGateway)(candidate, design=["too_easy", "sufficient"], question=["too_easy", "sufficient"])
     pipe = Pipeline(settings, pg, "depth-test", "pilot", tmp_path / "run", gateway)
     target = {"category": "Math", "subtopic": "组合与图论"}
     result = asyncio.run(pipe.generate(source, None, target, 0, 0))

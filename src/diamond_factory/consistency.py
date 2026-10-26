@@ -33,7 +33,8 @@ def has_valid_consistency(candidate, sources):
             return False
     evidence_ids = {e.source_id for e in candidate.item.evidence + candidate.solution.evidence}
     if candidate.known_result and known_result_errors(candidate.known_result, sources, candidate.solution,
-            candidate.blueprint_audit, source_fidelity=candidate.source_fidelity):
+            candidate.blueprint_audit, source_fidelity=candidate.source_fidelity,
+            defer_depth=bool(candidate.difficulty_origin and candidate.difficulty_origin.strategy == "shortcut_blocking")):
         return False
     if (candidate.solution.design and candidate.solution.design.difficulty
             and candidate.solution.design.difficulty.mask and not valid_bottleneck(candidate, sources)):

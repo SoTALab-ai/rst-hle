@@ -72,6 +72,10 @@ class Pipeline:
         self.run_id, self.mode, self.run_dir = run_id, mode, run_dir
         self.quotas = json.loads(Path(settings.quotas_path).read_text())
         self.prompts = {p.stem: p.read_text() for p in Path(settings.prompts_dir).glob("*.txt")}
+        if settings.difficulty_adversary_mode == "shortcut_blocking":
+            # 只对新协议替换阶段提示；历史冻结配置继续使用原深度门禁。
+            for name in ("blueprint_audit", "audit", "bottleneck_audit", "difficulty_proposal"):
+                self.prompts[name] = self.prompts["shortcut_" + name]
         self.difficulty_profile = (json.loads(Path(settings.difficulty_profile_path).read_text())
                                    if settings.difficulty_profile_path else None)
         self.gateway = gateway or Gateway(settings, run_dir / "requests", store=store, run_id=run_id)
@@ -201,7 +205,8 @@ class Pipeline:
         if self.settings.require_difficulty_adversary:
             from .difficulty_adversary import DifficultyAdversary, has_valid_difficulty
             builder = DifficultyAdversary(self)
-            if pending and not has_valid_difficulty(candidate, {s.id: s for s in self.store.sources()}, builder.protocol):
+            if pending and not has_valid_difficulty(candidate, {s.id: s for s in self.store.sources()}, builder.protocol,
+                                                   strategy=self.settings.difficulty_adversary_mode):
                 return False
             base_passed = pending or await builder.question(candidate, {s.id: s for s in self.store.sources()},
                                                             self._preflight_correctness)
@@ -236,7 +241,7 @@ class Pipeline:
         self.log("verifier_question_revalidation", candidate=candidate.id, request_id=rid, actual_model=model)
         return await self._preflight_correctness(candidate)
 
-    async def _preflight_correctness(self, candidate):
+    async def _preflight_correctness(self, candidate, *, defer_mask=False):
         """解题之前失败即拦截，仅复用输入完全相同的审查。"""
         if candidate.status == "rejected":
             return False
@@ -253,14 +258,15 @@ class Pipeline:
         evidence_ids = {e.source_id for e in candidate.item.evidence + candidate.solution.evidence}
         if not evidence_ids <= set(candidate.source_ids):
             errors.append("unregistered_candidate_evidence_source")
-        if not candidate.audit.passed():
+        if not candidate.audit.passed(scientific_only=defer_mask):
             errors.append("audit_failed:" + candidate.audit.reason)
         if self.settings.require_solution_design and candidate.solution.design is None:
             errors.append("missing_solution_design")
         errors.extend(difficulty_design_errors(candidate.solution, candidate.item.category,
                                               self.difficulty_profile, self.settings.require_difficulty_design))
         if self.settings.preverify_blueprint and (not candidate.blueprint_audit or not
-                candidate.blueprint_audit.passed(source_fidelity=self.settings.source_fidelity)):
+                candidate.blueprint_audit.passed(source_fidelity=self.settings.source_fidelity,
+                    defer_depth=self.settings.difficulty_adversary_mode == "shortcut_blocking")):
             errors.append("missing_or_failed_blueprint_audit")
         if self.settings.require_stepwise_blueprint_review and (
             not candidate.blueprint_audit
@@ -269,7 +275,8 @@ class Pipeline:
             errors.append("missing_or_mismatched_stepwise_blueprint_review")
         if self.settings.require_known_result:
             errors.extend(known_result_errors(candidate.known_result, sources, candidate.solution,
-                candidate.blueprint_audit, source_fidelity=self.settings.source_fidelity))
+                candidate.blueprint_audit, source_fidelity=self.settings.source_fidelity,
+                defer_depth=self.settings.difficulty_adversary_mode == "shortcut_blocking"))
             if candidate.known_result and candidate.source_ids != [candidate.known_result.source_id]:
                 errors.append("known_result_candidate_source_mismatch")
             if not errors:
@@ -285,7 +292,7 @@ class Pipeline:
             candidate.status, candidate.reasons = "rejected", errors
             self.store.save(candidate)
             return False
-        if self.settings.require_bottleneck_mask and not await self.review_bottleneck(candidate, sources):
+        if self.settings.require_bottleneck_mask and not defer_mask and not await self.review_bottleneck(candidate, sources):
             return False
         input_hash = consistency_input(candidate, sources)
         hashes = {name: digest(self.prompts[name]) for name in ("consistency_solve", "consistency_review")}

@@ -39,6 +39,7 @@ class Settings(StrictModel):
     source_fidelity: Literal["strict", "advisory"] = "strict"
     require_bottleneck_mask: bool = False
     require_difficulty_adversary: bool = False
+    difficulty_adversary_mode: Literal["depth_gate", "shortcut_blocking"] = "depth_gate"
     difficulty_references_path: str | None = None
     difficulty_design_max_revisions: int = Field(default=2, ge=0, le=2)
     difficulty_mask_max_revisions: int = Field(default=2, ge=0, le=2)
@@ -76,6 +77,8 @@ class Settings(StrictModel):
 
     @model_validator(mode="after")
     def validate_role_capacity(self):
+        if self.difficulty_adversary_mode == "shortcut_blocking" and not self.require_difficulty_adversary:
+            raise ValueError("Shortcut blocking requires the difficulty adversary")
         if self.require_difficulty_adversary and not (
                 self.source_fidelity == "advisory" and self.use_locked_proof_draft
                 and self.require_bottleneck_mask and self.require_verifier_adversary
