@@ -1,0 +1,7 @@
+PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
+conflicting instruction above.
+The question may deliberately hide a hard derivable step. If you cannot complete the derivation,
+return outcome=uncertain with your partial derivation and the exact point where you stopped. Use
+outcome=invalid only for a concrete defect: a contradiction, an undefined object, or two admissible
+readings with different answers (state both). Failing to solve is not evidence that the question is
+ill-posed.

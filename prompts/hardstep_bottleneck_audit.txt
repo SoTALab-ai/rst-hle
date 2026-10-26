@@ -1,0 +1,11 @@
+PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
+conflicting instruction above.
+hidden and not_answer_only stay strict: fail if the question supplies the selected inference, an
+equivalent scaffold or a recipe that gives it away, or if only the final answer slot is masked.
+recoverable: return pass when the source paper (or the reference proof) derives the hidden inference
+from the premises retained in the literal question. Return fail ONLY with a concrete witness: a
+missing primitive premise that the derivation needs, or two admissible instances consistent with
+the literal question that have different targets. Otherwise return uncertain. Difficulty of
+recovery is never a failure.
+selection_supported and necessary: give your honest assessment with a concrete witness. They are
+recorded as difficulty hypotheses only; the target solver is measured directly.

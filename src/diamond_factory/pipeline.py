@@ -66,6 +66,11 @@ class AuthoringRejected(RuntimeError):
     pass
 
 
+# paper_grounded追加条款的阶段；每个名字对应prompts/hardstep_<name>.txt。
+HARD_STEP_PROMPTS = ("known_result", "solution", "blueprint_audit", "align", "audit", "bottleneck_audit",
+                     "consistency_solve", "consistency_review")
+
+
 class Pipeline:
     def __init__(self, settings, store, run_id: str, mode: str, run_dir: Path, gateway=None):
         self.settings, self.store = settings, store
@@ -76,6 +81,12 @@ class Pipeline:
             # 只对新协议替换阶段提示；历史冻结配置继续使用原深度门禁。
             for name in ("blueprint_audit", "audit", "bottleneck_audit", "difficulty_proposal"):
                 self.prompts[name] = self.prompts["shortcut_" + name]
+        self.basis = settings.correctness_basis
+        self.defer_depth = settings.difficulty_adversary_mode == "shortcut_blocking" or self.basis == "paper_grounded"
+        if self.basis == "paper_grounded":
+            # 只追加“论文硬步”条款，原提示保持不变；条款进入全部提示哈希与运行指纹。
+            for name in HARD_STEP_PROMPTS:
+                self.prompts[name] = self.prompts[name] + "\n\n" + self.prompts["hardstep_" + name]
         self.difficulty_profile = (json.loads(Path(settings.difficulty_profile_path).read_text())
                                    if settings.difficulty_profile_path else None)
         self.gateway = gateway or Gateway(settings, run_dir / "requests", store=store, run_id=run_id)
@@ -250,6 +261,8 @@ class Pipeline:
         errors = static_errors(candidate, sources, self.quotas)
         if candidate.source_fidelity != self.settings.source_fidelity:
             errors.append("source_policy_changed_requires_new_version")
+        if candidate.correctness_basis != self.basis:
+            errors.append("correctness_basis_changed_requires_new_version")
         if candidate.source_fidelity == "advisory":
             candidate.source_notes = sorted(set(candidate.source_notes + ["source_inspired_construction"] +
                 evidence_errors(candidate.item.evidence + candidate.solution.evidence, sources)))
@@ -258,7 +271,7 @@ class Pipeline:
         evidence_ids = {e.source_id for e in candidate.item.evidence + candidate.solution.evidence}
         if not evidence_ids <= set(candidate.source_ids):
             errors.append("unregistered_candidate_evidence_source")
-        if not candidate.audit.passed(scientific_only=defer_mask):
+        if not candidate.audit.passed(scientific_only=defer_mask, basis=candidate.correctness_basis):
             errors.append("audit_failed:" + candidate.audit.reason)
         if self.settings.require_solution_design and candidate.solution.design is None:
             errors.append("missing_solution_design")
@@ -266,7 +279,7 @@ class Pipeline:
                                               self.difficulty_profile, self.settings.require_difficulty_design))
         if self.settings.preverify_blueprint and (not candidate.blueprint_audit or not
                 candidate.blueprint_audit.passed(source_fidelity=self.settings.source_fidelity,
-                    defer_depth=self.settings.difficulty_adversary_mode == "shortcut_blocking")):
+                    defer_depth=self.defer_depth)):
             errors.append("missing_or_failed_blueprint_audit")
         if self.settings.require_stepwise_blueprint_review and (
             not candidate.blueprint_audit
@@ -276,7 +289,7 @@ class Pipeline:
         if self.settings.require_known_result:
             errors.extend(known_result_errors(candidate.known_result, sources, candidate.solution,
                 candidate.blueprint_audit, source_fidelity=self.settings.source_fidelity,
-                defer_depth=self.settings.difficulty_adversary_mode == "shortcut_blocking"))
+                defer_depth=self.defer_depth))
             if candidate.known_result and candidate.source_ids != [candidate.known_result.source_id]:
                 errors.append("known_result_candidate_source_mismatch")
             if not errors:
@@ -309,11 +322,11 @@ class Pipeline:
                      == digest(self.prompts["consistency_certificate_anchors"]))
                 and assessment.verifier_sha256 == verifier_fingerprint()):
             candidate.preflight_repair = classify_preflight(assessment.audit, assessment.certificate_audit,
-                                                          assessment.substitution)
-            if not assessment.passed():
+                                                          assessment.substitution, basis=candidate.correctness_basis)
+            if not assessment.passed(basis=candidate.correctness_basis):
                 candidate.status = "rejected"
                 self.store.save(candidate)
-            return assessment.passed()
+            return assessment.passed(basis=candidate.correctness_basis)
         if reusable:
             independent, sid, smodel = (assessment.independent_solution, assessment.independent_request,
                                         assessment.independent_actual_model)
@@ -342,7 +355,7 @@ class Pipeline:
                                 reason="Formula translation was not verified; no scientific counterexample is established."))
             attempts.append(CertificateAttempt(certificate=certificate, substitution=substitution,
                 request_id=cid, actual_model=cmodel, anchor_request=aid, anchor_actual_model=amodel))
-            advice = classify_preflight(review, certificate, substitution)
+            advice = classify_preflight(review, certificate, substitution, basis=candidate.correctness_basis)
             if advice is None or advice.owner != "certificate" or repair == self.settings.certificate_max_repairs:
                 break
             self.log("certificate_targeted_repair", candidate=candidate.id, repair=repair+1,
@@ -364,19 +377,21 @@ class Pipeline:
         candidate.consistency.certificate_attempts = attempts
         candidate.consistency.certificate_repair_protocol_sha256 = repair_protocol
         candidate.preflight_repair = advice
-        passed = candidate.consistency.passed()
+        basis = candidate.correctness_basis
+        passed = candidate.consistency.passed(basis=basis)
         if not passed:
             candidate.status = "rejected"
-            candidate.reasons = ["consistency_failed:" + reason for reason in review.failures()]
-            if not substitution.passed():
+            candidate.reasons = ["consistency_failed:" + reason for reason in review.failures(basis=basis)]
+            if not substitution.passed(basis=basis):
                 candidate.reasons.append("substitution_" + substitution.verdict + ":" + substitution.reason)
-            if not certificate.faithful_translation:
+            if not certificate.faithful_translation and basis != "paper_grounded":
                 candidate.reasons.append("certificate_translation_unverified:" + certificate.reason)
         self.store.save(candidate)
         self.log("preflight_consistency", candidate=candidate.id, passed=passed,
                  independent_request=sid, review_request=rid, actual_model=rmodel,
                  certificate_request=cid, certificate_actual_model=cmodel,
                  substitution_verdict=substitution.verdict, uncovered_outputs=substitution.uncovered_outputs,
+                 correctness_basis=basis, faithful_translation=certificate.faithful_translation,
                  checks={name: getattr(review, name).verdict for name in
                          ("premises", "definitions", "parameter_domain", "reference_answer", "physical_regime")})
         return passed
@@ -427,15 +442,15 @@ class Pipeline:
             self.store.save(candidate)
         if assessment.review.step_id != candidate.solution.design.difficulty.mask.step_id:
             raise ModelResponseError("consistency", assessment.request_id, "invalid_bottleneck_step_mapping")
-        passed = assessment.review.passed()
+        passed = assessment.review.passed(basis=candidate.correctness_basis)
         if not passed:
             candidate.status = "rejected"
             candidate.reasons = ["bottleneck_mask_failed:" + name + ":" + getattr(assessment.review, name).reasoning
-                                 for name in assessment.review.check_names()
-                                 if getattr(assessment.review, name).verdict != "pass"]
+                                 for name in assessment.review.blocking_checks(basis=candidate.correctness_basis)]
             self.store.save(candidate)
         self.log("bottleneck_mask_review", candidate=candidate.id, passed=passed,
                  step_id=assessment.review.step_id, request_id=assessment.request_id,
+                 verdicts={name: getattr(assessment.review, name).verdict for name in assessment.review.check_names()},
                  actual_model=assessment.actual_model)
         return passed
 
@@ -582,14 +597,15 @@ class Pipeline:
                                                                     salt + ":blueprint-audit", known_result)
                 self.log("blueprint_review", candidate=identity, repair=repair, request_id=bid,
                          actual_model=bmodel, solution_sha256=digest(plan.model_dump()),
-                         passed=blueprint.passed(source_fidelity=self.settings.source_fidelity),
+                         passed=blueprint.passed(source_fidelity=self.settings.source_fidelity,
+                                                 defer_depth=self.defer_depth),
                          reviewed_step_count=blueprint.reviewed_step_count,
                          issues=[issue.model_dump() for issue in blueprint.issues])
-                if not blueprint.passed(source_fidelity=self.settings.source_fidelity):
+                if not blueprint.passed(source_fidelity=self.settings.source_fidelity, defer_depth=self.defer_depth):
                     blueprint_errors.append("blueprint_failed:" + blueprint.reason)
             if self.settings.require_known_result:
                 blueprint_errors.extend(known_result_errors(known_result, {source.id: source}, plan, blueprint,
-                    source_fidelity=self.settings.source_fidelity))
+                    source_fidelity=self.settings.source_fidelity, defer_depth=self.defer_depth))
             if blueprint_errors:
                 self.log("blueprint_repair_feedback", candidate=identity, repair=repair, reasons=blueprint_errors)
                 data["feedback"] = {"original": feedback, "stage": "reference_proof",
@@ -636,7 +652,7 @@ class Pipeline:
             result = Candidate(id=identity, parent_id=parent.id if parent else None,
                                root_id=parent.root_id if parent else identity, generation=generation,
                                operator=operator, source_ids=[source.id], solution=plan, item=item, audit=audit,
-                               source_fidelity=self.settings.source_fidelity,
+                               source_fidelity=self.settings.source_fidelity, correctness_basis=self.basis,
                                origin_seed_sha256=digest(seed.model_dump()) if seed else "",
                                origin_candidate_id=seed.original_candidate_id if seed else None,
                                origin_request_ids=seed.original_request_ids if seed else [],
@@ -650,7 +666,7 @@ class Pipeline:
             errors = static_errors(result, {source.id: source}, self.quotas)
             if (item.category, item.subtopic) != (target["category"], target["subtopic"]):
                 errors.append("requested_category_mismatch")
-            if not audit.passed() and not self.settings.require_verifier_adversary:
+            if not audit.passed(basis=self.basis) and not self.settings.require_verifier_adversary:
                 errors.append("audit_failed:" + audit.reason)
             if not errors:
                 result.authoring_complete = False
@@ -877,7 +893,7 @@ class Pipeline:
                               source_ids=sorted({ev.source_id for ev in submission.item.evidence +
                                                  submission.solution.evidence}),
                               solution=submission.solution, item=submission.item, audit=provisional_audit,
-                              source_fidelity=self.settings.source_fidelity,
+                              source_fidelity=self.settings.source_fidelity, correctness_basis=self.basis,
                               status="quality_seed", run_id=self.run_id)
                 errors = static_errors(c, sources, self.quotas)
                 if self.mode == "production" and any(sources[s].kind == "synthetic"
@@ -893,7 +909,7 @@ class Pipeline:
                                 "sources": [sources[s].model_dump() for s in c.source_ids],
                                 "parent": parent.item.model_dump() if parent else None}, ensure_ascii=False),
                     f"{identity}:audit", Audit)
-                if not c.audit.passed():
+                if not c.audit.passed(basis=c.correctness_basis):
                     c.status, c.reasons = "rejected", ["audit_failed:" + c.audit.reason]
                     self.store.save(c)
                     continue
@@ -990,7 +1006,7 @@ def report(store, quotas):
                             "subtopic": c.item.subtopic, "status": c.status, "reasons": c.reasons,
                             "consistency_passed": has_valid_consistency(c, sources),
                             "verifier_adversary_passed": has_valid_verifier(c, sources),
-                            "difficulty_measurement_valid": (c.audit.passed()
+                            "difficulty_measurement_valid": (c.audit.passed(basis=c.correctness_basis)
                                 and has_valid_consistency(c, sources) and len(sample_outcomes(c)) == 16),
                             "samples": len(sample_outcomes(c)),
                             "correct_count": correct_count(sample_outcomes(c)) if len(sample_outcomes(c)) == 16 else None}

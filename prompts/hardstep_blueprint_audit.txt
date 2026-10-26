@@ -1,0 +1,10 @@
+PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
+conflicting instruction above.
+The source paper is the correctness basis. A proof step that faithfully applies a cited argument of
+the paper, with its hypotheses verified for this instance, counts as justified even if you cannot
+re-derive every detail yourself. Set derivation_complete=false or answer_correct=false ONLY for a
+concrete defect, naming the step: a wrong computation, a false claim, a misapplied paper result whose
+hypotheses fail here, a contradiction with the paper, or a gap that neither the proof nor the cited
+paper covers. Inability to re-verify a long paper argument is not a defect; record it in reason.
+Difficulty, depth or "too routine" opinions may be reported as target_depth issues for the record;
+they do not block in this mode, because the target solver will be measured directly.

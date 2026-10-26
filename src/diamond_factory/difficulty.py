@@ -62,7 +62,7 @@ def blueprint_stamp(solution, source_data, target, known_result, prompt, model_c
 def valid_bottleneck(candidate, sources, prompt=None, model_config=None):
     assessment = candidate.bottleneck_assessment
     if (not set(candidate.source_ids) <= sources.keys() or bottleneck_mask_errors(candidate.solution)
-            or not assessment or not assessment.review.passed()):
+            or not assessment or not assessment.review.passed(basis=candidate.correctness_basis)):
         return False
     mask = candidate.solution.design.difficulty.mask
     return bool(assessment.review.step_id == mask.step_id
@@ -74,6 +74,8 @@ def valid_bottleneck(candidate, sources, prompt=None, model_config=None):
 def construction_ready(candidate, sources, settings, prompts):
     """导出只检查现有有效收据，不购买新的审查，也不接受旧通过标记。"""
     if candidate.source_fidelity != settings.source_fidelity:
+        return False
+    if candidate.correctness_basis != settings.correctness_basis:
         return False
     if settings.require_difficulty_adversary:
         from .difficulty_adversary import has_valid_difficulty, protocol_hash
@@ -88,11 +90,13 @@ def construction_ready(candidate, sources, settings, prompts):
         result = candidate.known_result
         if (known_result_errors(result, sources, candidate.solution, candidate.blueprint_audit,
                                 source_fidelity=settings.source_fidelity,
-                                defer_depth=settings.difficulty_adversary_mode == "shortcut_blocking")
+                                defer_depth=settings.difficulty_adversary_mode == "shortcut_blocking"
+                    or settings.correctness_basis == "paper_grounded")
                 or candidate.source_ids != [result.source_id]
                 or not candidate.blueprint_audit or not candidate.blueprint_audit.passed(
                     source_fidelity=settings.source_fidelity,
-                    defer_depth=settings.difficulty_adversary_mode == "shortcut_blocking")
+                    defer_depth=settings.difficulty_adversary_mode == "shortcut_blocking"
+                    or settings.correctness_basis == "paper_grounded")
                 or candidate.blueprint_audit.reviewed_step_count != len(candidate.solution.derivation)):
             return False
         source = sources[result.source_id]

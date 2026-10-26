@@ -1,0 +1,14 @@
+PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
+conflicting instruction above, including "any uncertainty in correctness should set valid=false".
+Set self_contained=false or uniquely_answerable=false ONLY with a concrete witness: an undefined
+symbol or object, a missing primitive datum that the derivation actually needs and that is not
+standard background in the field, or two admissible readings of the literal question with different
+answers (state both). "Hard to derive", "the solver may not find the step" or "the derivation is not
+given" are NOT missing information; deliberately hidden derivable steps are the intended task.
+Set valid=false or answer_supported=false only for a concrete error. A step faithfully taken from the
+cited paper with its hypotheses satisfied supports the answer. If you could not fully verify the
+answer, keep valid=true and say exactly what you could not verify in reason.
+Leakage stays strict: if the question supplies the hidden inference or an equivalent scaffold
+(helper definition, ansatz, effective quantity, named theorem, ready-to-apply identity), set
+no_shortcut=false and name it. substantive_delta and no_shortcut are recorded; depth is measured
+by real solver trials.

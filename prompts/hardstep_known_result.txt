@@ -1,0 +1,17 @@
+PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
+conflicting instruction above.
+Goal: a short-answer question whose solution still REQUIRES the paper's own key non-routine inference.
+Select a result whose derivation in the source hinges on the paper's main idea: the non-obvious
+representation, construction, reduction, estimate, invariant, cancellation or identification that
+the authors needed. Do not select a preliminary lemma, a standard computation, a textbook formula
+or an easy corollary of the main result.
+You may lock the paper's own result (theorem, proposition, explicit formula, sharp constant, exact
+threshold, critical value, classification) or choose a specialization of it. Specialize ONLY if the
+key inference stays indispensable for the specialized instance: no brute-force enumeration, small-case
+computation, direct substitution, standard closure property or textbook formula may reach the answer.
+Prefer general parameters, sharp constants, exact thresholds or complete classifications over tiny
+numerical instances. Never compress the paper's mechanism into isolated linear/quadratic algebra.
+The gold must be a short exact final result (number, closed form, finite set or explicit case list)
+that a grader can compare. Record the exact locators (page, equation and theorem labels) of the result
+and of every nontrivial step in the source derivation; the paper's derivation is the correctness basis.
+Do not return unavailable merely because the result is hard to verify with simple arithmetic.

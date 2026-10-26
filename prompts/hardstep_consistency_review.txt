@@ -1,0 +1,9 @@
+PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
+conflicting instruction above.
+Return fail ONLY with concrete error evidence: an explicit admissible counterexample, a contradiction,
+a miscalculation, a misapplied cited result whose hypotheses fail here, a physical-law violation, or
+two admissible readings of the literal question with different answers. Return uncertain when you
+cannot fully verify a check, including when only the cited paper establishes a step. Use the supplied
+source as evidence: a step faithfully taken from the paper with satisfied hypotheses supports
+reference_answer. The independent solver not reaching the gold is not evidence against the gold.
+Certificates remain exact checks of faithful translations; do not weaken an original constraint.

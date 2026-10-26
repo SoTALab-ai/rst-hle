@@ -96,7 +96,7 @@ class QuestionExperiment(Pipeline):
                          "decision":branch(c),"samples":len(sample_outcomes(c)),
                          "answered_samples":len(c.trials), "deadline_incorrect_samples":len(c.deadline_outcomes),
                          "consistency_passed":has_valid_consistency(c, sources),
-                         "difficulty_measurement_valid":(c.audit.passed()
+                         "difficulty_measurement_valid":(c.audit.passed(basis=c.correctness_basis)
                              and has_valid_consistency(c, sources) and len(sample_outcomes(c))==16),
                          "observed_correct":sum(t.judgment.correct=="yes" for t in c.trials),
                          "status":c.status,"reasons":c.reasons} for c in lineage]
