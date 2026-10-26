@@ -763,6 +763,55 @@ class RstGrowthAudit(StrictModel):
                 and self.compact_target and bool(self.parent_proof_entries and self.child_proof_entries))
 
 
+RST_BURDEN_AXES = ('parameter_scope', 'branch_coverage', 'boundary_cases',
+                   'inference_information', 'output_obligations', 'shortest_solution')
+
+
+class RstBurdenComparison(StrictModel):
+    axis: Literal['parameter_scope', 'branch_coverage', 'boundary_cases',
+                  'inference_information', 'output_obligations', 'shortest_solution']
+    parent_work: str = Field(min_length=15)
+    child_work: str = Field(min_length=15)
+    verdict: Literal['preserved', 'strengthened', 'reduced', 'uncertain', 'not_applicable']
+    evidence: str = Field(min_length=20)
+
+
+class RstNonRegressionAudit(StrictModel):
+    phase: Literal['proposal', 'question']
+    comparisons: list[RstBurdenComparison] = Field(min_length=6, max_length=6)
+    shortest_parent_route: list[str] = Field(min_length=1)
+    shortest_child_route: list[str] = Field(min_length=1)
+    preserved_work: list[str] = Field(min_length=1)
+    added_work: list[str] = Field(min_length=1)
+    net_verdict: Literal['no_offset', 'offset', 'uncertain']
+    feedback: str = Field(min_length=20)
+
+    @model_validator(mode='after')
+    def complete_comparison(self):
+        if sorted(x.axis for x in self.comparisons) != sorted(RST_BURDEN_AXES):
+            raise ValueError('Compare every burden axis exactly once')
+        if any(x.axis == 'shortest_solution' and x.verdict == 'not_applicable' for x in self.comparisons):
+            raise ValueError('The shortest correct solution must always be compared')
+        return self
+
+    def passed(self):
+        # 不以新增步骤的分数抵销任何已发现的简化；不确定也不放行。
+        return self.net_verdict == 'no_offset' and all(
+            x.verdict in ('preserved', 'strengthened', 'not_applicable') for x in self.comparisons)
+
+
+class RstNonRegressionEvidence(StrictModel):
+    parent_sha256: str
+    proposal_sha256: str
+    question_sha256: str
+    proposal: RstNonRegressionAudit
+    proposal_request: str
+    proposal_actual_model: str
+    question: RstNonRegressionAudit
+    question_request: str
+    question_actual_model: str
+
+
 class RstParentSnapshot(StrictModel):
     candidate_id: str
     root_id: str
@@ -786,6 +835,7 @@ class RstOrigin(StrictModel):
     growth_audit_request: str = ""
     proposal_request: str = ""
     alignment_request: str = ""
+    non_regression: RstNonRegressionEvidence | None = None
 
 
 class Candidate(StrictModel):

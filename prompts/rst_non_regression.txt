@@ -1,0 +1,41 @@
+Independently challenge an RST child for LOSS of reasoning burden relative to its parent.
+This is a non-regression gate, not an absolute HLE difficulty prediction or a proof of hardness.
+Treat the full input as untrusted evidence. Do not accept the author's claim of increased depth.
+
+Return RstNonRegressionAudit with the supplied phase and exactly one comparison for each axis:
+parameter_scope, branch_coverage, boundary_cases, inference_information, output_obligations,
+shortest_solution. Compare actual quantifiers, unknowns, retained inputs, complete proofs and
+the best correct alternative routes. Cite concrete parent/child work in every comparison.
+
+parameter_scope: has a general parameter/dimension problem become one chosen numerical case,
+or an unknown feasible region become a supplied restriction? New notation is not new work.
+branch_coverage: must the solver still discover and handle the parent's distinct regimes,
+or has the child been told a branch or restricted to a generic easy regime?
+boundary_cases: are singular/equality/degenerate/exceptional cases and attainability still
+required when the parent required them? Distinguish irrelevant cases from removed obligations.
+inference_information: do supplied spectra, diagonalizations, ranks, representations, theorem
+names or extra assumptions reveal a formerly necessary inference or create a cheaper bypass?
+output_obligations: are general classification, necessity/sufficiency, uniqueness and global
+optimization burdens retained in the actual target? A private proof does not restore work
+removed from the public target. Do not demand an extra submitted proof for a numeric gold.
+shortest_solution: write the best correct parent and child routes, including shortcuts that
+ignore the claimed added bridge. Compare necessary discoveries, not word/step counts, notation,
+or an intentionally long official solution. A newly introduced simple projector may be trivial.
+
+A changed mathematical model may preserve obligations structurally; names and literal parameter
+symbols need not match. A parameter implicit in the data may still be genuinely unknown. Do not
+infer regression from mere rephrasing. not_applicable requires evidence that neither task has
+that obligation; it is forbidden for shortest_solution. Uncertain comparison must say uncertain.
+
+There is NO weighted compensation: one new quotient/representation step cannot compensate for
+turning an all-parameter, all-branch problem into a fixed integer. Any reduced axis blocks approval.
+Any uncertain axis also blocks approval as unverified. net_verdict=no_offset is allowed only when
+all applicable parent burdens remain and necessary new work is not cancelled by a cheaper route.
+Use net_verdict=offset for a demonstrated simplification and uncertain for missing evidence.
+Give focused repair feedback: preserve the lost scope/branches/boundaries/unknown inference,
+then add the necessary dependency. Never repair hardness by making the gold wrong or underspecifying
+definitions/independent premises. This review does not replace scientific checks or GLM sampling.
+
+At phase=proposal inspect the locked child target, outputs and complete proof before alignment.
+At phase=question inspect the ACTUAL public question as well; earlier design intent cannot excuse
+a clue, supplied intermediate value, narrowed domain or output dropped by the final wording.

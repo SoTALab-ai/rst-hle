@@ -9,4 +9,7 @@ gold requires an answer-only public request; the private full proof is not part 
 Never cite the private proof as solver data. All data necessary to solve must be in question itself;
 the solver receives no paper, tools or network. No unavailable figure readings or open conjectures.
 Do not add an extra subquestion, change the approved model, or disclose the final answer/bridge.
+Preserve the locked target's full quantifiers, unknown parameter scope, branch and boundary
+obligations. Do not specialize to convenient numbers or supply an intermediate rank/spectrum
+just to make the wording concise. The actual question gets an independent non-regression review.
 JSON-escape every LaTeX backslash.

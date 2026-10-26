@@ -20,6 +20,8 @@ from .models import (
     LockedProofDraft,
     Question,
     RstGrowthAudit,
+    RstNonRegressionAudit,
+    RstNonRegressionEvidence,
     RstOrigin,
     RstParentSnapshot,
     StepwiseBlueprintAudit,
@@ -27,6 +29,13 @@ from .models import (
     digest,
 )
 from .pipeline import Pipeline, SampleIncomplete
+from .rst_difficulty import (
+    proposal_contract,
+    question_contract,
+    regression_errors,
+    review_non_regression,
+    valid_non_regression,
+)
 from .runtime import atomic_json, gather_cancel_on_error
 
 OPERATORS = ("latent_representation", "coupled_compatibility", "boundary_observable")
@@ -38,8 +47,10 @@ def effective_prompts(prompts):
 
 
 def rst_protocol(settings, prompts):
-    return digest({"protocol": 'rst-curriculum-v1', "settings": settings.model_dump(),
+    return digest({"protocol": 'rst-curriculum-v2-non-regression', "settings": settings.model_dump(),
         "prompts": effective_prompts(prompts), "code": Path(__file__).read_text(),
+        "burden_code": Path(__file__).with_name('rst_difficulty.py').read_text(),
+        "models_code": Path(__file__).with_name('models.py').read_text(),
         "endpoints": {role: digest(os.environ.get(getattr(settings, role).base_url_env, '').rstrip('/'))
                    for role in ('generator', 'auditor', 'consistency')}})
 
@@ -67,7 +78,7 @@ def valid_rst_origin(candidate, sources, expected_protocol):
         return bool(candidate.parent_id is None and origin.imported_seed_sha256
                     and origin.parent_snapshot is None and origin.growth_audit is None)
     parent, review = origin.parent_snapshot, origin.growth_audit
-    return bool(parent and review and review.passed() and origin.growth_audit_request
+    return bool(parent and review and review.passed() and valid_non_regression(candidate) and origin.growth_audit_request
         and origin.proposal_request and origin.alignment_request
         and origin.parent_contract_sha256 == digest(parent.model_dump())
         and parent.candidate_id == candidate.parent_id and parent.root_id == candidate.root_id
@@ -149,6 +160,9 @@ class RstAttempt(StrictModel):
     proposal_request: str = ''
     blueprint: StepwiseBlueprintAudit | None = None
     growth: RstGrowthAudit | None = None
+    non_regression: RstNonRegressionAudit | None = None
+    non_regression_request: str = ''
+    non_regression_actual_model: str = ''
     errors: list[str] = Field(default_factory=list)
     question_versions: list[Candidate] = Field(default_factory=list, max_length=2)
     question_repair_requests: list[str] = Field(default_factory=list, max_length=2)
@@ -213,6 +227,9 @@ class RstCurriculum(Pipeline):
                     "candidate_id": record.candidate_id, "disposition": record.disposition,
                     "proposal_attempts": len(record.attempts), "proposal_errors": [a.errors for a in record.attempts],
                     "question_repairs": sum(len(a.question_repair_requests) for a in record.attempts),
+                    "burden_rejections": sum(any(e.startswith('non_regression_') for e in a.errors)
+                                             for a in record.attempts),
+                    "non_regression_verified": bool(c and c.generation > 0 and valid_non_regression(c)),
                     "samples": len(sample_outcomes(c)) if c else 0, "answered": len(c.trials) if c else 0,
                     "deadline_incorrect": len(c.deadline_outcomes) if c else 0,
                     "correct": sum(t.judgment.correct == 'yes' for t in c.trials) if c else 0,
@@ -329,6 +346,20 @@ class RstCurriculum(Pipeline):
                     attempt.errors = ['no_verified_structural_growth']
                     self.checkpoint()
                     continue
+                if attempt.non_regression is None:
+                    check, nid, nmodel = await review_non_regression(self.consistency_call,
+                        self.prompts['rst_non_regression'], parent_snapshot(parent),
+                        salt=cid + ':rst-non-regression:proposal', phase='proposal', solution=solution,
+                        known_result=proposal.result, required_outputs=proposal.required_outputs,
+                        category=category, subtopic=proposal.subtopic)
+                    attempt.non_regression, attempt.non_regression_request = check, nid
+                    attempt.non_regression_actual_model = nmodel
+                    self.checkpoint()
+                errors = regression_errors(attempt.non_regression, 'proposal')
+                if errors:
+                    attempt.errors = errors
+                    self.checkpoint()
+                    continue
                 draft, aid, _ = await self.gateway.call('generator', self.prompts['rst_align'] + '\n' +
                     json.dumps({"solution": solution.model_dump(), "known_result": proposal.result.model_dump(),
                         "target": target, "locked_required_outputs": proposal.required_outputs},
@@ -348,6 +379,23 @@ class RstCurriculum(Pipeline):
                     contract_sha256=contract(c), parent_contract_sha256=digest(snap.model_dump()), parent_snapshot=snap,
                     proposal_request=attempt.proposal_request, alignment_request=aid,
                     growth_audit=growth, growth_audit_request=gid, growth_actual_model=gmodel)
+                check, nid, nmodel = await review_non_regression(self.consistency_call,
+                    self.prompts['rst_non_regression'], snap,
+                    salt=cid + ':rst-non-regression:question:' + question_contract(c), phase='question', solution=solution,
+                    known_result=proposal.result, required_outputs=item.required_outputs,
+                    category=category, subtopic=item.subtopic, item=item)
+                c.rst_origin.non_regression = RstNonRegressionEvidence(parent_sha256=digest(snap.model_dump()),
+                    proposal_sha256=proposal_contract(c), question_sha256=question_contract(c),
+                    proposal=attempt.non_regression, proposal_request=attempt.non_regression_request,
+                    proposal_actual_model=attempt.non_regression_actual_model,
+                    question=check, question_request=nid, question_actual_model=nmodel)
+                errors = regression_errors(check, 'question')
+                if errors:
+                    attempt.errors = errors
+                    c.status, c.reasons = 'rejected', errors
+                    self.store.save(c)
+                    self.checkpoint()
+                    continue
                 await self.audit_item(c)
                 self.store.save(c)
                 row.candidate_id = c.id
@@ -379,6 +427,21 @@ class RstCurriculum(Pipeline):
                     c.authoring_repairs_completed = len(attempt.question_repair_requests)
                     c.rst_origin.alignment_request = rid
                     c.rst_origin.contract_sha256 = contract(c)
+                    # 修题面会使实际负担审查失效；在任何后续科学/采样前重查，不能借修复泄露桥梁。
+                    check, nid, nmodel = await review_non_regression(self.consistency_call,
+                        self.prompts['rst_non_regression'], c.rst_origin.parent_snapshot,
+                        salt=c.id + ':rst-non-regression:question:' + question_contract(c), phase='question',
+                        solution=c.solution, known_result=c.known_result, required_outputs=c.item.required_outputs,
+                        category=c.item.category, subtopic=c.item.subtopic, item=c.item)
+                    evidence = c.rst_origin.non_regression
+                    evidence.question_sha256, evidence.question = question_contract(c), check
+                    evidence.question_request, evidence.question_actual_model = nid, nmodel
+                    errors = regression_errors(check, 'question')
+                    if errors:
+                        c.status, c.reasons = 'rejected', errors
+                        self.store.save(c)
+                        self.checkpoint()
+                        return False
                     await self.audit_item(c)
                     self.store.save(c)
                     self.log('rst_question_contract_repaired', candidate=c.id,

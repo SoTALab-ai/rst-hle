@@ -59,6 +59,11 @@ def test_pg_rst_reseeding_lineage_and_checkpoint_roundtrip(pg, tmp_path, source,
     assert len(gateway.calls) == before
     pointer = pg.runs()[pipe.run_id]['rst_checkpoint']
     assert len(pg.objects.get(*pointer)['lines']) == 2
+    for child in [c for c in pg.candidates() if c.generation]:
+        evidence = child.rst_origin.non_regression
+        assert evidence.proposal.passed() and evidence.question.passed()
+        assert pg.get_request(evidence.proposal_request)['actual_model'] == evidence.proposal_actual_model
+        assert pg.get_request(evidence.question_request)['actual_model'] == evidence.question_actual_model
 
 
 def test_pg_rst_question_repair_preserves_complete_history(pg, tmp_path, source, candidate):

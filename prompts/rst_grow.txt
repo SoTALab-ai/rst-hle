@@ -15,6 +15,14 @@ Write one compact answer target whose computation actually uses the added depend
 your proposal with the best correct short route and explain why the new dependence is necessary.
 A short valid equivalent solution is allowed; do not create ambiguity or a wrong gold to beat it.
 
+Preserve the parent's reasoning burden while adding the dependency. Keep its general parameter
+scope, branch discovery, singular/boundary cases and target obligations, possibly in a new model.
+Do not replace an all-parameter classification by one fixed numerical case, supply a formerly
+unknown rank/spectrum/representation, or narrow to a generic easy regime. A new quotient step
+cannot compensate for those losses. Review the best correct shortcut, not official proof length.
+The independent non-regression review returns axis-specific feedback in previous_attempt;
+repair that lost burden in the next proposal rather than adding unrelated subquestions.
+
 This is a NEW child version. Its target, gold and explicit hypothetical model may differ from the
 parent, but every change must be declared in extension. The parent remains immutable. Prove all
 new and reused steps, singular branches, domain and physical validity. If it cannot be proved,

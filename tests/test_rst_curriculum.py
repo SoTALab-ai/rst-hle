@@ -12,10 +12,12 @@ from diamond_factory.config import load
 from diamond_factory.difficulty import construction_ready
 from diamond_factory.llm import ModelResponseError
 from diamond_factory.models import (
+    RST_BURDEN_AXES,
     ConsistencyAudit,
     LockedProofDraft,
     LockedTaskDesign,
     RstGrowthAudit,
+    RstNonRegressionAudit,
     StepwiseBlueprintAudit,
     digest,
 )
@@ -48,7 +50,7 @@ class RstGateway(DepthGateway):
             n = self.counts.get(self.generations.get(cid, 0), 16)
             ok = n == 16 or 1 <= sample <= n
             return 'Final Answer: ' + ('36' if ok else '37'), digest(salt), 'glm-5.2'
-        if schema not in (RstProposal, RstGrowthAudit, RstQuestionDraft, StepwiseBlueprintAudit):
+        if schema not in (RstProposal, RstGrowthAudit, RstQuestionDraft, StepwiseBlueprintAudit, RstNonRegressionAudit):
             return await super().call(role, prompt, salt, schema, **kwargs)
         if salt in self.cache:
             return self.cache[salt]
@@ -72,6 +74,8 @@ class RstGateway(DepthGateway):
                 substantive_change=self.growth, compact_target=True, parent_proof_entries=[1],
                 child_proof_entries=[2], shortest_correct_route=['Controlled equivalent fixture route.'],
                 reason='Controlled growth decision used to test lineage and bounds only.')
+        elif schema is RstNonRegressionAudit:
+            value = burden_review(data['phase'])
         elif schema is RstQuestionDraft:
             value = RstQuestionDraft(question=self.candidate.item.question + ' Controlled version ' + salt[:24] + '.',
                 rationale=self.candidate.item.rationale, material_key='controlled-rst-version')
@@ -88,6 +92,20 @@ class RstGateway(DepthGateway):
         answer = value, digest(salt), 'gpt-6-luna'
         self.cache[salt] = answer
         return answer
+
+
+def burden_review(phase, reduced=None, uncertain=False):
+    return RstNonRegressionAudit(phase=phase, comparisons=[{'axis': axis,
+        'parent_work': 'The fixture requires the complete symbolic parameter classification.',
+        'child_work': 'The fixture retains that classification and adds a necessary dependency.',
+        'verdict': ('uncertain' if uncertain else 'reduced') if axis == reduced else 'preserved',
+        'evidence': 'Controlled comparison evidence; no real hardness claim is made.'} for axis in RST_BURDEN_AXES],
+        shortest_parent_route=['Find all original cases and prove the attainable maximum.'],
+        shortest_child_route=['Recover the extra dependency, then find all the original cases.'],
+        preserved_work=['The complete original classification and boundary work remain necessary.'],
+        added_work=['The controlled extra dependency is necessary for the retained target.'],
+        net_verdict='uncertain' if uncertain else ('offset' if reduced else 'no_offset'),
+        feedback='Preserve every original parameter, branch and boundary before adding the new dependency.')
 
 
 def setup_rst(tmp_path, source, candidate, *, rounds=3, store=None, **kwargs):
@@ -228,6 +246,8 @@ def test_question_contract_repair_preserves_locked_outputs_gold_and_full_proof(t
     assert child.item.answer == old.item.answer and child.solution == old.solution
     assert child.item.required_outputs == old.item.required_outputs == ['edge count']
     assert child.item != old.item and valid_rst_origin(child, {source.id: source}, pipe.protocol)
+    assert child.rst_origin.non_regression.question_sha256 != old.rst_origin.non_regression.question_sha256
+    assert sum(':rst-non-regression:question:' in s for _, _, s in gateway.calls) == 2
     assert result['lines'][0]['rounds'][1]['question_repairs'] == 1
     assert sum(':rst-question-repair:' in s for _, _, s in gateway.calls) == 1
     assert sum(role == 'solver' for role, _, _ in gateway.calls) == 8
@@ -305,3 +325,138 @@ def test_alignment_schema_cannot_add_gold_or_outputs():
         RstQuestionDraft(question='An otherwise sufficiently long controlled fixture question about a tree.',
             rationale='An otherwise sufficiently long controlled rationale for this fixture question.',
             material_key='fixture-key', required_outputs=['extra proof'], answer='different gold')
+
+
+@pytest.mark.parametrize('axis', RST_BURDEN_AXES)
+def test_any_lost_burden_blocks_proposal_even_with_verified_new_dependency(tmp_path, source, candidate, axis):
+    class Regression(RstGateway):
+        async def call(self, role, prompt, salt, schema=None, **kwargs):
+            if schema is RstNonRegressionAudit:
+                self.calls.append((role, prompt, salt))
+                return burden_review('proposal', reduced=axis), digest(salt), 'gpt-6-luna'
+            return await super().call(role, prompt, salt, schema, **kwargs)
+
+    pipe, store, _ = setup_rst(tmp_path, source, candidate, rounds=1)
+    pipe.gateway = gateway = Regression(candidate)
+    result = asyncio.run(pipe.run_curriculum())
+    row = pipe.progress.lines['fixture'][1]
+    assert len(row.attempts) == 3 and all(a.growth.passed() for a in row.attempts)
+    assert all(any(axis in e for e in a.errors) for a in row.attempts)
+    assert result['lines'][0]['rounds'][1]['burden_rejections'] == 3
+    assert len(store.candidates()) == 1
+    assert sum(role == 'solver' for role, _, _ in gateway.calls) == 4
+    assert not any(':rst-align' in salt for _, _, salt in gateway.calls)
+    feedback = json.loads(next(p for _, p, s in gateway.calls if s.endswith(':rst-grow')
+                              and json.loads(p.splitlines()[-1])['previous_attempt']).splitlines()[-1])
+    assert feedback['previous_attempt']['non_regression']['feedback']
+    assert feedback['previous_attempt']['non_regression_request']
+
+
+def test_actual_wording_shortcut_is_checked_after_proposal_and_returned_as_new_attempt(tmp_path, source, candidate):
+    class RevealedBridge(RstGateway):
+        async def call(self, role, prompt, salt, schema=None, **kwargs):
+            value = await super().call(role, prompt, salt, schema, **kwargs)
+            if schema is RstNonRegressionAudit and json.loads(prompt.splitlines()[-1])['phase'] == 'question':
+                packet = json.loads(prompt.splitlines()[-1])
+                assert packet['child']['item']['question'] and packet['parent']['solution']['derivation']
+                return burden_review('question', reduced='inference_information'), value[1], value[2]
+            return value
+
+    pipe, store, _ = setup_rst(tmp_path, source, candidate, rounds=1)
+    pipe.gateway = gateway = RevealedBridge(candidate)
+    asyncio.run(pipe.run_curriculum())
+    children = [c for c in store.candidates() if c.generation]
+    assert len(children) == 3 and all(c.status == 'rejected' for c in children)
+    assert all(c.rst_origin.non_regression.proposal.passed() for c in children)
+    assert all(not valid_rst_origin(c, {source.id: source}, pipe.protocol) for c in children)
+    assert all(not c.verifier_assessment and not c.trials for c in children)
+    assert sum(role == 'solver' for role, _, _ in gateway.calls) == 4
+
+
+def test_uncertain_burden_or_failed_model_never_becomes_a_solver_error(tmp_path, source, candidate):
+    class Uncertain(RstGateway):
+        async def call(self, role, prompt, salt, schema=None, **kwargs):
+            if schema is RstNonRegressionAudit:
+                self.calls.append((role, prompt, salt))
+                return burden_review('proposal', reduced='shortest_solution', uncertain=True), digest(salt), 'gpt-6-luna'
+            return await super().call(role, prompt, salt, schema, **kwargs)
+
+    pipe, store, _ = setup_rst(tmp_path, source, candidate, rounds=1)
+    pipe.gateway = gateway = Uncertain(candidate)
+    asyncio.run(pipe.run_curriculum())
+    assert len(store.candidates()) == 1
+    assert all('uncertain' in a.errors[0] for a in pipe.progress.lines['fixture'][1].attempts)
+    assert sum(role == 'solver' for role, _, _ in gateway.calls) == 4
+
+
+def test_burden_approval_cannot_be_omitted_reused_on_changed_question_or_hidden_by_net_boolean(tmp_path, source, candidate):
+    pipe, store, gateway = setup_rst(tmp_path, source, candidate, rounds=1)
+    asyncio.run(pipe.run_curriculum())
+    c = next(c for c in store.candidates() if c.generation)
+    assert c.rst_origin.non_regression.question.passed()
+    evidence = c.rst_origin.non_regression
+    c.rst_origin.non_regression = None
+    assert not valid_rst_origin(c, {source.id: source}, pipe.protocol)
+    c.status, c.reasons = 'quality_seed', []
+    before = len(gateway.calls)
+    generic = Pipeline(pipe.settings, store, 'burden-bypass', 'pilot', tmp_path / 'bypass', gateway)
+    assert not asyncio.run(generic.preflight(c))
+    assert not construction_ready(c, {source.id: source}, pipe.settings, pipe.prompts)
+    assert len(gateway.calls) == before
+    c.rst_origin.non_regression = evidence
+    c.item.question += ' The formerly hidden rank is supplied here.'
+    from diamond_factory.rst_curriculum import contract
+    c.rst_origin.contract_sha256 = contract(c)
+    assert not valid_rst_origin(c, {source.id: source}, pipe.protocol)
+    check = burden_review('proposal', reduced='parameter_scope')
+    check.net_verdict = 'no_offset'
+    assert not check.passed()
+    assert len([x for x in gateway.calls if ':rst-non-regression:' in x[2]]) == 2
+
+
+def test_missing_duplicate_axes_and_ignored_shortest_route_are_invalid():
+    check = burden_review('proposal').model_dump()
+    check['comparisons'][-1] = check['comparisons'][0]
+    with pytest.raises(ValidationError):
+        RstNonRegressionAudit.model_validate(check)
+    check = burden_review('proposal').model_dump()
+    check['comparisons'][-1]['verdict'] = 'not_applicable'
+    with pytest.raises(ValidationError):
+        RstNonRegressionAudit.model_validate(check)
+
+
+def test_actual_burden_failure_after_contract_repair_cannot_reach_verifier_or_buy_more_solver(tmp_path, source, candidate):
+    class LeakingRepair(ContractRepairGateway):
+        async def call(self, role, prompt, salt, schema=None, **kwargs):
+            value = await super().call(role, prompt, salt, schema, **kwargs)
+            if schema is RstNonRegressionAudit and 'Return only the edge count.' in prompt:
+                return burden_review('question', reduced='shortest_solution'), value[1], value[2]
+            return value
+
+    pipe, store, _ = setup_rst(tmp_path, source, candidate, rounds=1)
+    pipe.gateway = gateway = LeakingRepair(candidate)
+    result = asyncio.run(pipe.run_curriculum())
+    c = next(c for c in store.candidates() if c.generation)
+    assert c.status == 'rejected' and not c.verifier_assessment and not c.trials
+    assert not c.rst_origin.non_regression.question.passed()
+    assert result['lines'][0]['rounds'][1]['disposition'] == 'quality_rejected_or_unverified'
+    assert sum(role == 'solver' for role, _, _ in gateway.calls) == 4
+
+
+@pytest.mark.parametrize('failure', ['phase', 'model'])
+def test_burden_model_failure_or_wrong_phase_is_unverified_not_a_pass(tmp_path, source, candidate, failure):
+    class InvalidReview(RstGateway):
+        async def call(self, role, prompt, salt, schema=None, **kwargs):
+            if schema is RstNonRegressionAudit:
+                self.calls.append((role, prompt, salt))
+                if failure == 'model':
+                    raise ModelResponseError(role, digest(salt), 'invalid_schema')
+                return burden_review('question'), digest(salt), 'gpt-6-luna'
+            return await super().call(role, prompt, salt, schema, **kwargs)
+
+    pipe, store, _ = setup_rst(tmp_path, source, candidate, rounds=1)
+    pipe.gateway = gateway = InvalidReview(candidate)
+    asyncio.run(pipe.run_curriculum())
+    assert len(store.candidates()) == 1
+    assert all(a.errors for a in pipe.progress.lines['fixture'][1].attempts)
+    assert sum(role == 'solver' for role, _, _ in gateway.calls) == 4
