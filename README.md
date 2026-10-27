@@ -10,6 +10,7 @@
 
 ## 入口
 
+- [管理控制台](docs/management-console.md)：参考ClawGym的批次、题目、来源、质检与成本浏览界面，`uv run diamond serve --reports docs/validation`启动本机只读服务。
 - [文档导航](docs/README.md)：按ClawGym的文档职责划分组织。
 - [架构与模块归属](docs/synthesis-architecture.md)、[验证方法与个人VM](docs/local-validation.md)。
 - [论文下载](docs/pdf-paper-library.md)、[直接读取入库](docs/paper-library-ingestion.md)、[读取上限与20份试产](docs/reader-limits.md)、[数据库](docs/database.md)。
