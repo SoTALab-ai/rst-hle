@@ -24,7 +24,7 @@ from diamond_factory.dependency_models import (
     PremiseContract,
 )
 from diamond_factory.difficulty import construction_ready
-from diamond_factory.llm import ModelResponseError
+from diamond_factory.llm import Gateway, ModelResponseError
 from diamond_factory.models import ScientificGoal, ScientificGoalAssessment, ScientificGoalSelection, digest
 from diamond_factory.pipeline import AuthoringRejected, QualityRejected
 
@@ -252,3 +252,67 @@ def test_dependency_mode_requires_the_locked_frozen_goal_protocol():
         payload[field] = None if field.endswith("path") else False
         with pytest.raises(ValidationError):
             type(settings).model_validate(payload)
+
+
+def test_generator_structure_repair_is_bounded_and_reuses_paid_receipts(tmp_path, source, candidate, monkeypatch):
+    pipe, _store, _gateway, goal = prepared(tmp_path, source, candidate)
+    monkeypatch.setenv("NEW_API_BASE_URL", "https://synthetic.invalid/v1")
+    monkeypatch.setenv("NEW_API_KEY", "synthetic-fixture-only")
+    gateway = Gateway(pipe.settings, tmp_path / "requests")
+    pipe.gateway = gateway
+    valid = ScientificGoalSelection(outcome="found", goal=goal, reason="Synthetic complete dependency proposal.")
+    invalid = valid.model_dump()
+    invalid["goal"]["misplaced_design_field"] = "This field must not be present."
+    fetches = []
+
+    async def fetch(role, config, payload, request_id, base, key):
+        fetches.append(payload)
+        body = valid.model_dump_json() if len(fetches) > 1 else json.dumps(invalid)
+        return {"response": {"model": config.model}, "actual_model": config.model,
+                "content": body, "usage": {"prompt_tokens": 1, "completion_tokens": 1}, "usage_unavailable": False}
+
+    monkeypatch.setattr(gateway, "_fetch", fetch)
+    first = asyncio.run(pipe.generator_call("Synthetic original goal input.", "goal", ScientificGoalSelection))
+    assert first[0] == valid
+    assert len(fetches) == 2
+    correction = next(json.loads(line) for line in fetches[1]["messages"][1]["content"].splitlines()
+                      if line.startswith('{"errors":'))
+    assert correction["errors"][0]["location"] == ["goal", "misplaced_design_field"]
+    assert "Preserve the scientific proposal" in fetches[1]["messages"][1]["content"]
+    # 原错误收据与正确修复都恢复；不得重新购买原调用或原地抹掉失败。
+    second = asyncio.run(pipe.generator_call("Synthetic original goal input.", "goal", ScientificGoalSelection))
+    assert second == first and len(fetches) == 2
+    saved = [json.loads(p.read_text()) for p in gateway.directory.glob("*.json") if p.name != "budget.json"]
+    assert len(saved) == 2 and sum(t.get("response_error") == "invalid_schema" for t in saved) == 1
+    assert not candidate.trials
+
+
+@pytest.mark.parametrize("reason, expected", [("invalid_schema", 2), ("http_503", 1), ("deadline_exceeded", 1)])
+def test_generator_repair_exhaustion_and_other_failures_are_not_grades(tmp_path, source, candidate, reason, expected):
+    pipe, _store, gateway, _goal = prepared(tmp_path, source, candidate)
+    calls = []
+
+    async def fail(role, prompt, salt, schema=None, **kwargs):
+        calls.append((role, salt))
+        raise ModelResponseError(role, "failure", reason)
+
+    gateway.call = fail
+    with pytest.raises(ModelResponseError, match=reason):
+        asyncio.run(pipe.generator_call("Synthetic input.", "goal", ScientificGoalSelection))
+    assert len(calls) == expected and all(role == "generator" for role, _ in calls)
+    assert not candidate.trials and not candidate.deadline_outcomes
+
+
+def test_original_generator_protocol_keeps_no_schema_retry(tmp_path, source, candidate):
+    pipe, _store, gateway, _goal = prepared(tmp_path, source, candidate)
+    pipe.settings.require_dependency_trace = False
+    calls = []
+
+    async def fail(role, prompt, salt, schema=None, **kwargs):
+        calls.append(salt)
+        raise ModelResponseError(role, "failure", "invalid_schema")
+
+    gateway.call = fail
+    with pytest.raises(ModelResponseError, match="invalid_schema"):
+        asyncio.run(pipe.generator_call("Synthetic original input.", "goal", ScientificGoalSelection))
+    assert calls == ["goal"]

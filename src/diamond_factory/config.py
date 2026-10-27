@@ -27,6 +27,7 @@ class Settings(StrictModel):
     judge: ModelConfig
     judge_schema_repairs: int = Field(default=1, ge=0, le=2)
     consistency_schema_repairs: int = Field(default=1, ge=0, le=2)
+    generator_schema_repairs: int = Field(default=0, ge=0, le=1)
     certificate_max_repairs: int = Field(default=0, ge=0, le=2)
     early_screen_samples: Literal[0, 4] = 0
     difficulty_profile_path: str | None = None
@@ -81,6 +82,8 @@ class Settings(StrictModel):
 
     @model_validator(mode="after")
     def validate_role_capacity(self):
+        if self.generator_schema_repairs and not self.require_dependency_trace:
+            raise ValueError("Bounded generator schema repair belongs to the dependency contract protocol")
         if self.require_dependency_trace and not (
                 self.scientific_goal_references_path and self.correctness_basis == "paper_grounded"
                 and self.use_locked_proof_draft and self.freeze_question_at_verifier):
