@@ -216,7 +216,8 @@ class VerifierBuilder:
         self.p = pipeline
 
     def packet(self, c, sources):
-        return {"item": c.item.model_dump(), "source_fidelity": c.source_fidelity, "initial_golden": {
+        return {"item": c.item.model_dump(), "source_fidelity": c.source_fidelity,
+                "correctness_basis": c.correctness_basis, "initial_golden": {
                     "known_result": c.known_result.model_dump() if c.known_result else None,
                     "solution": c.solution.model_dump(),
                     "blueprint_review": c.blueprint_audit.model_dump() if c.blueprint_audit else None},

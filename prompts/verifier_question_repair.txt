@@ -7,7 +7,8 @@ can derive or must determine may remain hidden. Return the complete corrected qu
 and rationale, plus change_reason. Full independent correctness review will follow; no GLM samples
 or prior pass rate are shown. If preserving the golden is impossible, state the defect, do not repair
 the mathematics by changing the target. The typed output cannot change the golden or output list.
-Preserve the short-answer contract: never turn a request for a value/bound into 'prove that' with
-the golden inequality already printed. This both leaks the answer and requests a proof that the
-locked conclusion-only golden does not provide. Ask for the sharp exponent/parameter dependence
-or specified optimal quantity without revealing its value. If that is not justified in the locked model, reject.
+Preserve the locked answer contract regardless of length or form. For a conclusion-only goal, never
+turn a value/bound request into 'prove that' with the golden inequality already printed: this leaks
+the answer and adds an uncovered proof obligation. A locked proof goal may state its proposition.
+Clarify only the target already established by the locked goal and gold. Do not invent sharpness,
+optimality or extra outputs to force uniqueness. If no precise wording preserves that contract, reject.

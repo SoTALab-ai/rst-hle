@@ -256,6 +256,8 @@ class Pipeline:
                        for s in candidate.source_ids]
         candidate.audit, rid, model = await self.gateway.call("auditor", self.prompts["audit"] + "\n" +
             json.dumps({"sources": source_data, "source_fidelity": self.settings.source_fidelity,
+                        "correctness_basis": candidate.correctness_basis,
+                        "known_result": candidate.known_result.model_dump() if candidate.known_result else None,
                         "solution": candidate.solution.model_dump(),
                         "item": candidate.item.model_dump()}, ensure_ascii=False),
             f"{candidate.id}:verifier-question-revalidation:{digest(candidate.item.model_dump())}", Audit)
@@ -352,6 +354,7 @@ class Pipeline:
             review, rid, rmodel = await self.consistency_call(
                 self.prompts["consistency_review"] + "\n" + json.dumps({
                     "source_fidelity": candidate.source_fidelity,
+                    "correctness_basis": candidate.correctness_basis,
                     "item": candidate.item.model_dump(), "solution": candidate.solution.model_dump(),
                     "known_result": candidate.known_result.model_dump() if candidate.known_result else None,
                     "independent_solution": independent.model_dump(),
@@ -593,6 +596,7 @@ class Pipeline:
         source_data["text"] = source.text[:self.settings.max_source_chars]
         data = {"source": source_data, "parent": parent.item.model_dump() if parent else None,
                 "source_fidelity": self.settings.source_fidelity,
+                "correctness_basis": self.basis,
                 "parent_solution": parent.solution.model_dump() if parent else None,
                 "target": target, "generation": generation, "operator": operator,
                 "feedback": feedback, "require_difficulty_design": self.settings.require_difficulty_design}
@@ -676,13 +680,15 @@ class Pipeline:
                                     "errors": blueprint_errors, "previous": plan.model_dump(),
                                     "blueprint_review": blueprint.model_dump() if blueprint else None,
                                     "repair_instruction": "Repair the specified claims and every dependent step. "
-                                    "Return the complete corrected proof and gold; preserve independently valid steps. "
+                                    "Return the complete corrected derivation in the requested response schema; "
+                                    "preserve independently valid steps. For LockedProofDraft do not emit gold, "
+                                    "locked assumptions or design.target; the program binds them. "
                                     "Do not change the locked result, target or original premises. If it is wrong, "
                                     "identify the contradiction; never silently replace it. "
                                     "Do not write a question before the proof is approved."}
                 if blueprint and any(issue.part == "known_result" for issue in blueprint.issues):
                     raise AuthoringRejected("locked_known_result_rejected:" + blueprint.reason)
-                if blueprint and any(issue.part == "target_depth" for issue in blueprint.issues):
+                if not self.defer_depth and blueprint and any(issue.part == "target_depth" for issue in blueprint.issues):
                     # 目标偏浅不是证明错误；终止该线，不能靠反复包装或换金标加难。
                     raise AuthoringRejected("target_depth_rejected:" + blueprint.reason)
                 if repair == self.settings.max_repairs:
@@ -693,6 +699,8 @@ class Pipeline:
             else:
                 item, align_request, _ = await self.gateway.call("generator", self.prompts["align"] + "\n" +
                                                 json.dumps({"solution": plan.model_dump(), "target": target,
+                                                            "known_result": known_result.model_dump() if known_result else None,
+                                                            "correctness_basis": self.basis,
                                                             "repair_feedback": data.get("feedback"),
                                                             "previous_question": reusable.item.model_dump() if reusable else None,
                                                             "source_fidelity": self.settings.source_fidelity},
@@ -705,6 +713,8 @@ class Pipeline:
             audit, _, _ = await self.gateway.call("auditor", self.prompts["audit"] + "\n" +
                                                  json.dumps({"source": source_data,
                                                              "source_fidelity": self.settings.source_fidelity,
+                                                             "correctness_basis": self.basis,
+                                                             "known_result": known_result.model_dump() if known_result else None,
                                                              "solution": plan.model_dump(),
                                                              "item": item.model_dump(),
                                                              "parent": data["parent"]}, ensure_ascii=False),
@@ -976,6 +986,7 @@ class Pipeline:
                 c.audit, _, _ = await self.gateway.call("auditor", self.prompts["audit"] + "\n" +
                     json.dumps({"item": c.item.model_dump(), "solution": c.solution.model_dump(),
                                 "source_fidelity": self.settings.source_fidelity,
+                                "correctness_basis": c.correctness_basis, "known_result": None,
                                 "sources": [sources[s].model_dump() for s in c.source_ids],
                                 "parent": parent.item.model_dump() if parent else None}, ensure_ascii=False),
                     f"{identity}:audit", Audit)

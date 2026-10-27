@@ -11,7 +11,8 @@ parameter intervals, feasible branches and auxiliary conditions may themselves b
 do not supply their solved values merely because they occur in the reference derivation.
 Preserve the selected scientific goal and let it determine answer form and length. Do not convert every intermediate derivation step
 into a mandatory answer item; difficulty should come from inference rather than coverage bookkeeping.
-Do not include the answer or derivation in the question. Do not mention private audits or evaluation machinery.
+For a final-result goal, do not include its answer or derivation in the question. For a proof goal,
+state the proposition to prove without supplying its argument. Do not mention private audits or evaluation machinery.
 For multiple choice provide at least A–E and make the answer a single option letter; prefer exactMatch.
 The rationale must fully explain the answer. material_key should identify the underlying material/claim and
 reasoning structure, invariant to superficial rewordings and number substitutions.
@@ -24,7 +25,8 @@ change the locked answer to compensate. required_outputs must list only what the
 Construct by reversing the solution's dependency chain: reveal the original observations, governing
 relations and target, while hiding the intermediate representation, auxiliary lemma, inversion trick,
 feasible parameter range and branch resolution whenever they can be inferred. Be aggressive about
-removing hints and conditions. Do not automatically copy every blueprint assumption into the prompt:
+removing derivable hints and conditions. Retain primitive definitions and independent model premises.
+Do not automatically copy every blueprint assumption into the prompt:
 some conditions are to be discovered or are consequences of retained constraints. Keep a minimal
 well-defined problem and let independent QC determine whether the shortened task remains solvable and
 unique. Never replace the gold with a newly improvised answer. Do not turn a locked target into a different
