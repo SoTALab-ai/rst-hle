@@ -14,6 +14,7 @@ from diamond_factory.models import (
     Audit,
     BlueprintIssue,
     BottleneckReview,
+    CertificateAudit,
     LockedProofDraft,
     Question,
     ResultSelection,
@@ -64,6 +65,8 @@ def test_mixed_proof_and_depth_feedback_repairs_only_under_deferred_policy(
             return candidate.item, salt, "fixture"
         if schema is BottleneckReview:
             return mask_review(), salt, "fixture"
+        if schema is CertificateAudit:
+            assert data["correctness_basis"] == basis
         return await original(role, prompt, salt, schema, **kwargs)
 
     gateway.call = call

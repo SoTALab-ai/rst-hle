@@ -5,7 +5,7 @@ If source_fidelity=advisory, check the explicitly defined model rather than requ
 With correctness_basis=paper_grounded, faithful cited applications with satisfied hypotheses are
 evidence; adapted claims still need justification and cannot inherit an inapplicable source theorem.
 Do not reject mathematical correctness merely because its premises/result differ from the paper.
-Actual contradictions, missing solver data, wrong golden or unsupported proof steps still block.
+Concrete contradictions, missing primitive data, wrong golden or demonstrably invalid proof steps still block.
 Rejecting an independent derivation merely because it differs from the gold is forbidden.
 Inspect five checks separately:
 premises: simultaneous consistency, sufficient inputs and a uniquely defined task;
@@ -64,6 +64,7 @@ Use equal with all-zero matrix/vector for nullspace checks, adjoint(S)*S equal e
 norm2(S*vec([1,0])) equal 1 for input-power checks, and exact equation residuals equal 0 for solutions.
 Matrix/scalar dimensions must match. Each case's target_output must exactly match an item.required_outputs
 entry. Cases are independent, so repeat needed bindings in each. An unsupported or undefined check
-blocks automatic sampling; it is not evidence that the question is mathematically false. If a genuine
+blocks automatic sampling under self_verified and is recorded as uncovered under paper_grounded;
+it is not evidence that the question is mathematically false. If a genuine
 proof/noncomputational task has no arithmetic certificate, use an empty list; independent proof review
 still applies and the report will explicitly show no executable substitution coverage.

@@ -183,6 +183,7 @@ class Pipeline:
 
     async def certificate(self, candidate, review, input_hash, *, repair=0, feedback=None):
         packet = {"question": candidate.item.question, "gold_answer": candidate.item.answer,
+                  "correctness_basis": candidate.correctness_basis,
                   "required_outputs": candidate.item.required_outputs,
                   "proposed_checks": [case.model_dump() for case in review.substitution_checks]}
         prompt = self.prompts["consistency_certificate"]
