@@ -356,16 +356,13 @@ class BottleneckReview(StrictModel):
 
     def passed(self, *, basis="self_verified"):
         if basis == "paper_grounded":
-            # 挖空泄露（hidden）与只挖答案仍是硬条件；可恢复性只在给出具体缺失前提/多解见证时判fail。
-            # 选择依据与必要性属于难度意见，交给GLM实测。
-            return (self.hidden.verdict == "pass" and self.not_answer_only.verdict == "pass"
-                    and self.recoverable.verdict != "fail")
+            # 可恢复性只记录；输入充分性与科学缺陷由独立科学审查核验，避免重复否决。
+            return self.hidden.verdict == "pass" and self.not_answer_only.verdict == "pass"
         return all(getattr(self, name).verdict == "pass" for name in self.check_names())
 
     def blocking_checks(self, *, basis="self_verified"):
         if basis == "paper_grounded":
-            return [name for name in ("hidden", "not_answer_only") if getattr(self, name).verdict != "pass"] + (
-                ["recoverable"] if self.recoverable.verdict == "fail" else [])
+            return [name for name in ("hidden", "not_answer_only") if getattr(self, name).verdict != "pass"]
         return [name for name in self.check_names() if getattr(self, name).verdict != "pass"]
 
 

@@ -18,6 +18,8 @@
 
 续跑发现`bottleneck_audit.recoverable`仍沿用只核显式公式的判断，亦以相同负x理由拒绝。因此该环节及verifier独立oracle同步明确上述模型内标准背景口径；旧拒绝和费用保留，用新快照续审，不覆盖原结论记录。
 
+随后用户明确选择移除该重复门槛：`paper_grounded`的`BottleneckReview.recoverable`包括fail均只记录，不影响该轮passed/blocking_checks。`hidden`与`not_answer_only`保持硬条件；独立初审、依赖充分性和自洽科学检查仍须通过。不能把可恢复性意见转成泄露失败。`self_verified`旧合同仍要求全部检查通过，历史冻结run不追改。
+
 ## 实际剩余推理
 
 前置审查新增两个独立调用：
