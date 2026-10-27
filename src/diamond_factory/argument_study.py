@@ -162,7 +162,8 @@ class ArgumentStudy:
             body = {"object_key": key, "object_sha256": sha, "object_size": size}
         else:
             body = {"state": raw}  # 仅离线测试用SQLite；VM使用PG元数据和CAS。
-        self.p.store.run(self.state_run, dict(mode=PROTOCOL, status=self.state.phase, **body))
+        self.p.store.run(self.state_run, dict(mode=PROTOCOL, status=self.state.phase,
+                                            fingerprint=self.fingerprint, **body))
         atomic_json(self.p.run_dir / "argument-study.json", raw)
 
     async def grade(self, grade, identity):
