@@ -8,4 +8,6 @@ For a proof goal it is legitimate to state the proposition to prove, but not its
 usable intermediate premise that discharges that argument. For a final-result task do not add an
 ungraded proof obligation. Retain genuinely independent definitions, kernels/model laws, domains,
 orientation and sign conventions needed to derive the requested result. Missing inputs create an
-invalid question, not a hard question. Do not mention internal node IDs or dependency/masking tools.
+invalid question, not a hard question. Standard definitions/laws of the named theory and their
+consequences are legitimate background or exploration; do not expand them into supplied solution
+steps merely to satisfy a literal formula checklist. Do not mention internal node IDs or tools.

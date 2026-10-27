@@ -2,6 +2,10 @@ DEPENDENCY-CONTRACT MODE. Compare the literal question to the scientific goal's 
 partition and the complete dependency trace. A source-supported intermediate is not automatically
 an allowed given. Identify derived statements or equivalent scaffolds supplied as usable premises,
 including upstream relations that make the remaining calculation trivial. Report concrete leakage
-in no_shortcut/reason. Also identify missing independent model inputs with explicit witnesses.
+in no_shortcut/reason. For missing independent inputs, first close the public premises under the
+named model's standard definitions/laws and legitimate alternative derivations. An unwritten
+derivable relation is allowed. A counterexample must satisfy that same physical model and regime;
+arbitrary function extensions outside it do not prove ambiguity. An unverified gap is uncertainty,
+not an automatic rejection of the question. Record an error in the reference route separately.
 Do not reject merely because a correct route is brief; record the route and remaining reasoning.
 The dedicated dependency question review enforces the construction contract before sampling.

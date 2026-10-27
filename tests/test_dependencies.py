@@ -245,6 +245,28 @@ def test_ordinary_alternative_and_unresolved_depth_do_not_create_subjective_veto
     assert candidate.dependency_assessment.review.probe_validity.verdict == "fail"
 
 
+@pytest.mark.parametrize("verdict, allowed", [("uncertain", True), ("fail", False)])
+def test_input_uncertainty_is_recorded_but_concrete_model_defect_blocks(
+        tmp_path, source, candidate, verdict, allowed):
+    pipe, store, gateway, _goal = prepared(tmp_path, source, candidate)
+    review = question_review()
+    review.primitive_sufficiency = type(review.primitive_sufficiency)(
+        verdict=verdict,
+        reasoning=("The probe did not establish a standard-background route; no admissible ambiguity was found."
+                   if allowed else "Two allowed public parameter choices produce different requested edge counts."),
+        witness=("There is no exhibited model satisfying the public premises and contradicting the target."
+                 if allowed else "The public graph order can be 3 or 4; its tree edge count is then 2 or 3."))
+    review.claims[0].exposure = "unused" if allowed else "derived"
+    reply(gateway, candidate, review)
+    assert asyncio.run(DependencyBuilder(pipe).question(candidate, {source.id: source})) is allowed
+    saved = next(c for c in store.candidates() if c.id == candidate.id)
+    assert saved.dependency_assessment.review.primitive_sufficiency.verdict == verdict
+    assert valid_dependency(saved, {source.id: source}, pipe.settings, pipe.prompts) is allowed
+    assert not saved.trials and not saved.deadline_outcomes
+    if not allowed:
+        assert "dependency_contract_failed:primitive_sufficiency" in saved.reasons
+
+
 def test_dependency_mode_requires_the_locked_frozen_goal_protocol():
     settings = load("configs/library-dependency-masking.toml")
     for field in ("scientific_goal_references_path", "use_locked_proof_draft", "freeze_question_at_verifier"):

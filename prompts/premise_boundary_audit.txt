@@ -8,7 +8,12 @@ dependency_support: do the earlier-ID dependencies plus ordinary background supp
 claim and the target? Check source hypotheses and required primitive definitions/kernels/conventions.
 Do not assume the solver receives the paper. A source citation can support the private argument,
 but cannot replace missing public model inputs. No need to re-prove the paper or expand all textbook
-algebra. A concrete missing independent input, wrong application or contradiction is fail.
+algebra. Interpret the named theory/regime using its standard definitions and laws: these may be
+used or derived by the solver without being given as intermediate equations. A missing-input
+witness must respect that same physical model, not an unconstrained abstraction of its displayed
+formulas. Explore a legitimate alternative route before alleging an independent choice is missing.
+An unverified derivation gap is uncertain. A concrete missing independent input, wrong application
+or contradiction is fail.
 exploration_preserved: are the declared exploration nodes actually conclusions to recover from
 those primitives? Does an allegedly primitive statement already supply them or an equivalent recipe?
 Check the source mechanism's upstream dependencies, not just the author's final chosen bridge.
