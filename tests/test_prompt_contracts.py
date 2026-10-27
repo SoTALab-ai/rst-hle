@@ -119,5 +119,3 @@ def test_post_audit_preserves_mode_but_concrete_defects_always_block(
     passed = asyncio.run(experiment.final_audit(candidate))
     assert passed is (basis == "paper_grounded" and not concrete_error)
     assert (candidate.status == "rejected") is not passed
-
-
