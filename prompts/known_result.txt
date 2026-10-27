@@ -55,7 +55,9 @@ Do not substitute a deliberately incorrect shortcut for this challenge. A routin
 small matrix inverse, Taylor expansion, power count, quadratic inequality classification or direct
 standard lemma/closure application is insufficient by itself, even with all branches and boundaries.
 The hardest step inside an easy proof may still be easy. Do not select it just to fill a paper quota.
-If no target has an identifiable further non-routine inference, return unavailable with result=null.
+If scientific_goal is absent and no target has an identifiable further non-routine inference,
+return unavailable with result=null. If scientific_goal is supplied, record a routine route honestly;
+do not reject or replace that locked goal solely on a subjective depth opinion.
 This is a selection heuristic, not a measured solve rate. A theorem name alone is neither evidence
 of depth nor a reason for rejection: establish the actual route and its prerequisites. Never delete
 an independent model premise to manufacture depth. These rules do not authorize changing an already

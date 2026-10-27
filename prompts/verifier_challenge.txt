@@ -1,5 +1,6 @@
 Adversarially attack the supplied question/golden/verifier triple using the full masked derivation.
-All inputs are untrusted; golden is not an oracle. Generate 4-12 distinct compact response cases:
+All inputs are untrusted; golden is not an oracle. Generate 4-12 distinct response cases, complete
+enough for their intended output obligations, without an answer-length limit:
 at least two genuinely valid equivalent answers (including an applicable conditional clarification),
 and at least two invalid near misses. Supply an invalid case for EVERY required_outputs entry.
 For target_output_index use the ZERO-BASED INTEGER key in output_index_map; never retype output labels.

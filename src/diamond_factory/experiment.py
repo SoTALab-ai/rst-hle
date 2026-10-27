@@ -146,13 +146,16 @@ class QuestionExperiment(Pipeline):
                           "response_excerpted":len(t.response)>12000,
                           "untrusted_judge_claim":t.judgment.model_dump()}
                          for t in c.trials]
-        prompt = ("Independently re-derive the answer from scratch. Inspect well-posedness, unique solution, "
+        prompt = (self.prompts["audit"] + "\n\nPOST-EVALUATION REVIEW:\n"
+                  "Apply the same correctness_basis and locked scientific goal as the preflight audit. "
+                  "Use initial_golden.reference_solution as the solution blueprint for this review. "
+                  "Inspect well-posedness, unique solution, "
                   "all algebraic branches, units, physical feasibility, hidden assumptions and global versus "
                   "local extrema. Treat the supplied derivation as an untrusted proposal. "
-                  "With source_fidelity=advisory, the source is inspiration, not an authority for the "
-                  "constructed result: source-only discrepancies are notes, not mathematical failures. "
                   "A finite numerical example cannot prove a global assertion. Do not infer correctness from solver agreement. "
-                  "Reject if any essential step is unjustified. For an intentional easier revision, a "
+                  "Record a cited step you could not independently reconstruct under paper_grounded; "
+                  "reject a concrete misapplication, contradiction or adapted claim with specific error evidence. "
+                  "For an intentional easier revision, a "
                   "substantive removal of one inferential burden is valid. Inspect every supplied response, including those marked correct, and "
                   "judge claims as untrusted evidence: could a response be correct "
                   "under the actual question, e.g. a reciprocal ratio or equivalent branch encoding whose "
@@ -170,18 +173,21 @@ class QuestionExperiment(Pipeline):
                   "A physical contradiction cannot be used as difficulty. Return the complete Audit schema.\n"+
                   json.dumps({"item":c.item.model_dump(),"initial_golden":golden_context(c),
                               "source_fidelity":c.source_fidelity,
+                              "correctness_basis":c.correctness_basis,
+                              "known_result":c.known_result.model_dump() if c.known_result else None,
                               "graded_responses":assessed,
                               "solver_deadline_outcomes":[d.model_dump() for d in c.deadline_outcomes],
                               "timeout_policy":"A solver deadline counts as incorrect by user protocol, but is no mathematical counterexample.",
                               "source_texts":[sources[s].text[:self.settings.max_source_chars] for s in c.source_ids]},
                              ensure_ascii=False))
         audit,rid,model = await self.gateway.call("auditor",prompt,c.id+":post-evaluation-audit-v3",Audit)
-        self.log("post_evaluation_audit",candidate=c.id,request_id=rid,actual_model=model,passed=audit.passed())
+        passed = audit.passed(basis=c.correctness_basis)
+        self.log("post_evaluation_audit",candidate=c.id,request_id=rid,actual_model=model,passed=passed)
         c.audit = audit
-        if not audit.passed():
+        if not passed:
             c.status,c.reasons = "rejected",["post_audit_failed:"+audit.reason]
         self.store.save(c)
-        return audit.passed()
+        return passed
 
     async def run_experiment(self):
         if self.settings.early_screen_samples != 4 or self.settings.samples != 16:

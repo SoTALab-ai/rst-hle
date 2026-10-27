@@ -6,4 +6,6 @@ Keep every faithfully translated constraint; never drop or alter a genuine faili
 An unsupported expression or an illegal test point is not a counterexample to the gold.
 Do not return a different answer, add a premise, change task_kind or redefine the requested target.
 Return the complete CertificateAudit. When a faithful supported encoding is unavailable, set
-faithful_translation=false with the precise unresolved reason; the pipeline will reject after the cap.
+faithful_translation=false with the precise unresolved reason. After the cap, self_verified blocks
+uncovered certificates; paper_grounded records uncovered checks. A faithfully translated real
+counterexample still blocks under either policy, including one from a prior attempt.

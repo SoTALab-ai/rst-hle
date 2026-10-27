@@ -4,7 +4,8 @@ Choose question wording after the scientific goal and reference solution. Preser
 answer form and every locked deliverable; impose no answer-length or quantitative-only rule.
 If the goal is a proof, stating the proposition to prove is legitimate; revealing its hidden
 argument is not. A formula-only gold still cannot silently become a proof task during wording.
-Do not lower the difficulty in the wording. The question states exactly what the paper starts from:
+Do not lower the difficulty in the wording. The question states the locked model's starting data
+(the paper's premises or the explicitly justified adaptation):
 primitive objects and definitions, model laws, given data, quantifiers, conventions that change the
 answer, and the requested final output. Do NOT add helper definitions, intermediate results, ansatzes,
 effective quantities, decompositions, normalizations chosen by the proof, named theorems, suggested

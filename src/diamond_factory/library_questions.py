@@ -265,8 +265,9 @@ async def plan_questions(store, milestone, settings, pricing, directory, run_id)
                      "a self-contained constructed variant, with its answer proved independently later. "
                      "Label this as a construction rather than claiming it is a theorem of the paper. " if advisory else
                      "Select physical pages covering each EXISTING exact result, complete proof and all needed ") +
-                    "definitions. Do not rely on unavailable figure values, external papers or missing supplements. "
-                    "Choose scientific objectives first, then their natural answer forms and candidate answers; "
+                    "definitions. Do not rely on unavailable figure values, external papers or missing supplements. " +
+                    ("Choose scientific objectives only; defer answer form and candidate answers. " if references else
+                     "Choose scientific objectives first, then their natural answer forms and candidate answers; ") +
                     "there is no answer-length or quantitative-only requirement. Reconstruct proofs later, "
                     "and hide the hardest necessary "
                     "inference. Prefer non-obvious intermediate mechanisms, branch/domain classification or "
@@ -290,7 +291,8 @@ async def plan_questions(store, milestone, settings, pricing, directory, run_id)
                      if advisory else "Copy a 20+ character source_quote VERBATIM from a selected page, preferably prose; ") +
                     "it is only an anchor, not proof validation. Provisional answers remain untrusted. "
                     "Choose the exact category/subtopic pair from the supplied list.\n" + json.dumps(
-                        {"source_fidelity": settings.source_fidelity, "allowed_targets": sorted(allowed),
+                        {"source_fidelity": settings.source_fidelity, "correctness_basis": settings.correctness_basis,
+                         "allowed_targets": sorted(allowed),
                          **({"high_difficulty_cases": references.model_dump()} if references else {}),
                          "material": planning_outline(paper, settings.max_source_chars)},
                         ensure_ascii=False), f"{paper.id}:plan-independent-lines", PaperOutline)
@@ -323,18 +325,24 @@ async def plan_questions(store, milestone, settings, pricing, directory, run_id)
                 for line, source in selected:
                     if line.id not in keep:
                         continue
-                    focus = (("Use this material as INSPIRATION. First select a self-contained theoretical model "
+                    focus = (("First select a scientific goal using the supplied high-difficulty cases, then its "
+                        "natural answer and complete reference derivation. Use the source mechanism or an explicitly "
+                        "justified construction; do not choose the answer form in this planning brief. " if references else
+                        "Use this material as INSPIRATION. First select a self-contained theoretical model "
                         "and candidate answer, mark it as a construction, and independently prove it before masking. "
                         "Source alignment and literal citations are advisory. Do not invent unavailable empirical "
                         "data or treat the paper as proof of a changed claim. Keep the locked constructed target "
                         "and answer across repairs and easing. " if advisory else
                         "Use ONLY this selected PDF body/formula/table material. First independently lock "
                         "the EXISTING source result and golden answer. ") +
-                        "Reconstruct the complete proof and "
-                        "verify each step before reverse construction. The plan is untrusted guidance, not an "
+                        ("Record the complete reference derivation; faithful paper citations with applicable "
+                         "hypotheses may justify steps, while adapted steps need explicit justification. "
+                         if settings.correctness_basis == "paper_grounded" else
+                         "Reconstruct the complete proof and verify each step before reverse construction. ") +
+                        "The plan is untrusted guidance, not an "
                         "additional premise or a passed gold. Hide the hardest necessary inference and its "
-                        "equivalent hints; preserve answer uniqueness and physical validity. No figure values "
-                        "or reference-paper content are supplied. Let the scientific goal determine the answer "
+                        "equivalent hints; preserve answer uniqueness and physical validity. Do not assume unavailable "
+                        "figure values or external cited-paper content. Let the scientific goal determine the answer "
                         "form and length, with every requested output covered by the golden. "
                         "Do not ask for proof when gold is just a conclusion. "
                         "Only ease overly hard valid questions; reject easy ones.\nUntrusted selected target: "+
