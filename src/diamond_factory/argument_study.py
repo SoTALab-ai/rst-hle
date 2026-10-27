@@ -196,8 +196,11 @@ class ArgumentStudy:
         sources = {s.id: s for s in p.store.sources()}
         packet = VerifierBuilder(p).packet(c, sources)
         if not state.controls:
+            # 金标说明不承担完整证明，也不拿它的省略论证改写成合法答卷。
+            control_input = {"question": c.item.question, "required_outputs": c.item.required_outputs,
+                             "reference_derivation": c.solution.derivation}
             state.controls, state.controls_request, _ = await p.consistency_call(self.prompts["argument_controls"] +
-                "\n" + json.dumps(packet, ensure_ascii=False), c.id + ":argument-controls", ArgumentControls)
+                "\n" + json.dumps(control_input, ensure_ascii=False), c.id + ":argument-controls", ArgumentControls)
             if any(case.response == c.item.answer for case in state.controls.cases):
                 raise ModelResponseError("consistency", state.controls_request, "duplicate_golden_argument_control")
             self.save()

@@ -133,6 +133,9 @@ def test_reference_gold_is_not_submitted_to_argument_grading(tmp_path, settings,
 
     async def call(role, prompt, salt, schema=None, **kwargs):
         if schema is ArgumentControls:
+            packet = json.loads(prompt.splitlines()[-1])
+            assert set(packet) == {"question", "required_outputs", "reference_derivation"}
+            assert packet["reference_derivation"] == candidate.solution.derivation
             return fixture.controls, salt, "fixture-controls"
         if schema is ArgumentOracle:
             packet = json.loads(prompt.splitlines()[-1])
