@@ -56,7 +56,7 @@ from .models import (
 from .preflight_repairs import certificate_repair_protocol, classify_preflight
 from .routing import read_routes
 from .runtime import gather_cancel_on_error
-from .scientific_goals import goal_errors, load_references
+from .scientific_goals import argument_validation_required, goal_errors, load_references
 from .substitution import verify_substitutions
 from .verifier import VerifierBuilder, has_valid_verifier
 
@@ -353,6 +353,7 @@ class Pipeline:
                 self.prompts["consistency_review"] + "\n" + json.dumps({
                     "source_fidelity": candidate.source_fidelity,
                     "item": candidate.item.model_dump(), "solution": candidate.solution.model_dump(),
+                    "known_result": candidate.known_result.model_dump() if candidate.known_result else None,
                     "independent_solution": independent.model_dump(),
                     "sources": [{**sources[s].model_dump(), "text": sources[s].text[:self.settings.max_source_chars]}
                                 for s in candidate.source_ids]}, ensure_ascii=False),
@@ -464,6 +465,8 @@ class Pipeline:
                                          source_fidelity=self.settings.source_fidelity)
             if goal is not None:
                 # 目标记录由程序绑定，模型不能另造一份目标审批。
+                if "grading_requirement" not in selection.result.model_fields_set:
+                    errors.append("missing_goal_grading_requirement")
                 if selection.result.scientific_goal not in (None, goal):
                     errors.append("scientific_goal_receipt_changed")
                 selection.result.scientific_goal = goal
@@ -775,8 +778,7 @@ class Pipeline:
     async def sample(self, candidate, limit=None):
         if not candidate.authoring_complete:
             raise ValueError("Finish the pending author repair before paid solver evaluation")
-        if (candidate.known_result and candidate.known_result.grading_requirement
-                != "final_answer_equivalence"):
+        if argument_validation_required(candidate):
             # 允许选择证明/非唯一构造目标；现有HLE最终答案比对不能冒充论证或见证验收。
             raise SampleIncomplete("evaluation_contract_uncovered:argument_or_witness_validation; "
                                    "no solver or judge request purchased")
@@ -794,6 +796,8 @@ class Pipeline:
                 raise ValueError("Reused persisted sample response")
         if not await self.preflight(candidate):
             raise QualityRejected("Question failed preflight; no difficulty samples allowed")
+        if argument_validation_required(candidate):
+            raise SampleIncomplete("evaluation_contract_uncovered:independent_review_requires_argument_validation")
         done = {t.sample_id for t in prior}
 
         async def one(i):

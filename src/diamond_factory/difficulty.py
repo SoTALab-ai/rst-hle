@@ -3,7 +3,7 @@ from pathlib import Path
 
 from .gates import correct_count, evidence_errors, sample_outcomes
 from .models import digest
-from .scientific_goals import goal_errors, load_references
+from .scientific_goals import argument_validation_required, goal_errors, load_references
 
 
 def known_result_errors(result, sources, solution=None, blueprint=None, *, source_fidelity="strict", defer_depth=False):
@@ -78,8 +78,7 @@ def construction_ready(candidate, sources, settings, prompts):
         return False
     if candidate.correctness_basis != settings.correctness_basis:
         return False
-    if (candidate.known_result and candidate.known_result.grading_requirement
-            != "final_answer_equivalence"):
+    if argument_validation_required(candidate):
         return False
     if goal_errors(candidate.known_result, sources, load_references(settings),
                    prompts.get("scientific_goal", ""), settings.generator.model_dump()):

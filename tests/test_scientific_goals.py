@@ -47,6 +47,7 @@ def replies(gateway, goal, result, *, wrong_first_target=False):
             return ScientificGoalSelection(outcome="found", goal=goal, reason="Synthetic goal contract fixture."), salt, "m"
         if schema is ResultSelection:
             value = result.model_copy(deep=True)
+            value.grading_requirement = result.grading_requirement
             if wrong_first_target and salt.endswith(":0"):
                 value.target = "A different target selected to make the answer shorter."
             return ResultSelection(outcome="found", result=value, reason="Synthetic answer contract fixture."), salt, "m"
@@ -141,6 +142,23 @@ def test_proof_goal_is_selectable_but_not_falsely_graded_by_hle(tmp_path, source
     calls = replies(gateway, goal, result)
     candidate.known_result = select(pipe, source)
     assert len(calls) == 2
+    candidate.authoring_complete = True
+    with pytest.raises(SampleIncomplete, match="evaluation_contract_uncovered"):
+        asyncio.run(pipe.sample(candidate, 4))
+    assert len(calls) == 2 and not candidate.trials
+    assert not construction_ready(candidate, {source.id: source}, pipe.settings, pipe.prompts)
+
+
+def test_independent_proof_classification_cannot_be_overridden_by_author(tmp_path, source, candidate):
+    from conftest import passing_consistency
+    from test_paper_hard_step import assessment
+
+    pipe, _store, gateway, goal = author(tmp_path, source, candidate)
+    calls = replies(gateway, goal, candidate.known_result)
+    candidate.known_result = select(pipe, source)
+    review = passing_consistency()
+    review.task_kind = "proof"
+    candidate.consistency = assessment(review)
     candidate.authoring_complete = True
     with pytest.raises(SampleIncomplete, match="evaluation_contract_uncovered"):
         asyncio.run(pipe.sample(candidate, 4))

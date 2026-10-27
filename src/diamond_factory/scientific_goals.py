@@ -9,6 +9,12 @@ def load_references(settings):
     return ScientificGoalReferences.model_validate_json(Path(path).read_text()) if path else None
 
 
+def argument_validation_required(candidate):
+    result = candidate.known_result
+    return bool(result and (result.grading_requirement == "argument_or_witness_validation"
+        or (result.scientific_goal and candidate.consistency and candidate.consistency.audit.task_kind == "proof")))
+
+
 def goal_errors(result, sources, references, prompt, model_config):
     if references is None:
         return []
