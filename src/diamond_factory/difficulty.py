@@ -75,6 +75,11 @@ def construction_ready(candidate, sources, settings, prompts):
     """导出只检查现有有效收据，不购买新的审查，也不接受旧通过标记。"""
     if candidate.source_fidelity != settings.source_fidelity:
         return False
+    if settings.synthesis_protocol == "rst_curriculum":
+        from .rst_curriculum import effective_prompts, rst_protocol, valid_rst_origin
+        prompts = effective_prompts(prompts)
+        if not valid_rst_origin(candidate, sources, rst_protocol(settings, prompts)):
+            return False
     if settings.require_difficulty_adversary:
         from .difficulty_adversary import has_valid_difficulty, protocol_hash
         if not has_valid_difficulty(candidate, sources, protocol_hash(settings, prompts)):

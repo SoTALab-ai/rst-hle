@@ -1,0 +1,13 @@
+Independently audit the actual question and hidden-step design. Return every BottleneckReview
+check and the exact mask.step_id. The full proof/gold/source are PRIVATE; the solver only sees
+item.question. Check real hidden/retained information, sufficient primitive data, all quantifiers,
+unique target, absence of answer or solved-bridge leakage, and actual proof-entry mapping.
+selection_supported compares the chosen bridge to the OTHER steps in THIS proof; it does not
+require absolute HLE-level depth. A simple bridge may be the hardest necessary step in an easy
+seed. Do not fail solely because it is familiar. Write a shortest correct route in its witness.
+necessary tests whether the inference burden is actually needed; a correct alternate proof of
+the same inference is allowed. A real bypass must identify a route from literal public inputs.
+recoverable requires a derivation from those inputs, not confidence in the supplied answer.
+not_answer_only requires hiding an intermediate inference instead of only blanking the answer.
+No check may be not_applicable; scientific ambiguity remains fail/uncertain, never artificial depth.
+The separate relative-growth audit and independent GLM trials decide what to do with valid seeds.

@@ -37,6 +37,7 @@ class Settings(StrictModel):
     require_known_result: bool = False
     use_locked_proof_draft: bool = False
     source_fidelity: Literal["strict", "advisory"] = "strict"
+    synthesis_protocol: Literal["standard", "rst_curriculum"] = "standard"
     require_bottleneck_mask: bool = False
     require_difficulty_adversary: bool = False
     difficulty_references_path: str | None = None
@@ -76,6 +77,13 @@ class Settings(StrictModel):
 
     @model_validator(mode="after")
     def validate_role_capacity(self):
+        if self.synthesis_protocol == "rst_curriculum" and not (
+                self.source_fidelity == "advisory" and self.use_locked_proof_draft
+                and self.require_stepwise_blueprint_review and self.require_bottleneck_mask
+                and self.require_verifier_adversary and self.freeze_question_at_verifier
+                and not self.require_difficulty_adversary and self.difficulty_policy == "ease_only"
+                and self.early_screen_samples == 4 and self.samples == 16):
+            raise ValueError("RST research requires full scientific/verifier gates and a separate advisory depth protocol")
         if self.require_difficulty_adversary and not (
                 self.source_fidelity == "advisory" and self.use_locked_proof_draft
                 and self.require_bottleneck_mask and self.require_verifier_adversary

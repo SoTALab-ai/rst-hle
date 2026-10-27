@@ -1,0 +1,11 @@
+Classify the failed pre-verifier checks and, ONLY for a question contract defect, repair the public
+question. Return RstQuestionRepair. You may output question/rationale/material_key only. The exact
+gold, full proof, model assumptions, target, category and locked_required_outputs are immutable.
+For example, if the gold is a numeral and the approved target asks for a numeral, remove an
+accidental demand to submit a proof. Restore missing primitive definitions or output conventions
+only when they are already in the locked model; do not add restrictions to make a wrong gold true.
+Keep all necessary independent premises and the approved target scope. Do not supply the answer
+or a solved intermediate bridge. If the proof/gold is wrong, needs a different domain/model, or
+the issue is unresolved, return proof_or_gold_defect or uncertain with revised=null. Do not edit
+the reference answer or reinterpret a scientific counterexample as a wording problem. Every
+proposed repair will undergo fresh scientific review, blind solve, consistency and substitution.

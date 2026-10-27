@@ -33,6 +33,7 @@ flowchart LR
 | `llm.py`、`costs.py`、`campaign_costs.py` | 实际模型校验、原始请求/响应、逐HTTP尝试、缓存、失败/未知/在途与跨阶段实际用量核算 |
 | `easy_audit.py`、`scripts/audit_easy_cohort.py` | 只读核对首4/4候选、既有答卷/判分/盲解封印与人工逐项判断，导出脱敏账本；不调用模型、不写回原run |
 | `difficulty_adversary.py` | 新首题锁定前的完整构造对抗、实际题面后的盲解路线挑战、有限增强修订与PG/CAS检查点；不改已测题和verifier冻结题 |
+| `rst_curriculum.py`、`rst_difficulty.py`、`scripts/run_rst_curriculum.py` | 独立研究模式：完整题解生长、相对增量与父子净负担双阶段审查、逐代GLM与封印恢复；默认生产不加难，见[RST生长实验](rst-curriculum.md) |
 
 ## 材料阶段合同
 

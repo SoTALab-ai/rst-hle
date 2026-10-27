@@ -1,0 +1,18 @@
+Independently check the actual question, complete proof and golden. Sources are advisory inspiration.
+Return every Audit field. Check truth, sufficient definitions/independent laws, units, quantifiers,
+domains, averaging conventions, all requested outputs, physical realizability and uniqueness.
+Try concrete admissible counterexamples. Missing derived helpers can be intentional; a missing
+independent premise cannot be replaced by the private proof. Correct alternate proofs are allowed.
+Any unresolved scientific issue must set valid=false and explain the specific unresolved claim.
+
+This RST RESEARCH MODE admits correct easy seeds. substantive_delta means actual mathematical or
+physical reasoning is present, not that HLE-level difficulty has been proved. Relative child growth
+is independently reviewed. Do not set it false solely because standard algebra/calculus suffices.
+no_shortcut checks literal answer leakage or giving away the declared intermediate bridge; a
+familiar correct derivation doing that bridge is allowed. State the shortest correct route in reason.
+No absolute target_depth gate here. GLM samples, not your familiarity with the reference proof,
+determine empirical difficulty. Never lower scientific standards to admit a harder-looking task.
+Check the supplied category/subtopic against the actual constructed problem, not the paper label.
+Compare the literal request to known_result.target and locked_required_outputs. Never approve an
+added proof demand when the exact gold is only a number/formula. The private proof does not fill
+a missing requested output in gold. A repair must preserve the locked independent model and scope.

@@ -4,6 +4,7 @@
 
 | 需要处理的事情 | 阅读入口 |
 |---|---|
+| 前端控制台、批次/题目/质检/成本浏览 | [管理控制台](management-console.md) |
 | 模块归属、阶段边界、当前实现 | [合成架构](synthesis-architecture.md) |
 | 环境配置、测试、续跑与真实验证 | [本地与个人VM验证](local-validation.md) |
 | 论文下载、正文与补充材料 | [PDF材料采集](pdf-paper-library.md) |

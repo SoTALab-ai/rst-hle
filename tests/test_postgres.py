@@ -26,6 +26,75 @@ def run_meta(pg, name="test"):
     pg.run(name, {"mode": "pilot", "status": "running", "fingerprint": "test"})
 
 
+def test_pg_rst_reseeding_lineage_and_checkpoint_roundtrip(pg, tmp_path, source, candidate):
+    import asyncio
+
+    from test_rst_curriculum import RstGateway, setup_rst
+
+    from diamond_factory.models import digest
+    from diamond_factory.rst_curriculum import RstCurriculum
+
+    pipe, _, base = setup_rst(tmp_path, source, candidate, rounds=1, store=pg)
+
+    class DurableFixture(RstGateway):
+        async def call(self, role, prompt, salt, schema=None, **kwargs):
+            value, rid, model = await super().call(role, prompt, salt, schema, **kwargs)
+            pg.save_request(pipe.run_id, {'request_id': rid, 'role': role, 'actual_model': model,
+                'salt': salt, 'usage': {}, 'attempts': [], 'content': value.model_dump_json()
+                    if hasattr(value, 'model_dump_json') else value})
+            return value, rid, model
+
+    pipe.gateway = gateway = DurableFixture(base.candidate)
+    extra = pipe.plan.seeds[0].model_copy(update={'name': 'parallel'})
+    pipe.plan = pipe.plan.model_copy(update={'seeds': pipe.plan.seeds + [extra]})
+    pipe.progress.input_sha256 = digest(pipe.plan.model_dump())
+    report = asyncio.run(pipe.run_curriculum())
+    assert report['formed_versions'] == 4 and len(pg.candidates()) == 4
+    assert len({c.root_id for c in pg.candidates()}) == 2
+    assert pg.db.execute('SELECT count(*) FROM diamond.qc_samples').fetchone()[0] == 16
+    before = len(gateway.calls)
+    resumed = RstCurriculum(pipe.settings, pg, pipe.run_id, 'pilot', pipe.run_dir, gateway,
+        plan=pipe.plan, pricing=pipe.pricing)
+    assert asyncio.run(resumed.run_curriculum())['formed_versions'] == 4
+    assert len(gateway.calls) == before
+    pointer = pg.runs()[pipe.run_id]['rst_checkpoint']
+    assert len(pg.objects.get(*pointer)['lines']) == 2
+    for child in [c for c in pg.candidates() if c.generation]:
+        evidence = child.rst_origin.non_regression
+        assert evidence.proposal.passed() and evidence.question.passed()
+        assert pg.get_request(evidence.proposal_request)['actual_model'] == evidence.proposal_actual_model
+        assert pg.get_request(evidence.question_request)['actual_model'] == evidence.question_actual_model
+
+
+def test_pg_rst_question_repair_preserves_complete_history(pg, tmp_path, source, candidate):
+    import asyncio
+
+    from test_rst_curriculum import ContractRepairGateway, setup_rst
+
+    from diamond_factory.rst_curriculum import RstCurriculum
+
+    pipe, _, base = setup_rst(tmp_path, source, candidate, rounds=1, store=pg)
+
+    class DurableRepair(ContractRepairGateway):
+        async def call(self, role, prompt, salt, schema=None, **kwargs):
+            value, rid, model = await super().call(role, prompt, salt, schema, **kwargs)
+            pg.save_request(pipe.run_id, {'request_id': rid, 'role': role, 'actual_model': model,
+                'salt': salt, 'usage': {}, 'attempts': [], 'content': value.model_dump_json()
+                    if hasattr(value, 'model_dump_json') else value})
+            return value, rid, model
+
+    pipe.gateway = gateway = DurableRepair(base.candidate)
+    report = asyncio.run(pipe.run_curriculum())
+    assert report['lines'][0]['rounds'][1]['question_repairs'] == 1
+    restored = RstCurriculum(pipe.settings, pg, pipe.run_id, 'pilot', pipe.run_dir, gateway,
+        plan=pipe.plan, pricing=pipe.pricing)
+    attempt = restored.progress.lines['fixture'][1].attempts[-1]
+    c = next(c for c in pg.candidates() if c.generation == 1)
+    assert attempt.question_versions[0].item != c.item
+    assert attempt.question_versions[0].solution == c.solution
+    assert len(attempt.question_repair_decisions) == len(attempt.question_repair_requests) == 1
+
+
 def test_pg_source_and_candidate_sample_roundtrip(pg, source, candidate):
     run_meta(pg)
     pg.add_source(source)

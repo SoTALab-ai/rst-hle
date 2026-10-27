@@ -21,5 +21,6 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --frozen --python 3.12
       - run: uv run ruff check src tests scripts
+      - run: node --test tests/web/quality-flow.test.mjs
       - run: uv run pytest -q
       - run: uv run diamond doctor

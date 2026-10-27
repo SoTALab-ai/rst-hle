@@ -1,0 +1,15 @@
+Create the examination question AFTER the supplied reference result and full proof are approved.
+Return RstQuestionDraft ONLY. The program binds the approved gold, category, subtopic and source
+metadata; do not emit any of them again. Give one compact target with every required output covered
+by the exact gold. Hide the designed necessary intermediate inference and equivalent hints while
+keeping all primitive definitions, independent model laws, quantifiers and physical conventions.
+The program also binds locked_required_outputs. Do not add proof submission, existence witnesses,
+boundary classifications or extra subquestions beyond those covered by the locked gold. A numeric
+gold requires an answer-only public request; the private full proof is not part of the gold output.
+Never cite the private proof as solver data. All data necessary to solve must be in question itself;
+the solver receives no paper, tools or network. No unavailable figure readings or open conjectures.
+Do not add an extra subquestion, change the approved model, or disclose the final answer/bridge.
+Preserve the locked target's full quantifiers, unknown parameter scope, branch and boundary
+obligations. Do not specialize to convenient numbers or supply an intermediate rank/spectrum
+just to make the wording concise. The actual question gets an independent non-regression review.
+JSON-escape every LaTeX backslash.
