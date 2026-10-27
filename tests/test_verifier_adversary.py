@@ -62,6 +62,7 @@ class Adversary(FakeGateway):
         elif schema is VerifierOracle:
             assert "verifier" not in data and "kind" not in str(data["responses"])
             ids = [r["id"] for r in data["responses"]]
+            assert "golden" not in ids
             value = VerifierOracle.model_validate({"cases": [{"id": cid,
                 "verdict": "yes" if cid in ("golden", "word", "number") else "no",
                 "reasoning": "The literal question determines the single integer 36."} for cid in ids],
@@ -103,14 +104,18 @@ def prepared(tmp_path, settings, source, candidate, mode="pass"):
     return pipe, store, pipe.gateway
 
 
-def test_controls_include_locked_golden_and_hidden_proof_without_leaking_to_blind_solve(
+def test_reference_gold_is_not_graded_as_a_response_and_hidden_proof_stays_private(
         tmp_path, settings, source, candidate):
     pipe, _, gateway = prepared(tmp_path, settings, source, candidate)
     assert asyncio.run(pipe.preflight(candidate))
     assert has_valid_verifier(candidate, {source.id: source})
     assert construction_ready(candidate, {source.id: source}, settings, pipe.prompts)
     result = candidate.verifier_assessment.versions[-1].result
-    assert {o.case_id for o in result.observations} == {"golden", "word", "number", "wrong", "missing"}
+    assert {o.case_id for o in result.observations} == {"word", "number", "wrong", "missing"}
+    assert not any(s.endswith((":apply:golden", ":hle-control:golden")) for _, _, s in gateway.calls)
+    oracle_packets = [json.loads(p.splitlines()[-1]) for _, p, s in gateway.calls if s.endswith(":oracle")]
+    assert oracle_packets[0]["item"]["answer"] == candidate.item.answer == "36"
+    assert oracle_packets[0]["initial_golden"]["solution"]["derivation"]
     blind = [json.loads(p.splitlines()[-1]) for _, p, s in gateway.calls if s.endswith(":solve")]
     assert blind == [{"question": candidate.item.question}]
     assert not any(role == "solver" for role, _, _ in gateway.calls)
@@ -190,11 +195,11 @@ def test_tampered_or_missing_controls_and_unknown_results_fail_closed(tmp_path, 
     altered.observations[-1].oracle = altered.observations[-1].oracle.model_copy(update={"verdict": "yes"})
     assert "oracle_observation_mapping_mismatch" in round_errors(altered, candidate.item)
     altered = result.model_copy(deep=True)
-    altered.observations = altered.observations[:3]
+    altered.observations = altered.observations[:2]
     assert "negative_output_coverage_incomplete" in round_errors(altered, candidate.item)
     altered = result.model_copy(deep=True)
     altered.observations[1].verifier.correct = "uncertain"
-    assert "unresolved_control:word" in round_errors(altered, candidate.item)
+    assert "unresolved_control:number" in round_errors(altered, candidate.item)
     candidate.solution.derivation.append("An unreviewed change to the hidden proof.")
     assert not has_valid_verifier(candidate, {source.id: source})
 
