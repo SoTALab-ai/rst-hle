@@ -93,7 +93,11 @@ def test_pg_full_dependency_contract_and_question_review_roundtrip(pg, tmp_path,
                                 "usage": {"total_tokens": 1}, "content": "synthetic dependency receipt"})
     pg.save(candidate)
     stored = pg.candidates()[0]
-    assert stored == candidate
+    # 旧蓝图字段按基类反序列化；比较持久化内容及本需求的具体类型记录。
+    assert stored.model_dump() == candidate.model_dump()
+    assert stored.known_result.scientific_goal == record
+    assert stored.solution.design.dependency_trace == candidate.solution.design.dependency_trace
+    assert stored.dependency_assessment == assessment
     assert valid_dependency(stored, {source.id: source}, pipe.settings, pipe.prompts)
     stored.item.question += " Now supply an intermediate that was hidden."
     assert not valid_dependency(stored, {source.id: source}, pipe.settings, pipe.prompts)
