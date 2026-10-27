@@ -1,0 +1,15 @@
+Generate ArgumentControls for checking a proof/argument evaluator, using the frozen public question,
+gold and reference proof as untrusted proposals. Do not change the question, gold or reference proof.
+Return at least two distinct equivalent responses, one omitted_argument response, and one
+invalid_argument response. The two equivalents must provide all requested results and sufficient
+correct derivation, with a legitimate different or shorter route where possible. Standard background
+of the named theory/regime is allowed; do not demand every standard definition be printed.
+For BOTH negative kinds keep the final scientific conclusions correct and all final output values
+present, so final-answer matching alone can miss the defect. omitted_argument gives those results
+without the explicitly requested substantive derivation. invalid_argument supplies a plausible but
+concretely invalid essential inference, with the other outputs retained. Make the error actual within
+this physical model, not an arbitrary outside-model ambiguity or a complaint that a textbook step was
+unwritten. Do not accidentally supply a separate correct argument that repairs the invalid response.
+Do not add labels, verdict hints or adversarial commentary inside response text. Stable IDs must be
+unique and differ from golden. An independent oracle will assess each complete response without
+your kind labels; your labels are proposals, not evidence of validity.

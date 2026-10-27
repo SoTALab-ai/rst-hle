@@ -26,6 +26,28 @@ def run_meta(pg, name="test"):
     pg.run(name, {"mode": "pilot", "status": "running", "fingerprint": "test"})
 
 
+def test_argument_study_state_is_cas_bound_and_not_a_production_trial(pg, tmp_path, settings, source, candidate, monkeypatch):
+    from test_argument_study import control_fixture, prepared
+
+    from diamond_factory.argument_study import ArgumentStudy
+
+    run_meta(pg)
+    pg.add_source(source)
+    pipe, _offline, _gateway = prepared(tmp_path / "offline", settings, source, candidate, monkeypatch)
+    pipe.store = pg
+    study = ArgumentStudy(pipe, candidate)
+    control_fixture(study)()
+    study.save()
+    metadata = pg.runs()[study.state_run]
+    assert "object_key" in metadata and "state" not in metadata
+    restored = ArgumentStudy(pipe, candidate)
+    assert restored.state == study.state
+    assert pg.db.execute("SELECT count(*) FROM diamond.qc_samples").fetchone()[0] == 0
+    (pg.objects.root / metadata["object_key"]).write_text("corrupted study checkpoint")
+    with pytest.raises(ValueError, match="corrupt"):
+        ArgumentStudy(pipe, candidate)
+
+
 def test_pg_source_and_candidate_sample_roundtrip(pg, source, candidate):
     run_meta(pg)
     pg.add_source(source)
