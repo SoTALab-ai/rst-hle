@@ -4,6 +4,13 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from .dependency_models import (
+    DependencyAssessment,
+    DependencyTrace,
+    PremiseBoundaryAssessment,
+    PremiseContract,
+)
+
 
 def digest(value: object) -> str:
     raw = json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
@@ -54,6 +61,7 @@ class ScientificGoal(StrictModel):
     reasoning_challenge: list[str] = Field(min_length=1)
     reference_case_ids: list[str] = Field(min_length=1)
     reference_comparison: str = Field(min_length=20)
+    premise_contract: PremiseContract | None = None
 
 
 class ScientificGoalSelection(StrictModel):
@@ -77,6 +85,7 @@ class ScientificGoalAssessment(StrictModel):
     references_sha256: str
     prompt_sha256: str
     model_config_sha256: str
+    premise_assessment: PremiseBoundaryAssessment | None = None
 
 
 class HighDifficultyCase(StrictModel):
@@ -185,6 +194,7 @@ class TaskDesign(StrictModel):
     inverse_construction: str = Field(min_length=20)
     answer_check: str = Field(min_length=20)
     difficulty: DifficultyDesign | None = None
+    dependency_trace: DependencyTrace | None = None
     construction_type: Literal["inverse_identification", "branch_discovery", "parameter_region", "theorem_applicability"] | None = None
     bridge_type: Literal["invariant", "representation", "auxiliary_object", "symmetry", "conservation", "decomposition"] | None = None
 
@@ -211,6 +221,7 @@ class LockedTaskDesign(StrictModel):
     inverse_construction: str = Field(min_length=20)
     answer_check: str = Field(min_length=20)
     difficulty: DifficultyDesign | None = None
+    dependency_trace: DependencyTrace | None = None
     construction_type: Literal["inverse_identification", "branch_discovery", "parameter_region", "theorem_applicability"] | None = None
     bridge_type: Literal["invariant", "representation", "auxiliary_object", "symmetry", "conservation", "decomposition"] | None = None
 
@@ -896,6 +907,7 @@ class Candidate(StrictModel):
     blueprint_fingerprint: str = ""
     known_result: KnownResult | None = None
     bottleneck_assessment: BottleneckAssessment | None = None
+    dependency_assessment: DependencyAssessment | None = None
     difficulty_origin: DifficultyOrigin | None = None
     difficulty_rounds: list[DifficultyQuestionRound] = Field(default_factory=list, max_length=3)
     difficulty_diagnostic: DifficultyDiagnostic | None = None

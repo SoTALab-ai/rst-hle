@@ -1,0 +1,8 @@
+DEPENDENCY-CONTRACT MODE. The scientific goal includes an independently reviewed premise_contract.
+Copy scientific_goal.assumptions EXACTLY, in the same order, into result.assumptions, with no additions.
+The derived nodes are conclusions to recover, never extra assumed facts. The target and original
+input boundary are locked now. Choose the natural answer form for this target. Do not silently
+shrink it to a downstream application of the intermediate conclusions. Preserve every requested
+obligation; use argument_or_witness_validation when judging the argument or a noncanonical witness
+is necessary. A final_answer_equivalence task must have a well-defined final result, not an ungraded
+proof obligation hidden in its rationale. Leave scientific_goal null for program binding.

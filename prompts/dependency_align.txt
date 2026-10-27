@@ -1,0 +1,11 @@
+DEPENDENCY-CONTRACT MODE. Construct the public question from premise_contract.primitives, the locked
+target and answer-affecting conventions. The private source, proof, derived node statements and
+solution.assumptions beyond the registered primitives are NOT public givens. Do not copy a derived
+quark/antiquark equality, sign relation, effective formula, intermediate symmetry consequence or
+representation into the question just because the private proof cites it or calls it an assumption.
+Hide ALL derived nodes and their equivalent scaffolds; several stages may remain to discover.
+For a proof goal it is legitimate to state the proposition to prove, but not its argument or a
+usable intermediate premise that discharges that argument. For a final-result task do not add an
+ungraded proof obligation. Retain genuinely independent definitions, kernels/model laws, domains,
+orientation and sign conventions needed to derive the requested result. Missing inputs create an
+invalid question, not a hard question. Do not mention internal node IDs or dependency/masking tools.

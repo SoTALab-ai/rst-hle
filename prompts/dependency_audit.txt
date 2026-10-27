@@ -1,0 +1,7 @@
+DEPENDENCY-CONTRACT MODE. Compare the literal question to the scientific goal's primitive/derived
+partition and the complete dependency trace. A source-supported intermediate is not automatically
+an allowed given. Identify derived statements or equivalent scaffolds supplied as usable premises,
+including upstream relations that make the remaining calculation trivial. Report concrete leakage
+in no_shortcut/reason. Also identify missing independent model inputs with explicit witnesses.
+Do not reject merely because a correct route is brief; record the route and remaining reasoning.
+The dedicated dependency question review enforces the construction contract before sampling.

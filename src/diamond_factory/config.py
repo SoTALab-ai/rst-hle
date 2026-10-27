@@ -44,6 +44,7 @@ class Settings(StrictModel):
     correctness_basis: Literal["self_verified", "paper_grounded"] = "self_verified"
     difficulty_references_path: str | None = None
     scientific_goal_references_path: str | None = None
+    require_dependency_trace: bool = False
     difficulty_design_max_revisions: int = Field(default=2, ge=0, le=2)
     difficulty_mask_max_revisions: int = Field(default=2, ge=0, le=2)
     require_verifier_adversary: bool = False
@@ -80,6 +81,10 @@ class Settings(StrictModel):
 
     @model_validator(mode="after")
     def validate_role_capacity(self):
+        if self.require_dependency_trace and not (
+                self.scientific_goal_references_path and self.correctness_basis == "paper_grounded"
+                and self.use_locked_proof_draft and self.freeze_question_at_verifier):
+            raise ValueError("Dependency tracing requires scientific goal selection, paper basis, locked proof and frozen verifier")
         if self.scientific_goal_references_path and not (
                 self.correctness_basis == "paper_grounded" and self.require_known_result):
             raise ValueError("Scientific goal references require paper-grounded result locking")

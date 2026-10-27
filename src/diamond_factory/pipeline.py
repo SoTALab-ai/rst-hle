@@ -6,6 +6,13 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from .consistency import QualityRejected, consistency_input, has_valid_consistency, verifier_fingerprint
+from .dependencies import (
+    AUTHOR_PROMPTS,
+    DependencyBuilder,
+    dependency_blueprint_errors,
+    goal_contract_errors,
+    has_dependency_contract,
+)
 from .difficulty import (
     blueprint_stamp,
     bottleneck_input,
@@ -94,6 +101,9 @@ class Pipeline:
                 dedicated = self.prompts["hardstep_" + name]
                 self.prompts[name] = (dedicated if name == "blueprint_audit" else
                                       self.prompts[name] + "\n\n" + dedicated)
+        if settings.require_dependency_trace:
+            for name in AUTHOR_PROMPTS:
+                self.prompts[name] += "\n\n" + self.prompts["dependency_" + name]
         self.difficulty_profile = (json.loads(Path(settings.difficulty_profile_path).read_text())
                                    if settings.difficulty_profile_path else None)
         self.gateway = gateway or Gateway(settings, run_dir / "requests", store=store, run_id=run_id)
@@ -277,6 +287,8 @@ class Pipeline:
             errors.append("source_policy_changed_requires_new_version")
         if candidate.correctness_basis != self.basis:
             errors.append("correctness_basis_changed_requires_new_version")
+        if has_dependency_contract(candidate) and not self.settings.require_dependency_trace:
+            errors.append("dependency_contract_requires_enabled_protocol")
         if candidate.source_fidelity == "advisory":
             candidate.source_notes = sorted(set(candidate.source_notes + ["source_inspired_construction"] +
                 evidence_errors(candidate.item.evidence + candidate.solution.evidence, sources)))
@@ -322,6 +334,8 @@ class Pipeline:
             self.store.save(candidate)
             return False
         if self.settings.require_bottleneck_mask and not defer_mask and not await self.review_bottleneck(candidate, sources):
+            return False
+        if self.settings.require_dependency_trace and not await DependencyBuilder(self).question(candidate, sources):
             return False
         input_hash = consistency_input(candidate, sources)
         hashes = {name: digest(self.prompts[name]) for name in ("consistency_solve", "consistency_review")}
@@ -435,6 +449,13 @@ class Pipeline:
             if (len(set(goal.reference_case_ids)) != len(goal.reference_case_ids)
                     or not set(goal.reference_case_ids) <= {c.id for c in references.cases}):
                 errors.append("invalid_scientific_goal_reference_ids")
+            premise_assessment = None
+            if self.settings.require_dependency_trace:
+                errors.extend(goal_contract_errors(goal))
+                if not errors:
+                    premise_assessment = await DependencyBuilder(self).review_goal(goal, source, source_data, identity)
+                    errors.extend("premise_boundary_failed:" + name
+                                  for name in premise_assessment.review.blocking_checks())
             self.log("scientific_goal_selection", candidate=identity, repair=repair,
                      request_id=rid, actual_model=model, selection=selection.model_dump(), errors=errors,
                      references_sha256=digest(references.model_dump()), measured_difficulty=False)
@@ -443,8 +464,10 @@ class Pipeline:
                     request_id=rid, actual_model=model,
                     source_sha256=source.sha256, references_sha256=digest(references.model_dump()),
                     prompt_sha256=digest(self.prompts["scientific_goal"]),
-                    model_config_sha256=digest(self.settings.generator.model_dump()))
-            data["feedback"] = {"previous": selection.model_dump(), "errors": errors}
+                    model_config_sha256=digest(self.settings.generator.model_dump()),
+                    premise_assessment=premise_assessment)
+            data["feedback"] = {"previous": selection.model_dump(), "errors": errors,
+                "premise_review": premise_assessment.review.model_dump() if premise_assessment else None}
         raise AuthoringRejected("scientific_goal_selection_failed:" + ";".join(errors))
 
     async def select_known_result(self, source, source_data, target, identity, brief):
@@ -476,6 +499,8 @@ class Pipeline:
                 selection.result.scientific_goal = goal
                 errors.extend(goal_errors(selection.result, {source.id: source}, self.goal_references,
                                           self.prompts["scientific_goal"], self.settings.generator.model_dump()))
+                if self.settings.require_dependency_trace and selection.result.assumptions != goal.goal.assumptions:
+                    errors.append("result_added_or_changed_primitive_inputs")
             self.log("known_result_selection", candidate=identity, repair=repair, request_id=rid,
                      actual_model=model, result_sha256=digest(selection.result.model_dump()), errors=errors)
             if not errors:
@@ -623,6 +648,8 @@ class Pipeline:
                                 "previous_solution": existing.solution.model_dump(),
                                 "bottleneck_assessment": (existing.bottleneck_assessment.model_dump()
                                                           if existing.bottleneck_assessment else None),
+                                "dependency_assessment": (existing.dependency_assessment.model_dump()
+                                                          if existing.dependency_assessment else None),
                                 "verifier_assessment": (existing.verifier_assessment.model_dump()
                                                         if existing.verifier_assessment else None),
                                 "consistency_assessment": (existing.consistency.model_dump()
@@ -661,6 +688,8 @@ class Pipeline:
                                                              self.settings.require_difficulty_design))
             if self.settings.require_bottleneck_mask:
                 blueprint_errors.extend(bottleneck_mask_errors(plan))
+            if self.settings.require_dependency_trace:
+                blueprint_errors.extend(dependency_blueprint_errors(known_result, plan))
             if self.settings.preverify_blueprint:
                 blueprint, bid, bmodel = await self.review_blueprint(plan, source_data, target,
                                                                     salt + ":blueprint-audit", known_result)
@@ -769,6 +798,8 @@ class Pipeline:
                                 "previous_solution": plan.model_dump(),
                                 "bottleneck_assessment": (result.bottleneck_assessment.model_dump()
                                                           if result.bottleneck_assessment else None),
+                                "dependency_assessment": (result.dependency_assessment.model_dump()
+                                                          if result.dependency_assessment else None),
                                 "verifier_assessment": (result.verifier_assessment.model_dump()
                                                         if result.verifier_assessment else None),
                                 "consistency_assessment": (result.consistency.model_dump()
