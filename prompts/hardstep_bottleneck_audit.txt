@@ -5,7 +5,9 @@ quantitative form. For a proof goal, the stated proposition is the task; its pre
 not reveal the requested argument. A conclusion-only locked goal cannot be changed into a proof.
 hidden and not_answer_only stay strict: fail if the question supplies the selected inference, an
 equivalent scaffold or a recipe that gives it away, or if only the final answer slot is masked.
-recoverable: return pass when the source paper (or the reference proof) derives the hidden inference
+recoverable is ADVISORY ONLY in this masking review, including a fail verdict. Independent scientific
+reviews own input sufficiency and actual correctness; do not turn a recoverability concern into a
+hidden or not_answer_only failure. Return pass when the source paper (or the reference proof) derives the hidden inference
 from the premises retained in the literal question. Return fail ONLY with a concrete witness: a
 missing primitive premise that the derivation needs, or two admissible instances consistent with
 the literal question that have different targets. Otherwise return uncertain. Difficulty of
