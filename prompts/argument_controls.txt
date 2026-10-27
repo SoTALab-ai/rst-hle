@@ -4,6 +4,12 @@ Return at least two distinct equivalent responses, one omitted_argument response
 invalid_argument response. The two equivalents must provide all requested results and sufficient
 correct derivation, with a legitimate different or shorter route where possible. Standard background
 of the named theory/regime is allowed; do not demand every standard definition be printed.
+The golden text is only a reference for scientific final results and may omit essential supporting
+arguments. Construct valid response controls from the complete private derivation or an independently
+established route, not by paraphrasing the golden exposition. Each positive response must include its
+own necessary inference bridges; do not copy an unsupported transformation from the golden and assume
+that the oracle can fill it from the private proof. This requirement applies to generated submissions,
+not to the reference golden. Keep the golden text unchanged.
 For BOTH negative kinds keep the final scientific conclusions correct and all final output values
 present, so final-answer matching alone can miss the defect. omitted_argument gives those results
 without the explicitly requested substantive derivation. invalid_argument supplies a plausible but
