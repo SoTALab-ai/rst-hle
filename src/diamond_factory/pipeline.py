@@ -45,6 +45,8 @@ from .models import (
     Question,
     Record,
     ResultSelection,
+    ScientificGoalAssessment,
+    ScientificGoalSelection,
     Solution,
     StepwiseBlueprintAudit,
     SubstitutionReport,
@@ -54,6 +56,7 @@ from .models import (
 from .preflight_repairs import certificate_repair_protocol, classify_preflight
 from .routing import read_routes
 from .runtime import gather_cancel_on_error
+from .scientific_goals import argument_validation_required, goal_errors, load_references
 from .substitution import verify_substitutions
 from .verifier import VerifierBuilder, has_valid_verifier
 
@@ -82,6 +85,7 @@ class Pipeline:
             for name in ("blueprint_audit", "audit", "bottleneck_audit", "difficulty_proposal"):
                 self.prompts[name] = self.prompts["shortcut_" + name]
         self.basis = settings.correctness_basis
+        self.goal_references = load_references(settings)
         self.defer_depth = settings.difficulty_adversary_mode == "shortcut_blocking" or self.basis == "paper_grounded"
         if self.basis == "paper_grounded":
             # 蓝图只查引用与适用条件，避免旧“独立重证”指令与论文依据口径冲突。
@@ -105,6 +109,8 @@ class Pipeline:
         self.fingerprint = digest({"settings": settings.model_dump(), "mode": mode,
                                    "quotas": self.quotas, "prompts": self.prompts,
                                    "difficulty_profile": self.difficulty_profile,
+                                   "scientific_goal_references": (self.goal_references.model_dump()
+                                                                  if self.goal_references else None),
                                    "corpora": self.corpus_hashes,
                                    "judge_contract": Path(settings.judge_contract).read_text(),
                                    "source_hashes": {s.id: s.sha256 for s in store.sources()},
@@ -132,6 +138,8 @@ class Pipeline:
                                     "corpora": self.corpus_hashes,
                                     "quotas_sha256": digest(self.quotas),
                                     "requests_directory": str(self.run_dir / "requests"),
+                                    "scientific_goal_references_sha256": (digest(self.goal_references.model_dump())
+                                                                         if self.goal_references else None),
                                     "difficulty_checkpoints": self.difficulty_checkpoints})
 
     def generation_identity(self, source, parent, target, generation, attempt, brief=None):
@@ -175,6 +183,7 @@ class Pipeline:
 
     async def certificate(self, candidate, review, input_hash, *, repair=0, feedback=None):
         packet = {"question": candidate.item.question, "gold_answer": candidate.item.answer,
+                  "correctness_basis": candidate.correctness_basis,
                   "required_outputs": candidate.item.required_outputs,
                   "proposed_checks": [case.model_dump() for case in review.substitution_checks]}
         prompt = self.prompts["consistency_certificate"]
@@ -248,6 +257,8 @@ class Pipeline:
                        for s in candidate.source_ids]
         candidate.audit, rid, model = await self.gateway.call("auditor", self.prompts["audit"] + "\n" +
             json.dumps({"sources": source_data, "source_fidelity": self.settings.source_fidelity,
+                        "correctness_basis": candidate.correctness_basis,
+                        "known_result": candidate.known_result.model_dump() if candidate.known_result else None,
                         "solution": candidate.solution.model_dump(),
                         "item": candidate.item.model_dump()}, ensure_ascii=False),
             f"{candidate.id}:verifier-question-revalidation:{digest(candidate.item.model_dump())}", Audit)
@@ -290,6 +301,8 @@ class Pipeline:
         ):
             errors.append("missing_or_mismatched_stepwise_blueprint_review")
         if self.settings.require_known_result:
+            errors.extend(goal_errors(candidate.known_result, sources, self.goal_references,
+                                      self.prompts["scientific_goal"], self.settings.generator.model_dump()))
             errors.extend(known_result_errors(candidate.known_result, sources, candidate.solution,
                 candidate.blueprint_audit, source_fidelity=self.settings.source_fidelity,
                 defer_depth=self.defer_depth))
@@ -342,7 +355,9 @@ class Pipeline:
             review, rid, rmodel = await self.consistency_call(
                 self.prompts["consistency_review"] + "\n" + json.dumps({
                     "source_fidelity": candidate.source_fidelity,
+                    "correctness_basis": candidate.correctness_basis,
                     "item": candidate.item.model_dump(), "solution": candidate.solution.model_dump(),
+                    "known_result": candidate.known_result.model_dump() if candidate.known_result else None,
                     "independent_solution": independent.model_dump(),
                     "sources": [{**sources[s].model_dump(), "text": sources[s].text[:self.settings.max_source_chars]}
                                 for s in candidate.source_ids]}, ensure_ascii=False),
@@ -403,10 +418,46 @@ class Pipeline:
         return blueprint_stamp(solution, source_data, target, known_result,
             self.prompts["blueprint_audit"], self.settings.consistency.model_dump(), self.settings.source_fidelity)
 
+    async def select_scientific_goal(self, source, source_data, target, identity, brief):
+        """独立选择科学目标；答案形式在后续结果选择中确定，收据随金标保存。"""
+        references = self.goal_references
+        data = {"source": source_data, "target": target, "research_brief": brief,
+                "high_difficulty_cases": references.model_dump()}
+        for repair in range(self.settings.max_repairs + 1):
+            selection, rid, model = await self.gateway.call("generator", self.prompts["scientific_goal"] + "\n" +
+                json.dumps(data, ensure_ascii=False), f"{identity}:scientific-goal:{repair}", ScientificGoalSelection)
+            if selection.outcome == "unavailable":
+                raise AuthoringRejected("scientific_goal_unavailable:" + selection.reason)
+            goal = selection.goal
+            errors = []
+            if goal.source_id != source.id:
+                errors.append("scientific_goal_source_mismatch")
+            if (len(set(goal.reference_case_ids)) != len(goal.reference_case_ids)
+                    or not set(goal.reference_case_ids) <= {c.id for c in references.cases}):
+                errors.append("invalid_scientific_goal_reference_ids")
+            self.log("scientific_goal_selection", candidate=identity, repair=repair,
+                     request_id=rid, actual_model=model, selection=selection.model_dump(), errors=errors,
+                     references_sha256=digest(references.model_dump()), measured_difficulty=False)
+            if not errors:
+                return ScientificGoalAssessment(goal=goal, goal_sha256=digest(goal.model_dump()),
+                    request_id=rid, actual_model=model,
+                    source_sha256=source.sha256, references_sha256=digest(references.model_dump()),
+                    prompt_sha256=digest(self.prompts["scientific_goal"]),
+                    model_config_sha256=digest(self.settings.generator.model_dump()))
+            data["feedback"] = {"previous": selection.model_dump(), "errors": errors}
+        raise AuthoringRejected("scientific_goal_selection_failed:" + ";".join(errors))
+
     async def select_known_result(self, source, source_data, target, identity, brief):
         """只从来源抽取已有结果；完整证明复核前不把抽取当作真值。"""
         data = {"source": source_data, "target": target, "research_brief": brief,
                 "source_fidelity": self.settings.source_fidelity}
+        goal = None
+        if self.goal_references is not None:
+            goal = await self.select_scientific_goal(source, source_data, target, identity, brief)
+            data["scientific_goal"] = goal.goal.model_dump()
+            data["goal_contract"] = ("Preserve this target verbatim and every primitive assumption. "
+                "Now choose the natural answer form and its grading_requirement. Leave scientific_goal null; "
+                "the program attaches its sealed selection receipt. No short-answer or quantitative restriction.")
         if self.difficulty_profile:
             data["construction_reference"] = profile_for_category(self.difficulty_profile, target["category"])
         for repair in range(self.settings.max_repairs + 1):
@@ -416,6 +467,15 @@ class Pipeline:
                 raise AuthoringRejected("known_result_unavailable:" + selection.reason)
             errors = known_result_errors(selection.result, {source.id: source},
                                          source_fidelity=self.settings.source_fidelity)
+            if goal is not None:
+                # 目标记录由程序绑定，模型不能另造一份目标审批。
+                if "grading_requirement" not in selection.result.model_fields_set:
+                    errors.append("missing_goal_grading_requirement")
+                if selection.result.scientific_goal not in (None, goal):
+                    errors.append("scientific_goal_receipt_changed")
+                selection.result.scientific_goal = goal
+                errors.extend(goal_errors(selection.result, {source.id: source}, self.goal_references,
+                                          self.prompts["scientific_goal"], self.settings.generator.model_dump()))
             self.log("known_result_selection", candidate=identity, repair=repair, request_id=rid,
                      actual_model=model, result_sha256=digest(selection.result.model_dump()), errors=errors)
             if not errors:
@@ -537,6 +597,7 @@ class Pipeline:
         source_data["text"] = source.text[:self.settings.max_source_chars]
         data = {"source": source_data, "parent": parent.item.model_dump() if parent else None,
                 "source_fidelity": self.settings.source_fidelity,
+                "correctness_basis": self.basis,
                 "parent_solution": parent.solution.model_dump() if parent else None,
                 "target": target, "generation": generation, "operator": operator,
                 "feedback": feedback, "require_difficulty_design": self.settings.require_difficulty_design}
@@ -620,13 +681,15 @@ class Pipeline:
                                     "errors": blueprint_errors, "previous": plan.model_dump(),
                                     "blueprint_review": blueprint.model_dump() if blueprint else None,
                                     "repair_instruction": "Repair the specified claims and every dependent step. "
-                                    "Return the complete corrected proof and gold; preserve independently valid steps. "
+                                    "Return the complete corrected derivation in the requested response schema; "
+                                    "preserve independently valid steps. For LockedProofDraft do not emit gold, "
+                                    "locked assumptions or design.target; the program binds them. "
                                     "Do not change the locked result, target or original premises. If it is wrong, "
                                     "identify the contradiction; never silently replace it. "
                                     "Do not write a question before the proof is approved."}
                 if blueprint and any(issue.part == "known_result" for issue in blueprint.issues):
                     raise AuthoringRejected("locked_known_result_rejected:" + blueprint.reason)
-                if blueprint and any(issue.part == "target_depth" for issue in blueprint.issues):
+                if not self.defer_depth and blueprint and any(issue.part == "target_depth" for issue in blueprint.issues):
                     # 目标偏浅不是证明错误；终止该线，不能靠反复包装或换金标加难。
                     raise AuthoringRejected("target_depth_rejected:" + blueprint.reason)
                 if repair == self.settings.max_repairs:
@@ -637,6 +700,8 @@ class Pipeline:
             else:
                 item, align_request, _ = await self.gateway.call("generator", self.prompts["align"] + "\n" +
                                                 json.dumps({"solution": plan.model_dump(), "target": target,
+                                                            "known_result": known_result.model_dump() if known_result else None,
+                                                            "correctness_basis": self.basis,
                                                             "repair_feedback": data.get("feedback"),
                                                             "previous_question": reusable.item.model_dump() if reusable else None,
                                                             "source_fidelity": self.settings.source_fidelity},
@@ -649,6 +714,8 @@ class Pipeline:
             audit, _, _ = await self.gateway.call("auditor", self.prompts["audit"] + "\n" +
                                                  json.dumps({"source": source_data,
                                                              "source_fidelity": self.settings.source_fidelity,
+                                                             "correctness_basis": self.basis,
+                                                             "known_result": known_result.model_dump() if known_result else None,
                                                              "solution": plan.model_dump(),
                                                              "item": item.model_dump(),
                                                              "parent": data["parent"]}, ensure_ascii=False),
@@ -722,6 +789,10 @@ class Pipeline:
     async def sample(self, candidate, limit=None):
         if not candidate.authoring_complete:
             raise ValueError("Finish the pending author repair before paid solver evaluation")
+        if argument_validation_required(candidate):
+            # 允许选择证明/非唯一构造目标；现有HLE最终答案比对不能冒充论证或见证验收。
+            raise SampleIncomplete("evaluation_contract_uncovered:argument_or_witness_validation; "
+                                   "no solver or judge request purchased")
         limit = self.settings.samples if limit is None else limit
         if not 1 <= limit <= self.settings.samples:
             raise ValueError("Invalid sampling stage")
@@ -736,6 +807,8 @@ class Pipeline:
                 raise ValueError("Reused persisted sample response")
         if not await self.preflight(candidate):
             raise QualityRejected("Question failed preflight; no difficulty samples allowed")
+        if argument_validation_required(candidate):
+            raise SampleIncomplete("evaluation_contract_uncovered:independent_review_requires_argument_validation")
         done = {t.sample_id for t in prior}
 
         async def one(i):
@@ -914,6 +987,7 @@ class Pipeline:
                 c.audit, _, _ = await self.gateway.call("auditor", self.prompts["audit"] + "\n" +
                     json.dumps({"item": c.item.model_dump(), "solution": c.solution.model_dump(),
                                 "source_fidelity": self.settings.source_fidelity,
+                                "correctness_basis": c.correctness_basis, "known_result": None,
                                 "sources": [sources[s].model_dump() for s in c.source_ids],
                                 "parent": parent.item.model_dump() if parent else None}, ensure_ascii=False),
                     f"{identity}:audit", Audit)

@@ -354,6 +354,8 @@ class DifficultyAdversary:
     async def audit_item(self, candidate, source_data, salt):
         audit, rid, model = await self.p.gateway.call("auditor", self.p.prompts["audit"] + "\n" +
             json.dumps({"source": source_data, "source_fidelity": candidate.source_fidelity,
+                "correctness_basis": candidate.correctness_basis,
+                "known_result": candidate.known_result.model_dump() if candidate.known_result else None,
                 "solution": candidate.solution.model_dump(), "item": candidate.item.model_dump(),
                 "parent": None}, ensure_ascii=False), salt, Audit)
         return audit, rid, model
@@ -381,6 +383,7 @@ class DifficultyAdversary:
             if candidate is None or candidate.status == "rejected":
                 item, rid, _ = await p.gateway.call("generator", p.prompts["align"] + "\n" + json.dumps({
                     "solution": solution.model_dump(), "source_fidelity": p.settings.source_fidelity,
+                    "correctness_basis": p.basis, "known_result": version.proposal.result.model_dump(),
                     "target": target, "previous_question": candidate.item.model_dump() if candidate else None,
                     "repair_feedback": candidate.reasons if candidate else None}, ensure_ascii=False),
                     f"{identity}:depth-align:{quality_revision}", Question)

@@ -46,6 +46,33 @@ def test_pg_source_and_candidate_sample_roundtrip(pg, source, candidate):
         pg.sources()
 
 
+def test_pg_scientific_goal_receipt_and_grading_requirement_roundtrip(pg, tmp_path, source, candidate):
+    import asyncio
+
+    from test_scientific_goals import author, replies
+
+    from diamond_factory.models import digest
+
+    run_meta(pg)
+    pg.add_source(source)
+    pipe, _offline, gateway, goal = author(tmp_path / "offline", source, candidate)
+    replies(gateway, goal, candidate.known_result)
+    result = asyncio.run(pipe.select_known_result(source, source.model_dump(),
+        {"category": "Math", "subtopic": "组合与图论"}, "line", None))
+    candidate.known_result = result
+    candidate.known_result.grading_requirement = "argument_or_witness_validation"
+    receipt = result.scientific_goal
+    pg.save_request("test", {"request_id": receipt.request_id, "role": "generator",
+        "actual_model": receipt.actual_model, "usage": {"total_tokens": 1},
+        "content": receipt.goal.model_dump_json()})
+    pg.save(candidate)
+    stored = pg.candidates()[0]
+    assert stored.known_result.scientific_goal == receipt
+    assert stored.known_result.grading_requirement == "argument_or_witness_validation"
+    assert pg.get_request(receipt.request_id)["content"] == receipt.goal.model_dump_json()
+    assert receipt.references_sha256 == digest(pipe.goal_references.model_dump())
+
+
 @pytest.mark.parametrize("shortcut", [False, True])
 def test_pg_difficulty_checkpoints_and_two_stage_history_roundtrip(pg, tmp_path, source, candidate, shortcut):
     import asyncio
