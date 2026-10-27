@@ -15,6 +15,250 @@
   --border: #dfe6eb;
   --muted: #7b8c98;
 }
+
+/* 分阶段显示真实证据，流程说明不冒充当前题目的通过记录。 */
+.quality-intro {
+  padding: 20px 22px;
+  font-size: 12px;
+  line-height: 1.9;
+  color: #5c7581;
+}
+.quality-flow-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 20px;
+  margin: 15px 0 11px;
+  color: #3e7462;
+  font-size: 11px;
+}
+.quality-boundary {
+  color: #8a999f;
+  font-size: 10px;
+}
+.console main nav.quality-flow-nav {
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 8px 0;
+  position: sticky;
+  top: 59px;
+  z-index: 9;
+  background: #f3f5f7;
+  border-bottom: 1px solid #e0e7e9;
+  margin-bottom: 18px;
+}
+.quality-flow-nav button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  background: #f6faf8;
+  border: 1px solid #dbe9e2;
+  color: #56756a;
+  border-radius: 5px;
+  padding: 10px;
+  font-size: 10px;
+}
+.quality-flow-nav button span {
+  font:
+    10px ui-monospace,
+    monospace;
+  color: #85a497;
+}
+.quality-flow-nav svg {
+  width: 12px;
+  height: 12px;
+}
+.quality-phase {
+  scroll-margin-top: 128px;
+  margin: 28px 0;
+}
+.quality-phase-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  margin-bottom: 16px;
+}
+.quality-phase-heading h2 {
+  font-size: 16px;
+  margin: 1px 0 6px;
+}
+.quality-phase-heading p {
+  color: #8b9ba3;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.quality-phase-number {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  border-radius: 7px;
+  background: #e4f0ea;
+  color: #4d876e;
+  font:
+    12px ui-monospace,
+    monospace;
+  flex: none;
+}
+.quality-stage {
+  background: #fff;
+  border: 1px solid #dfe6eb;
+  border-radius: 7px;
+  margin: 0 0 13px 13px;
+  min-width: 0;
+}
+.quality-stage-heading {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  padding: 18px 21px;
+  border-bottom: 1px solid #edf1f3;
+}
+.quality-stage-heading h3 {
+  font-size: 13px;
+  line-height: 1.7;
+}
+.quality-stage-heading > .pill {
+  margin-left: auto;
+}
+.quality-step-number {
+  color: #9cadb7;
+  font:
+    10px ui-monospace,
+    monospace;
+}
+.quality-role {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  color: #9aa9af;
+}
+.quality-stage-body {
+  padding: 18px 21px;
+}
+.quality-description {
+  color: #5a737f;
+  font-size: 12px;
+  line-height: 1.9;
+}
+.quality-gate,
+.quality-observation {
+  display: grid;
+  grid-template-columns: 102px 1fr;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 11px;
+  line-height: 1.85;
+}
+.quality-gate strong,
+.quality-observation strong {
+  font-size: 10px;
+  font-weight: 550;
+  color: #8e9ea6;
+}
+.quality-gate p {
+  color: #7c8f99;
+}
+.quality-observation {
+  border: 1px solid #e5ede8;
+  border-radius: 4px;
+  padding: 10px 12px;
+  background: #f7faf8;
+  color: #4c7364;
+}
+.quality-stage.state-failed .quality-observation {
+  background: #fcf4f2;
+  border-color: #efdfda;
+  color: #9b6860;
+}
+.quality-stage.state-uncovered .quality-observation,
+.quality-stage.state-uncertain .quality-observation {
+  background: #fbf8ef;
+  border-color: #eae3cf;
+  color: #9b875c;
+}
+.quality-stage .table-wrap {
+  margin-top: 16px;
+  border: 1px solid #e6edf0;
+  border-radius: 5px;
+}
+.quality-stage table {
+  white-space: normal;
+}
+.quality-stage th,
+.quality-stage td {
+  padding: 11px 13px;
+}
+.quality-stage td:first-child {
+  min-width: 120px;
+}
+.quality-stage td:nth-child(2) {
+  white-space: nowrap;
+}
+.quality-check-detail {
+  min-width: 180px;
+  font-size: 11px;
+  color: #82959e;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+}
+.quality-stage .fields {
+  padding: 16px 0 0;
+}
+.quality-evidence {
+  margin-top: 16px;
+  border-top: 1px solid #edf0f2;
+  padding-top: 12px;
+}
+.quality-evidence summary {
+  cursor: pointer;
+  color: #648578;
+  font-size: 11px;
+}
+.quality-evidence .json {
+  margin-top: 12px;
+  max-height: 460px;
+  border: 1px solid #edf0f2;
+  border-radius: 4px;
+}
+@media (max-width: 760px) {
+  .quality-intro {
+    padding: 16px;
+    font-size: 11px;
+  }
+  .console main nav.quality-flow-nav {
+    padding: 7px 0;
+  }
+  .quality-stage {
+    margin-left: 0;
+  }
+  .quality-stage-heading,
+  .quality-stage-body {
+    padding: 15px;
+  }
+  .quality-stage-heading {
+    gap: 9px;
+    flex-wrap: wrap;
+  }
+  .quality-stage-heading h3 {
+    font-size: 12px;
+  }
+  .quality-gate,
+  .quality-observation {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .quality-phase-heading h2 {
+    font-size: 14px;
+  }
+  .quality-stage td:first-child {
+    min-width: 90px;
+  }
+  .quality-check-detail {
+    min-width: 160px;
+  }
+}
 * {
   box-sizing: border-box;
 }
