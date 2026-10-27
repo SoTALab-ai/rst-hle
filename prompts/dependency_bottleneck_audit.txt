@@ -4,3 +4,7 @@ the single bottleneck_step label. Exposing any of those intermediate conclusions
 recipe as a usable premise fails hidden. Stating a proposition that the task actually requires
 proving is legitimate and does not supply its argument. A successful citation in the private proof
 does not authorize giving that conclusion to the solver. Primitive sufficiency is still required.
+Primitive sufficiency includes standard definitions and laws of the named theory/regime, without
+requiring their consequences as explicit givens. Any missing-input witness must obey the full
+physical model, not merely its displayed positive-x formulas. Check other legal derivations before
+rejecting recoverability; an unverified entailment is uncertain, and a correct shorter route is allowed.
