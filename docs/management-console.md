@@ -1,0 +1,65 @@
+# RST-HLE 管理控制台
+
+控制台参考 ClawGym 管理前端的固定深色侧栏、浅色工作区、筛选表格和详情分栏，面向本项目的论文启发出题协议。它是当前阶段的只读观察入口：读取已有批次，不启动、停止或恢复模型任务，不修改题面、Golden、审批与历史终态。
+
+## 启动
+
+无需 Node、npm 或构建步骤；Python 包包含前端静态文件，KaTeX 以 MIT 许可离线提供原生 MathML，不调用远程字体或 CDN。
+
+```bash
+uv sync --frozen --python 3.12
+# 数据库必须已经存在；入口不会创建空数据库或自动迁移。
+uv run diamond --db work/factory.sqlite serve --reports docs/validation
+```
+
+打开 `http://127.0.0.1:8765`；端口被占用时增加 `--port 8787`。不需要加载生产配置或提供模型 API 密钥。退出使用 Ctrl+C。
+
+PostgreSQL 使用现有运行环境的 `DIAMOND_DATABASE_URL` 和 `DIAMOND_OBJECTS_DIR`，或通过 `--objects /absolute/path/to/objects` 显式选择 CAS。前者与命令行其他入口一致，优先于 `--db`。数据库与 CAS 必须对应同一运行环境和代码模型结构；这里不把连接串或密钥放进命令行。
+
+```bash
+# 在已经加载个人运行环境变量、且切换到所选代码目录的终端执行。
+uv run diamond serve --objects /absolute/path/to/objects --reports docs/validation
+```
+
+控制台只绑定 `127.0.0.1` / `localhost`，没有公网账号系统。远程使用现有 SSH 权限转发：
+
+```bash
+ssh -N -L 8765:127.0.0.1:8765 YOUR_PERSONAL_VM
+```
+
+不要向正在运行的冻结目录覆盖新源码。需要查看旧批次时，在独立控制台目录启动只读服务，指向该批次已有数据库及 CAS；出现 schema / 对象错误时保持失败，不将旧数据改成新格式。文件校验失败或模型结构不兼容会显示读取失败，不能由 UI 补造通过标记。
+
+## 页面与统计口径
+
+| 页面 | 能力与口径 |
+|---|---|
+| 合成产线 | 当前数据库的批次、全部候选版本、已记录样本、accepted 状态；阶段覆盖按当前内容检查自洽与 verifier 凭证，不宣称完整生产审批 |
+| 题目队列 | ID / 题面 / 子类搜索，学科和状态筛选，每页20条；筛选摘要下载；关联批次跳转 |
+| 题目详情 | 题面、Golden与完整推导、各阶段结构化质检、实际GLM答卷和judge、独立deadline收据、来源哈希与父子谱系 |
+| 运行批次 | 当前数据库身份、冻结指纹、模型配置、协议、提示词哈希和关联题目；不透传任意运行body或环境配置 |
+| 论文与来源 | 已登记来源及同库论文索引、DOI、正文哈希、文件数、物理页数；不推断完整解析或科学合格 |
+| 质量审查 | 当前内容的凭证状态、样本覆盖和原始拒绝原因，直接跳转证据分栏；模型意见和有限点反代的边界单独说明 |
+| 实验档案 | 显式 `--reports` 目录中含 `run_id` 与 `cost` 的脱敏JSON；原报告查看和下载；不递归扫描私有产物 |
+| 成本收据 | 逐档案支付run的原始 `cost`、角色明细、未知usage和未结算预约；不合并累计账本、不用成功响应数估算HTTP成本 |
+
+`quality_seed`、`screened`、`accepted` 分开展示，16份答卷或综合审查通过都不会自动变成 accepted。正确 / 已记录可展示4次初筛，但不足16次不会计作完整难度记录。墙钟超时单列且不伪造答卷/judge；异常、重复、不连续样本不显示正确数。当前有效凭证检查用于观察，不是重新运行科学审查或改写旧批次结论。
+
+档案按相同 `run_id` 去重，优先保留 `finalized_at` 更新的报告；未知时间不猜测。不同支付分片保持不同身份。未记录的数量、时间和费用显示“—”“未记录”“未核算”，不默认为零。报告目录必须由操作者明确选择已脱敏内容；浏览器下载的是筛选摘要或已有脱敏报告，不是生产交付包导出。
+
+页面每15秒刷新，后台标签暂停刷新。失败保留上次快照并明确显示旧时间；详情加载失败可重试。侧栏可折叠，窄屏保留图标导航，表格横向滚动，详情可通过地址分栏定位。
+
+## 读取边界与验证
+
+SQLite 通过 `mode=ro` 与 `PRAGMA query_only=ON` 打开；PostgreSQL 使用独立连接、只读事务和 repeatable-read 快照，不调用 `PostgresStore` 的初始化、迁移、生产写锁或模型接口。CAS 读取先验证路径、长度和SHA256。HTTP静态文件使用固定白名单；只接受本机Host与同源Origin，未开放CORS、写入API或任意文件下载。题面与模型响应默认以文本渲染；TeX仅进入 `trust=false` 的受限KaTeX渲染。
+
+```bash
+uv run ruff check src tests scripts
+uv run pytest -q tests/test_console.py tests/test_console_postgres.py
+uv run pytest -q
+uv run diamond doctor
+node --check src/diamond_factory/web/app.js  # 有Node时额外检查前端语法
+```
+
+PG测试复用已有安全fixture，先验证测试库名称以 `_test` 结尾，再迁移与清理；没有 `DIAMOND_TEST_DATABASE_URL` 时跳过，不能据此声称已验证真实PG。覆盖只读事务拒绝写入、CAS缺损、未知费用、历史/实时分离、异常样本、敏感字段投影、路径/Host/Origin边界和CLI绕过生产写者。
+
+当前实现面向本项目已有实验规模，每次刷新会读取所选库的候选及其CAS；尚未实现大规模服务端分页、多个数据库的合并视图、公网认证或运行控制。论文库与出题批次分库时分别启动观察，避免伪造一个合并后的实时状态。

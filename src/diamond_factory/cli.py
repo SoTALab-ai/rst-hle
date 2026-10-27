@@ -38,6 +38,11 @@ def main():
             run.add_argument("submission")
     sub.add_parser("doctor", help="Check procurement configuration; makes no model calls")
     sub.add_parser("report")
+    console = sub.add_parser("serve", help="Open the local read-only management console; no model calls")
+    console.add_argument("--host", choices=["127.0.0.1", "localhost"], default="127.0.0.1")
+    console.add_argument("--port", type=int, default=8765)
+    console.add_argument("--objects", help="CAS directory; defaults to DIAMOND_OBJECTS_DIR or work/objects")
+    console.add_argument("--reports", help="Explicit directory of sanitized experiment JSON reports")
     sub.add_parser("db-init", help="Explicitly apply PostgreSQL schema; startup never migrates")
     catalog = sub.add_parser("catalog-import", help="Import publication metadata after importing full texts")
     catalog.add_argument("manifest")
@@ -64,6 +69,14 @@ def main():
     export.add_argument("--output", default="outputs/delivery.jsonl")
     export.add_argument("--require-complete", action="store_true")
     args = parser.parse_args()
+    if args.command == "serve":
+        import os
+
+        from .console import serve
+        serve(os.environ.get("DIAMOND_DATABASE_URL") or args.db,
+              args.objects or os.environ.get("DIAMOND_OBJECTS_DIR", "work/objects"),
+              args.reports, args.host, args.port)
+        return
     if hasattr(args, "run_id") and (not args.run_id or any(
             c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for c in args.run_id)):
         raise ValueError("Invalid run-id")
