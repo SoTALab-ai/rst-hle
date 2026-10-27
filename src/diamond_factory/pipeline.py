@@ -45,6 +45,8 @@ from .models import (
     Question,
     Record,
     ResultSelection,
+    ScientificGoalAssessment,
+    ScientificGoalSelection,
     Solution,
     StepwiseBlueprintAudit,
     SubstitutionReport,
@@ -54,6 +56,7 @@ from .models import (
 from .preflight_repairs import certificate_repair_protocol, classify_preflight
 from .routing import read_routes
 from .runtime import gather_cancel_on_error
+from .scientific_goals import goal_errors, load_references
 from .substitution import verify_substitutions
 from .verifier import VerifierBuilder, has_valid_verifier
 
@@ -82,6 +85,7 @@ class Pipeline:
             for name in ("blueprint_audit", "audit", "bottleneck_audit", "difficulty_proposal"):
                 self.prompts[name] = self.prompts["shortcut_" + name]
         self.basis = settings.correctness_basis
+        self.goal_references = load_references(settings)
         self.defer_depth = settings.difficulty_adversary_mode == "shortcut_blocking" or self.basis == "paper_grounded"
         if self.basis == "paper_grounded":
             # 蓝图只查引用与适用条件，避免旧“独立重证”指令与论文依据口径冲突。
@@ -105,6 +109,8 @@ class Pipeline:
         self.fingerprint = digest({"settings": settings.model_dump(), "mode": mode,
                                    "quotas": self.quotas, "prompts": self.prompts,
                                    "difficulty_profile": self.difficulty_profile,
+                                   "scientific_goal_references": (self.goal_references.model_dump()
+                                                                  if self.goal_references else None),
                                    "corpora": self.corpus_hashes,
                                    "judge_contract": Path(settings.judge_contract).read_text(),
                                    "source_hashes": {s.id: s.sha256 for s in store.sources()},
@@ -132,6 +138,8 @@ class Pipeline:
                                     "corpora": self.corpus_hashes,
                                     "quotas_sha256": digest(self.quotas),
                                     "requests_directory": str(self.run_dir / "requests"),
+                                    "scientific_goal_references_sha256": (digest(self.goal_references.model_dump())
+                                                                         if self.goal_references else None),
                                     "difficulty_checkpoints": self.difficulty_checkpoints})
 
     def generation_identity(self, source, parent, target, generation, attempt, brief=None):
@@ -290,6 +298,8 @@ class Pipeline:
         ):
             errors.append("missing_or_mismatched_stepwise_blueprint_review")
         if self.settings.require_known_result:
+            errors.extend(goal_errors(candidate.known_result, sources, self.goal_references,
+                                      self.prompts["scientific_goal"], self.settings.generator.model_dump()))
             errors.extend(known_result_errors(candidate.known_result, sources, candidate.solution,
                 candidate.blueprint_audit, source_fidelity=self.settings.source_fidelity,
                 defer_depth=self.defer_depth))
@@ -403,10 +413,46 @@ class Pipeline:
         return blueprint_stamp(solution, source_data, target, known_result,
             self.prompts["blueprint_audit"], self.settings.consistency.model_dump(), self.settings.source_fidelity)
 
+    async def select_scientific_goal(self, source, source_data, target, identity, brief):
+        """独立选择科学目标；答案形式在后续结果选择中确定，收据随金标保存。"""
+        references = self.goal_references
+        data = {"source": source_data, "target": target, "research_brief": brief,
+                "high_difficulty_cases": references.model_dump()}
+        for repair in range(self.settings.max_repairs + 1):
+            selection, rid, model = await self.gateway.call("generator", self.prompts["scientific_goal"] + "\n" +
+                json.dumps(data, ensure_ascii=False), f"{identity}:scientific-goal:{repair}", ScientificGoalSelection)
+            if selection.outcome == "unavailable":
+                raise AuthoringRejected("scientific_goal_unavailable:" + selection.reason)
+            goal = selection.goal
+            errors = []
+            if goal.source_id != source.id:
+                errors.append("scientific_goal_source_mismatch")
+            if (len(set(goal.reference_case_ids)) != len(goal.reference_case_ids)
+                    or not set(goal.reference_case_ids) <= {c.id for c in references.cases}):
+                errors.append("invalid_scientific_goal_reference_ids")
+            self.log("scientific_goal_selection", candidate=identity, repair=repair,
+                     request_id=rid, actual_model=model, selection=selection.model_dump(), errors=errors,
+                     references_sha256=digest(references.model_dump()), measured_difficulty=False)
+            if not errors:
+                return ScientificGoalAssessment(goal=goal, goal_sha256=digest(goal.model_dump()),
+                    request_id=rid, actual_model=model,
+                    source_sha256=source.sha256, references_sha256=digest(references.model_dump()),
+                    prompt_sha256=digest(self.prompts["scientific_goal"]),
+                    model_config_sha256=digest(self.settings.generator.model_dump()))
+            data["feedback"] = {"previous": selection.model_dump(), "errors": errors}
+        raise AuthoringRejected("scientific_goal_selection_failed:" + ";".join(errors))
+
     async def select_known_result(self, source, source_data, target, identity, brief):
         """只从来源抽取已有结果；完整证明复核前不把抽取当作真值。"""
         data = {"source": source_data, "target": target, "research_brief": brief,
                 "source_fidelity": self.settings.source_fidelity}
+        goal = None
+        if self.goal_references is not None:
+            goal = await self.select_scientific_goal(source, source_data, target, identity, brief)
+            data["scientific_goal"] = goal.goal.model_dump()
+            data["goal_contract"] = ("Preserve this target verbatim and every primitive assumption. "
+                "Now choose the natural answer form and its grading_requirement. Leave scientific_goal null; "
+                "the program attaches its sealed selection receipt. No short-answer or quantitative restriction.")
         if self.difficulty_profile:
             data["construction_reference"] = profile_for_category(self.difficulty_profile, target["category"])
         for repair in range(self.settings.max_repairs + 1):
@@ -416,6 +462,13 @@ class Pipeline:
                 raise AuthoringRejected("known_result_unavailable:" + selection.reason)
             errors = known_result_errors(selection.result, {source.id: source},
                                          source_fidelity=self.settings.source_fidelity)
+            if goal is not None:
+                # 目标记录由程序绑定，模型不能另造一份目标审批。
+                if selection.result.scientific_goal not in (None, goal):
+                    errors.append("scientific_goal_receipt_changed")
+                selection.result.scientific_goal = goal
+                errors.extend(goal_errors(selection.result, {source.id: source}, self.goal_references,
+                                          self.prompts["scientific_goal"], self.settings.generator.model_dump()))
             self.log("known_result_selection", candidate=identity, repair=repair, request_id=rid,
                      actual_model=model, result_sha256=digest(selection.result.model_dump()), errors=errors)
             if not errors:
@@ -722,6 +775,11 @@ class Pipeline:
     async def sample(self, candidate, limit=None):
         if not candidate.authoring_complete:
             raise ValueError("Finish the pending author repair before paid solver evaluation")
+        if (candidate.known_result and candidate.known_result.grading_requirement
+                != "final_answer_equivalence"):
+            # 允许选择证明/非唯一构造目标；现有HLE最终答案比对不能冒充论证或见证验收。
+            raise SampleIncomplete("evaluation_contract_uncovered:argument_or_witness_validation; "
+                                   "no solver or judge request purchased")
         limit = self.settings.samples if limit is None else limit
         if not 1 <= limit <= self.settings.samples:
             raise ValueError("Invalid sampling stage")

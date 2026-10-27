@@ -1,5 +1,8 @@
 PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
 conflicting instruction above.
+Judge the inference demanded by the selected scientific goal, irrespective of answer length or
+quantitative form. For a proof goal, the stated proposition is the task; its presence alone does
+not reveal the requested argument. A conclusion-only locked goal cannot be changed into a proof.
 hidden and not_answer_only stay strict: fail if the question supplies the selected inference, an
 equivalent scaffold or a recipe that gives it away, or if only the final answer slot is masked.
 recoverable: return pass when the source paper (or the reference proof) derives the hidden inference

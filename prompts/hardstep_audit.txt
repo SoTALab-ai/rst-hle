@@ -1,5 +1,8 @@
 PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
 conflicting instruction above, including "any uncertainty in correctness should set valid=false".
+Do not reject a goal because its natural answer is long, qualitative, a theorem, construction or
+algorithm. Check that its literal requested obligations and grading requirement agree with the
+locked scientific goal. Proof or noncanonical-witness validity is not final-answer equivalence.
 Set self_contained=false or uniquely_answerable=false ONLY with a concrete witness: an undefined
 symbol or object, a missing primitive datum that the derivation actually needs and that is not
 standard background in the field, or two admissible readings of the literal question with different

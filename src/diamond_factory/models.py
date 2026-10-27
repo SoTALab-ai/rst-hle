@@ -46,6 +46,62 @@ class InferenceStep(StrictModel):
     inference: str = Field(min_length=15)
 
 
+class ScientificGoal(StrictModel):
+    """先确定科学目标及必要推理；这一阶段不选择答案或题面格式。"""
+    source_id: str
+    target: str = Field(min_length=10)
+    assumptions: list[str] = Field(min_length=1)
+    reasoning_challenge: list[str] = Field(min_length=1)
+    reference_case_ids: list[str] = Field(min_length=1)
+    reference_comparison: str = Field(min_length=20)
+
+
+class ScientificGoalSelection(StrictModel):
+    outcome: Literal["found", "unavailable"]
+    goal: ScientificGoal | None
+    reason: str = Field(min_length=10)
+
+    @model_validator(mode="after")
+    def selected_goal(self):
+        if (self.outcome == "found") != (self.goal is not None):
+            raise ValueError("Found requires a scientific goal; unavailable must not invent one")
+        return self
+
+
+class ScientificGoalAssessment(StrictModel):
+    goal: ScientificGoal
+    goal_sha256: str
+    request_id: str
+    actual_model: str
+    source_sha256: str
+    references_sha256: str
+    prompt_sha256: str
+    model_config_sha256: str
+
+
+class HighDifficultyCase(StrictModel):
+    id: str
+    title: str
+    source_url: str
+    declared_tier: str
+    mechanism: list[str] = Field(min_length=1)
+    output_lesson: str
+    # 公开难度标签不冒充本项目GLM实测；不存题目全文或金标。
+    evidence_status: Literal["public_solution_not_glm_calibrated"]
+
+
+class ScientificGoalReferences(StrictModel):
+    version: str
+    scope: str
+    cases: list[HighDifficultyCase] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def unique_cases(self):
+        if len({c.id for c in self.cases}) != len(self.cases):
+            raise ValueError("Scientific goal reference IDs must be unique")
+        return self
+
+
 class KnownResult(StrictModel):
     source_id: str
     locator: str = Field(min_length=3)
@@ -54,6 +110,8 @@ class KnownResult(StrictModel):
     answer: str = Field(min_length=1)
     assumptions: list[str] = Field(min_length=1)
     evidence: list[Evidence] = Field(min_length=1)
+    scientific_goal: ScientificGoalAssessment | None = None
+    grading_requirement: Literal["final_answer_equivalence", "argument_or_witness_validation"] = "final_answer_equivalence"
 
 
 class ResultSelection(StrictModel):

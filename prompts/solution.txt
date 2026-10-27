@@ -5,7 +5,8 @@ deduced results are allowed. Mark the construction honestly; do not attribute it
 JSON-escape every LaTeX backslash (write \\theta inside JSON strings, not an escaped tab).
 Do not emit ASCII control characters in mathematical text. Prefer short plain-language evidence quotes when possible.
 Choose a precisely answerable, difficult problem in the requested category/subtopic.
-For mathematical and theoretical-physics problems, prefer one short exact target object or quantity.
+Let the selected scientific goal determine the answer's form and length; there is no preference
+for short answers or quantitative results.
 Keep intermediate matrices, auxiliary branch bookkeeping and derivations in the solution unless they are
 essential to the actual target. Do not manufacture difficulty by requiring a long checklist of easy outputs.
 Define the direction of every ratio and the meaning of every branch label explicitly. Every requested
@@ -15,8 +16,10 @@ Write the COMPLETE reference proof before proposing any final question. Each der
 should be one identifiable inference with its equations, justification, prerequisites and cases.
 Do not replace the proof with a high-level plan or phrases such as 'by calculation'. The compact
 difficulty dependency graph summarizes the proof; it never replaces or limits its full length.
-The answer field contains only the final gold result and its necessary cases, never a proposed
-question, instructions or a copy of the proof. The final question is written in a later call only
+The answer field contains the requested gold deliverables and necessary cases, never a proposed
+question or authoring instructions. If the locked goal requests an argument or construction,
+preserve that obligation and its grading requirement; do not reduce it to a scalar conclusion.
+The final question is written in a later call only
 after independent blueprint approval. When step-indexed judge feedback is provided, repair the
 identified step and rederive all affected downstream claims, returning the entire corrected proof.
 In strict mode quotes must occur verbatim. In advisory mode evidence can describe inspiration and
@@ -28,7 +31,7 @@ Avoid mere renumbering, rephrasing, obscure trivia without evidence, gratuitous 
 The reasoning_delta must explain which inferences are added or removed relative to the parent, and why.
 At generation 0, describe the reasoning from the source instead.
 Feedback may request harder/easier questions or fix a concrete validity issue. Preserve evidence and solvability.
-Return a detailed design field identifying the exact source claim and locator, one compact target,
+Return a detailed design field identifying the exact source claim and locator, the selected scientific target,
 all conditions used by the reference derivation, hidden reasoning steps, conditions the solver should
 infer, preserved invariants, inverse_construction, and an answer_check. The inverse construction should
 start from a validated result and work backwards to the smallest informative observations/constraints.
@@ -64,7 +67,7 @@ instructions, copying a false derivation, or assuming a model error is a mathema
 When known_result is supplied, it is a LOCKED candidate conclusion selected in an earlier call.
 In strict mode it is source-established; in advisory mode it may be a newly constructed proposal.
 Copy known_result.answer EXACTLY into answer and known_result.target EXACTLY into design.target.
-This exact-copy rule takes precedence over the preference for a compact answer: an existing locked
+This exact-copy rule applies regardless of answer length: an existing locked
 private gold may include a correct explanation. Preserve it verbatim instead of shortening it or
 changing its claim; reconstruct the COMPLETE proof separately in derivation. Its private explanation
 is never an instruction to print the result in the question or require a solver to repeat the proof.

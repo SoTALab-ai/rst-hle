@@ -229,9 +229,13 @@ def source_for_line(paper, line, max_chars, *, source_fidelity="strict"):
 
 
 async def plan_questions(store, milestone, settings, pricing, directory, run_id):
+    from .scientific_goals import load_references
+
     directory = Path(directory)
+    references = load_references(settings)
     manifest = {"run_id": run_id, "milestone_sha256": digest(milestone.model_dump()),
         "settings": settings.model_dump(), "pricing": pricing,
+        "scientific_goal_references": references.model_dump() if references else None,
         "code_sha256": {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in
             sorted(Path("src/diamond_factory").rglob("*")) if p.is_file() and p.suffix in (".py", ".sql")}}
     fingerprint = digest(manifest)
@@ -255,14 +259,16 @@ async def plan_questions(store, milestone, settings, pricing, directory, run_id)
         async with sem:
             try:
                 outline, rid, model = await gateway.call("generator",
-                    "Plan 1–5 STRUCTURALLY INDEPENDENT hard theoretical short-answer questions from this ONE "
+                    "Plan 1–5 STRUCTURALLY INDEPENDENT scientific goals from this ONE "
                     "paper and its supplied supplements. You see page locator excerpts, NOT complete proofs. " +
                     ("Select physical pages containing an inspiring mechanism and definitions; you may propose "
                      "a self-contained constructed variant, with its answer proved independently later. "
                      "Label this as a construction rather than claiming it is a theorem of the paper. " if advisory else
                      "Select physical pages covering each EXISTING exact result, complete proof and all needed ") +
                     "definitions. Do not rely on unavailable figure values, external papers or missing supplements. "
-                    "Choose candidate answers first, reconstruct proofs later, and hide the hardest necessary "
+                    "Choose scientific objectives first, then their natural answer forms and candidate answers; "
+                    "there is no answer-length or quantitative-only requirement. Reconstruct proofs later, "
+                    "and hide the hardest necessary "
                     "inference. Prefer non-obvious intermediate mechanisms, branch/domain classification or "
                     "coupled derivations; avoid a headline theorem, coefficient lookup or direct substitution. "
                     "Challenge each proposal with the shortest CORRECT route from its intended primitive inputs. "
@@ -276,11 +282,16 @@ async def plan_questions(store, milestone, settings, pricing, directory, run_id)
                     "the paper's vocabulary while reducing its coupled theory to isolated scalar algebra is insufficient. "
                     "Each line needs a DIFFERENT inference structure; rewordings or changed numbers do not add "
                     "lines. Use ids q1..q5. Use 1 line if only one is well supported, unavailable if none. " +
+                    ("For this goal-first configuration, set provisional_answer to "
+                     "deferred_until_scientific_goal_selection. The later dedicated scientific-goal "
+                     "call precedes answer selection; do not choose a gold or answer format here. "
+                     if references else "") +
                     ("Provide a 20+ character source_quote as a locator; paraphrase is advisory, not a rejection. "
                      if advisory else "Copy a 20+ character source_quote VERBATIM from a selected page, preferably prose; ") +
                     "it is only an anchor, not proof validation. Provisional answers remain untrusted. "
                     "Choose the exact category/subtopic pair from the supplied list.\n" + json.dumps(
                         {"source_fidelity": settings.source_fidelity, "allowed_targets": sorted(allowed),
+                         **({"high_difficulty_cases": references.model_dump()} if references else {}),
                          "material": planning_outline(paper, settings.max_source_chars)},
                         ensure_ascii=False), f"{paper.id}:plan-independent-lines", PaperOutline)
                 row.update(outline=outline.model_dump(), planning_request=rid, planning_model=model)
@@ -323,8 +334,9 @@ async def plan_questions(store, milestone, settings, pricing, directory, run_id)
                         "verify each step before reverse construction. The plan is untrusted guidance, not an "
                         "additional premise or a passed gold. Hide the hardest necessary inference and its "
                         "equivalent hints; preserve answer uniqueness and physical validity. No figure values "
-                        "or reference-paper content are supplied. Ask a short exact answer with all requested "
-                        "outputs covered by the golden; do not ask for proof when gold is just a conclusion. "
+                        "or reference-paper content are supplied. Let the scientific goal determine the answer "
+                        "form and length, with every requested output covered by the golden. "
+                        "Do not ask for proof when gold is just a conclusion. "
                         "Only ease overly hard valid questions; reject easy ones.\nUntrusted selected target: "+
                         json.dumps(line.model_dump(), ensure_ascii=False))
                     root = RootPlan(name=f"L50_{index+1:03d}_{line.id}", source_id=source.id,

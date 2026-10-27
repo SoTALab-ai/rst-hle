@@ -1,6 +1,7 @@
 # 论文硬步试产（2026-10-26用户口径）：以论文推导为正确性依据，只有具体错误拦截；
 # 不确定、验算未覆盖与6Luna深度意见只记录，难度由GLM实测。其余沿用来源启发配置。
 correctness_basis = "paper_grounded"
+scientific_goal_references_path = "configs/scientific-goal-references.json"
 source_fidelity = "advisory"
 certificate_max_repairs = 1
 require_verifier_adversary = true

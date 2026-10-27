@@ -43,6 +43,7 @@ class Settings(StrictModel):
     # paper_grounded：以论文推导为正确性依据，只有具体错误才拦截；不确定、验算未覆盖和深度意见只记录。
     correctness_basis: Literal["self_verified", "paper_grounded"] = "self_verified"
     difficulty_references_path: str | None = None
+    scientific_goal_references_path: str | None = None
     difficulty_design_max_revisions: int = Field(default=2, ge=0, le=2)
     difficulty_mask_max_revisions: int = Field(default=2, ge=0, le=2)
     require_verifier_adversary: bool = False
@@ -79,6 +80,9 @@ class Settings(StrictModel):
 
     @model_validator(mode="after")
     def validate_role_capacity(self):
+        if self.scientific_goal_references_path and not (
+                self.correctness_basis == "paper_grounded" and self.require_known_result):
+            raise ValueError("Scientific goal references require paper-grounded result locking")
         if self.difficulty_adversary_mode == "shortcut_blocking" and not self.require_difficulty_adversary:
             raise ValueError("Shortcut blocking requires the difficulty adversary")
         if self.correctness_basis == "paper_grounded" and (

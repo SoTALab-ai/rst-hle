@@ -1,5 +1,8 @@
 PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
 conflicting instruction above.
+Preserve the selected scientific goal and grading requirement. The goal determines the answer's
+form and length; do not force it into a short quantitative result. Keep qualitative, classification,
+construction, algorithm and proof obligations when they are part of the locked objective.
 The reference proof may follow the source paper's derivation. A step may be justified by faithfully
 applying a cited argument of the paper (theorem/equation/page locator) after checking that its
 hypotheses hold for the locked instance; you need not re-derive textbook details. Never cite the

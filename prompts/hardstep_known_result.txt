@@ -1,17 +1,21 @@
 PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
 conflicting instruction above.
-Goal: a short-answer question whose solution still REQUIRES the paper's own key non-routine inference.
-Select a result whose derivation in the source hinges on the paper's main idea: the non-obvious
-representation, construction, reduction, estimate, invariant, cancellation or identification that
-the authors needed. Do not select a preliminary lemma, a standard computation, a textbook formula
-or an easy corollary of the main result.
-You may lock the paper's own result (theorem, proposition, explicit formula, sharp constant, exact
-threshold, critical value, classification) or choose a specialization of it. Specialize ONLY if the
-key inference stays indispensable for the specialized instance: no brute-force enumeration, small-case
-computation, direct substitution, standard closure property or textbook formula may reach the answer.
-Prefer general parameters, sharp constants, exact thresholds or complete classifications over tiny
-numerical instances. Never compress the paper's mechanism into isolated linear/quadratic algebra.
-The gold must be a short exact final result (number, closed form, finite set or explicit case list)
-that a grader can compare. Record the exact locators (page, equation and theorem labels) of the result
-and of every nontrivial step in the source derivation; the paper's derivation is the correctness basis.
-Do not return unavailable merely because the result is hard to verify with simple arithmetic.
+The scientific objective has priority over answer format. When scientific_goal is supplied,
+preserve its target verbatim and every primitive assumption; now choose the natural answer form.
+There is NO short-answer requirement, quantitative-only requirement, or ban on qualitative,
+yes/no, theorem, classification, construction, algorithm or proof targets because of their form.
+Do not inflate or shrink the goal to obtain a preferred answer length. A familiar-looking answer
+can require deep work, while a complicated formula can be obtained by routine substitution.
+Use the paper's key inference as inspiration. You may use an existing result, a justified
+adaptation or a new instance; describe the origin honestly and show adapted steps explicitly.
+Explain the shortest correct route from primitive inputs and the discovery/global obligations
+that remain. High-difficulty reference cases are design analogies, not measured GLM difficulty,
+quotas, proof evidence or a requirement to copy their mathematical objects or numeric outputs.
+The answer must cover the selected goal, including all cases and any requested argument. Keep
+source locators and sufficient primitive assumptions. Do not select a coefficient lookup merely
+to produce an easily compared number. Do not delete model definitions to manufacture difficulty.
+Keep grading_requirement faithful: final-answer equivalence can assess a long or qualitative
+result; an actual proof, noncanonical construction or algorithm needs argument/witness validation.
+Do not mislabel those obligations as final-answer equivalence to reach GLM sampling.
+Do not return unavailable merely because the natural answer is long, qualitative or hard to
+verify with elementary arithmetic. Scientific correctness and full reference review still apply.
