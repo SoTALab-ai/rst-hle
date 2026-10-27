@@ -250,6 +250,8 @@ def test_input_uncertainty_is_recorded_but_concrete_model_defect_blocks(
         tmp_path, source, candidate, verdict, allowed):
     pipe, store, gateway, _goal = prepared(tmp_path, source, candidate)
     review = question_review()
+    if not allowed:
+        candidate.item.question = "Let G be a finite connected simple graph with no cycles. Determine its number of edges."
     review.primitive_sufficiency = type(review.primitive_sufficiency)(
         verdict=verdict,
         reasoning=("The probe did not establish a standard-background route; no admissible ambiguity was found."
