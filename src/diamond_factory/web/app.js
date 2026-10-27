@@ -1,3 +1,5 @@
+import { buildQualityFlow, FLOW_STATUS } from "./quality-flow.mjs";
+
 const $ = (selector) => document.querySelector(selector);
 function el(tag, props = {}, ...children) {
   const node = document.createElement(tag);
@@ -1058,6 +1060,200 @@ function tabs(items) {
     ),
   );
 }
+const openQualityEvidence = new Set();
+function qualityFlow(data) {
+  const flow = buildQualityFlow(data),
+    q = data.summary;
+  const verdictNames = {
+    pass: "通过",
+    fail: "未通过",
+    uncertain: "不确定",
+    unsupported: "未覆盖",
+    not_applicable: "不适用",
+    missing: "无记录",
+    advisory: "溯源提示",
+    preserved: "保留",
+    strengthened: "增强",
+    reduced: "削弱",
+  };
+  const verdictTone = (value) =>
+    ["pass", "preserved", "strengthened"].includes(value)
+      ? "green"
+      : ["fail", "reduced"].includes(value)
+        ? "red"
+        : ["uncertain", "unsupported", "advisory"].includes(value)
+          ? "amber"
+          : "gray";
+  const recorded = flow.stages.filter((s) => s.evidence != null).length;
+  function stageView(s, index) {
+    const evidenceKey = `${q.id}/${s.id}`;
+    const meta = s.metadata || [];
+    const event = [...flow.events].reverse().find(
+      (e) =>
+        ({
+          "proof-review": "blueprint_review",
+          bottleneck: "bottleneck_mask_review",
+          "consistency-review": "preflight_consistency",
+          "verifier-adversary": "verifier_adversarial_round",
+          "post-review": "post_evaluation_audit",
+        })[s.id] === e.event,
+    );
+    if (event) meta.push(["阶段时间", date(event.at)]);
+    return el(
+      "article",
+      { className: `quality-stage state-${s.status}` },
+      el(
+        "div",
+        { className: "quality-stage-heading" },
+        el(
+          "span",
+          { className: "quality-step-number" },
+          String(index).padStart(2, "0"),
+        ),
+        el(
+          "div",
+          {},
+          el("h3", {}, s.title),
+          el("span", { className: "quality-role" }, s.role),
+        ),
+        el(
+          "span",
+          { className: `pill ${FLOW_STATUS[s.status][1]}` },
+          FLOW_STATUS[s.status][0],
+        ),
+      ),
+      el(
+        "div",
+        { className: "quality-stage-body" },
+        el("p", { className: "quality-description" }, s.description),
+        el(
+          "div",
+          { className: "quality-gate" },
+          el("strong", {}, "放行与失败处置"),
+          el("p", {}, s.gate),
+        ),
+        el(
+          "div",
+          { className: "quality-observation" },
+          el("strong", {}, "本题记录"),
+          el("p", {}, s.summary),
+        ),
+        s.checks.length > 0 &&
+          table(
+            ["独立检查项", "记录结果", "依据 / 发现"],
+            s.checks.map((c) => [
+              c.label,
+              el(
+                "span",
+                { className: `pill ${verdictTone(c.verdict)}` },
+                verdictNames[c.verdict] || c.verdict,
+              ),
+              el(
+                "div",
+                { className: "quality-check-detail" },
+                c.detail || "未提供单项说明",
+              ),
+            ]),
+          ),
+        meta.length > 0 && fields(meta),
+        s.evidence != null &&
+          el(
+            "details",
+            {
+              className: "quality-evidence",
+              open: openQualityEvidence.has(evidenceKey),
+              ontoggle: (e) => {
+                e.target.open
+                  ? openQualityEvidence.add(evidenceKey)
+                  : openQualityEvidence.delete(evidenceKey);
+              },
+            },
+            el("summary", {}, "展开本阶段原始证据"),
+            jsonView(s.evidence),
+          ),
+      ),
+    );
+  }
+  let index = 0;
+  return [
+    panel(
+      "业务全流程与分阶段质检",
+      el("span", { className: "pill blue" }, flow.protocol),
+      el(
+        "div",
+        { className: "quality-intro" },
+        el(
+          "p",
+          {},
+          "从材料准备到交付，逐项展示业务目的、负责角色、放行条件与本题已有证据。普通生产、难度对抗和 RST 研究分支按当前冻结配置说明。",
+        ),
+        el(
+          "div",
+          { className: "quality-flow-summary" },
+          el("span", {}, `完整流程 ${flow.stages.length} 项`),
+          el("span", {}, `有记录 ${recorded} 项`),
+          el(
+            "span",
+            {},
+            `当前自洽凭证：${q.consistency_passed ? "有效" : "未认证"}`,
+          ),
+          el(
+            "span",
+            {},
+            `当前 Verifier 凭证：${q.verifier_passed ? "有效" : "未认证"}`,
+          ),
+        ),
+        el(
+          "p",
+          { className: "quality-boundary" },
+          "“记录通过”只复述已保存的分项结果，不重新授予整题通过资格。无记录不等于失败或未执行；不确定、未覆盖、接口失败与科学错误分别展示。旧批次沿用原冻结协议。",
+        ),
+      ),
+    ),
+    el(
+      "nav",
+      { className: "quality-flow-nav", "aria-label": "完整业务流程" },
+      flow.groups.map((group, i) =>
+        el(
+          "button",
+          {
+            type: "button",
+            onclick: () =>
+              document
+                .getElementById(`quality-${group.id}`)
+                .scrollIntoView({ block: "start", behavior: "auto" }),
+          },
+          el("span", {}, String(i + 1).padStart(2, "0")),
+          group.title,
+          icon("arrow"),
+        ),
+      ),
+    ),
+    q.reasons.length > 0 &&
+      panel(
+        "当前版本拒绝 / 阻断原因",
+        chip(q.status),
+        ...q.reasons.map((r) => el("p", { className: "reason" }, r)),
+      ),
+    ...flow.groups.map((group, i) =>
+      el(
+        "section",
+        { id: `quality-${group.id}`, className: "quality-phase" },
+        el(
+          "div",
+          { className: "quality-phase-heading" },
+          el(
+            "span",
+            { className: "quality-phase-number" },
+            String(i + 1).padStart(2, "0"),
+          ),
+          el("div", {}, el("h2", {}, group.title), el("p", {}, group.subtitle)),
+        ),
+        ...group.stages.map((s) => stageView(s, ++index)),
+      ),
+    ),
+  ];
+}
 function questionDetail(data) {
   const c = data.candidate,
     q = data.summary,
@@ -1101,43 +1297,7 @@ function questionDetail(data) {
       ),
       panel("解题说明", null, prose(c.item.rationale)),
     ],
-    quality: () => [
-      q.reasons.length > 0 &&
-        panel(
-          "当前拒绝 / 阻断原因",
-          chip(q.status),
-          ...q.reasons.map((r) => el("p", { className: "reason" }, r)),
-        ),
-      ...[
-        "audit",
-        "blueprint_audit",
-        "bottleneck_assessment",
-        "consistency",
-        "verifier_assessment",
-        "difficulty_rounds",
-        "rst_origin",
-      ].map((key) =>
-        panel(
-          {
-            audit: "综合审查",
-            blueprint_audit: "完整推导复核",
-            bottleneck_assessment: "最难步骤与挖空",
-            consistency: "自洽审查与精确反代",
-            verifier_assessment: "Verifier 对抗",
-            difficulty_rounds: "难度对抗历史",
-            rst_origin: "RST 父子增量与净负担",
-          }[key],
-          null,
-          c[key] && (!Array.isArray(c[key]) || c[key].length)
-            ? jsonView(c[key])
-            : el(
-                "p",
-                { className: "muted" },
-                "该版本无此项记录，不推断为通过。",
-              ),
-        ),
-      ),
-    ],
+    quality: () => qualityFlow(data),
     samples: () => [
       panel(
         "难度样本",

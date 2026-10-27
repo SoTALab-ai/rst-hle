@@ -50,6 +50,9 @@ def test_console_readonly_snapshot_and_details(console_data):
     assert detail["candidate"]["item"]["answer"] == "36"
     assert "text" not in detail["sources"][0]
     assert "must-not-leak" not in json.dumps(console_data.run("test"))
+    assert "must-not-leak" not in json.dumps(detail["workflow"])
+    assert detail["workflow"]["mode"] == "pilot"
+    assert detail["workflow"]["events"] == []
     with console_data.connection() as db, pytest.raises(sqlite3.OperationalError, match="readonly"):
         db.execute("DELETE FROM candidates")
     assert hashlib.sha256(Path(path).read_bytes()).hexdigest() == before
@@ -126,7 +129,7 @@ def test_bad_archive_does_not_hide_valid_reports_or_follow_symlink(console_data,
 
 def test_http_boundary_no_secrets_and_no_writes(console_server):
     with httpx.Client(base_url=console_server, trust_env=False) as client:
-        for path in ("/", "/app.js", "/styles.css", "/katex.min.js", "/favicon.svg", "/api/snapshot",
+        for path in ("/", "/app.js", "/quality-flow.mjs", "/styles.css", "/katex.min.js", "/favicon.svg", "/api/snapshot",
                      "/api/questions/candidate1", "/api/runs/test"):
             response = client.get(path)
             assert response.status_code == 200, path

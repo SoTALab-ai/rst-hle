@@ -44,3 +44,22 @@ def test_console_pg_corrupt_cas_refuses_snapshot(console_pg, candidate, source):
     data = ConsoleData(os.environ["DIAMOND_TEST_DATABASE_URL"], console_pg.objects.root)
     with pytest.raises(ValueError, match="哈希"):
         data.snapshot()
+
+
+def test_console_pg_workflow_context_is_candidate_scoped_and_allowlisted(console_pg, candidate, source):
+    run_meta(console_pg)
+    console_pg.add_source(source)
+    console_pg.save(candidate)
+    console_pg.event("test", {"event": "post_evaluation_audit", "candidate": candidate.id,
+                             "passed": True, "request_id": "post-1", "actual_model": "actual-model",
+                             "api_key": "must-not-leak"})
+    console_pg.event("test", {"event": "post_evaluation_audit", "candidate": "another-candidate",
+                             "passed": False})
+    console_pg.event("test", {"event": "model_http_attempt", "candidate": candidate.id,
+                             "secret": "must-not-leak"})
+    data = ConsoleData(os.environ["DIAMOND_TEST_DATABASE_URL"], console_pg.objects.root)
+    context = data.question(candidate.id)["workflow"]
+    assert len(context["events"]) == 1
+    assert context["events"][0]["passed"] is True
+    assert context["events"][0]["request_id"] == "post-1"
+    assert "must-not-leak" not in str(context)

@@ -15,6 +15,7 @@ WEB = Path(__file__).parent / "web"
 STATIC = {"/": ("index.html", "text/html"), "/app.js": ("app.js", "text/javascript"),
           "/styles.css": ("styles.css", "text/css"), "/favicon.svg": ("favicon.svg", "image/svg+xml"),
           "/katex.min.js": ("vendor/katex.min.js", "text/javascript")}
+STATIC["/quality-flow.mjs"] = ("quality-flow.mjs", "text/javascript")
 LOG = logging.getLogger(__name__)
 
 

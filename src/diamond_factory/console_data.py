@@ -91,6 +91,34 @@ class Snapshot(StrictModel):
     warnings: list[str]
 
 
+class WorkflowEvent(StrictModel):
+    event: str
+    at: str
+    passed: bool | None = None
+    request_id: str | None = None
+    actual_model: str | None = None
+    status: str | None = None
+    reasons: list[str] = Field(default_factory=list)
+
+
+class WorkflowContext(StrictModel):
+    mode: str | None = None
+    settings: dict[str, bool | int | float | str] = Field(default_factory=dict)
+    events: list[WorkflowEvent] = Field(default_factory=list)
+
+
+WORKFLOW_SETTINGS = (
+    "synthesis_protocol", "source_fidelity", "early_screen_samples", "samples", "difficulty_policy",
+    "require_difficulty_adversary", "require_bottleneck_mask", "require_known_result",
+    "require_verifier_adversary", "freeze_question_at_verifier", "certificate_max_repairs",
+    "verifier_max_revisions", "solver_deadline_counts_as_incorrect",
+)
+WORKFLOW_EVENTS = (
+    "known_result_selection", "locked_proof_bound", "blueprint_review", "bottleneck_mask_review",
+    "preflight_consistency", "verifier_adversarial_round", "post_evaluation_audit", "candidate_finished",
+)
+
+
 def summarize(candidate: Candidate, sources: dict[str, Source]) -> QuestionRow:
     outcomes = sample_outcomes(candidate)
     correct = None
@@ -273,8 +301,30 @@ class ConsoleData:
             sources = {s.id: s for s in self.sources(db)}
             return {"summary": summarize(candidate, sources).model_dump(),
                     "candidate": candidate.model_dump(),
+                    "workflow": self.workflow_context(db, candidate).model_dump(),
                     "sources": [s.model_dump(exclude={"text"}) for s in sources.values()
                                 if s.id in candidate.source_ids]}
+
+    def workflow_context(self, db, candidate):
+        if self.is_pg:
+            row = db.execute("SELECT body FROM diamond.runs WHERE id=%s", (candidate.run_id,)).fetchone()
+            body = row[0] if row else {}
+            rows = db.execute("SELECT event,data,created_at FROM diamond.stage_events "
+                              "WHERE run_id=%s AND data->>'candidate'=%s AND event=ANY(%s) "
+                              "ORDER BY id DESC LIMIT 200",
+                              (candidate.run_id, candidate.id, list(WORKFLOW_EVENTS))).fetchall()
+            events = [WorkflowEvent(event=event, at=str(at),
+                                    **{key: data[key] for key in (
+                                        "passed", "request_id", "actual_model", "status", "reasons")
+                                       if key in data}) for event, data, at in reversed(rows)]
+        else:
+            row = db.execute("SELECT body FROM runs WHERE id=?", (candidate.run_id,)).fetchone()
+            body = json.loads(row[0]) if row else {}
+            events = []
+        settings = body.get("settings", {})
+        return WorkflowContext(mode=body.get("mode"),
+                               settings={k: settings[k] for k in WORKFLOW_SETTINGS if k in settings},
+                               events=events)
 
     def run(self, identity):
         with self.connection() as db:
