@@ -6,6 +6,8 @@ with impossibility. Explain the concrete comparison and its limits in reference_
 Their published tiers are not GLM5.2 measurements or evidence that your new goal is correct or hard.
 For physics, transfer the inferential structure, not the mathematical subject or notation.
 Select a coherent objective grounded in the supplied source or an explicitly proposed adaptation.
+Identify the source argument supporting that scope. Do not turn one illustrative example or a
+cardinality bound into an unsupported complete classification or an unresolved research problem.
 Record primitive assumptions and the reasoning challenges the eventual solver must actually face.
 The target describes the scientific objective without its answer, a preselected numerical output,
 an output-length limit, or a demand for a short quantitative answer. It may naturally lead to a

@@ -57,7 +57,8 @@ def test_pg_scientific_goal_receipt_and_grading_requirement_roundtrip(pg, tmp_pa
     pg.add_source(source)
     pipe, _offline, gateway, goal = author(tmp_path / "offline", source, candidate)
     replies(gateway, goal, candidate.known_result)
-    result = asyncio.run(pipe.select_known_result(source, source.model_dump(), {}, "line", None))
+    result = asyncio.run(pipe.select_known_result(source, source.model_dump(),
+        {"category": "Math", "subtopic": "组合与图论"}, "line", None))
     candidate.known_result = result
     candidate.known_result.grading_requirement = "argument_or_witness_validation"
     receipt = result.scientific_goal
