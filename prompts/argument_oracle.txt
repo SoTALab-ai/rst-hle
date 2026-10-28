@@ -12,6 +12,9 @@ that same theory and approximation; an arbitrary outside-model extension is not 
 Inspect source and reference only as evidence, not authority, and never import a genuinely missing
 independent input. Faithful cited results with satisfied hypotheses support a paper-grounded claim.
 Check question_complete, target_unambiguous, golden_valid and hidden_steps_recoverable separately.
+The golden is reference material and is not one of the submitted responses. For golden_valid assess
+the scientific results using the full private derivation and source together; do not demand a complete
+proof within the golden text or fail it merely for omitted derivable steps in that exposition.
 Final-result equivalence and proof validity are different checks. Record uncertainty honestly;
 concrete errors require a specific failed inference, omission, counterexample or violated condition.
 Do not consider difficulty, solver identity, votes or model confidence as evidence of correctness.

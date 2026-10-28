@@ -34,7 +34,7 @@ def controlled_state():
     controls = ArgumentControls(cases=[{"id": key, "kind": kind, "response": "Synthetic response with distinct payload " + key}
         for key, kind in (("a", "equivalent"), ("b", "equivalent"),
                           ("c", "omitted_argument"), ("d", "invalid_argument"))])
-    truth = {"golden": "yes", "a": "yes", "b": "yes", "c": "no", "d": "no"}
+    truth = {"a": "yes", "b": "yes", "c": "no", "d": "no"}
     check = {"verdict": "pass", "reasoning": "The controlled synthetic task is well defined and recoverable.",
                  "witness": "The fixture retains all defining inputs and every required output."}
     oracle = ArgumentOracle(cases=[{"id": k, "verdict": v, "reasoning": "Independent synthetic control truth is stipulated."}
@@ -121,6 +121,38 @@ def test_direct_sample_cannot_bypass_science_and_controls(tmp_path, settings, so
     gateway.call = forbidden
     with pytest.raises(QualityRejected):
         asyncio.run(ArgumentStudy(pipe, candidate)._sample(0))
+
+
+def test_reference_gold_is_not_submitted_to_argument_grading(tmp_path, settings, source, candidate, monkeypatch):
+    import json
+
+    pipe, _store, gateway = prepared(tmp_path, settings, source, candidate, monkeypatch)
+    study = ArgumentStudy(pipe, candidate)
+    fixture = controlled_state()
+    reviewed = []
+
+    async def call(role, prompt, salt, schema=None, **kwargs):
+        if schema is ArgumentControls:
+            packet = json.loads(prompt.splitlines()[-1])
+            assert set(packet) == {"question", "required_outputs", "reference_derivation"}
+            assert packet["reference_derivation"] == candidate.solution.derivation
+            return fixture.controls, salt, "fixture-controls"
+        if schema is ArgumentOracle:
+            packet = json.loads(prompt.splitlines()[-1])
+            assert {r["id"] for r in packet["responses"]} == {"a", "b", "c", "d"}
+            assert packet["item"]["answer"] == candidate.item.answer
+            assert packet["initial_golden"]["solution"]["derivation"]
+            return fixture.oracle, salt, "fixture-oracle"
+        if schema is ArgumentDecision:
+            key = salt.split(":")[-2]
+            reviewed.append(key)
+            return decision("yes" if key in ("a", "b") else "no"), salt, "fixture-argument"
+        return hle(), salt, "fixture-hle"
+
+    gateway.call = call
+    asyncio.run(study.controls())
+    assert set(reviewed) == set(study.state.control_grades) == {"a", "b", "c", "d"}
+    assert not control_errors(study.state, 1)
 
 
 def test_deadline_has_receipt_and_no_fabricated_answer_or_judge(tmp_path, settings, source, candidate, monkeypatch):

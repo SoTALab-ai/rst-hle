@@ -109,7 +109,7 @@ def control_errors(state, count):
     errors = []
     oracle = {o.id: o.verdict for o in state.oracle.cases}
     final = {o.id: o.verdict for o in state.oracle.final_results}
-    expected = {"golden", *(c.id for c in state.controls.cases)}
+    expected = {c.id for c in state.controls.cases}
     if len(oracle) != len(state.oracle.cases) or set(oracle) != expected or set(state.control_grades) != expected:
         errors.append("control_mapping_mismatch")
     if len(final) != len(state.oracle.final_results) or set(final) != expected or set(final.values()) != {"yes"}:
@@ -117,8 +117,6 @@ def control_errors(state, count):
     if any(getattr(state.oracle, k).verdict != "pass" for k in
            ("question_complete", "target_unambiguous", "golden_valid", "hidden_steps_recoverable")):
         errors.append("unresolved_question_or_gold")
-    if oracle.get("golden") != "yes":
-        errors.append("golden_not_validated")
     positive = [c for c in state.controls.cases if c.kind == "equivalent" and oracle.get(c.id) == "yes"]
     if len(positive) < 2:
         errors.append("insufficient_positive_controls")
@@ -198,12 +196,16 @@ class ArgumentStudy:
         sources = {s.id: s for s in p.store.sources()}
         packet = VerifierBuilder(p).packet(c, sources)
         if not state.controls:
+            # 金标说明不承担完整证明，也不拿它的省略论证改写成合法答卷。
+            control_input = {"question": c.item.question, "required_outputs": c.item.required_outputs,
+                             "reference_derivation": c.solution.derivation}
             state.controls, state.controls_request, _ = await p.consistency_call(self.prompts["argument_controls"] +
-                "\n" + json.dumps(packet, ensure_ascii=False), c.id + ":argument-controls", ArgumentControls)
+                "\n" + json.dumps(control_input, ensure_ascii=False), c.id + ":argument-controls", ArgumentControls)
             if any(case.response == c.item.answer for case in state.controls.cases):
                 raise ModelResponseError("consistency", state.controls_request, "duplicate_golden_argument_control")
             self.save()
-        responses = {"golden": c.item.answer, **{r.id: r.response for r in state.controls.cases}}
+        # 金标只作参考结果；论证对照全部由独立生成的实际答卷承担。
+        responses = {r.id: r.response for r in state.controls.cases}
         if not state.oracle:
             packet["responses"] = [{"id": k, "response": v} for k, v in responses.items()]
             state.oracle, state.oracle_request, _ = await p.consistency_call(self.prompts["argument_oracle"] + "\n" +
@@ -292,7 +294,7 @@ class ArgumentStudy:
                     if correct <= 8:
                         sources = {s.id: s for s in p.store.sources()}
                         packet = VerifierBuilder(p).packet(c, sources)
-                        packet["responses"] = [{"id": "golden", "response": c.item.answer}] + [
+                        packet["responses"] = [
                             {"id": "sample_" + str(r.sample_id), "response": r.grade.response}
                             for r in state.samples if r.grade]
                         if not state.postreview:
@@ -303,7 +305,7 @@ class ArgumentStudy:
                         truth = {r.id: r.verdict for r in state.postreview.cases}
                         expected = {r["id"] for r in packet["responses"]}
                         sound = (len(truth) == len(state.postreview.cases) and set(truth) == expected
-                            and truth.get("golden") == "yes" and all(getattr(state.postreview, k).verdict == "pass"
+                            and all(getattr(state.postreview, k).verdict == "pass"
                             for k in ("question_complete", "target_unambiguous", "golden_valid", "hidden_steps_recoverable"))
                             and all(truth.get("sample_" + str(r.sample_id)) == r.verdict()
                                     for r in state.samples if r.grade))

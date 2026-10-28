@@ -23,10 +23,12 @@ derivation. Any unestablished claim is uncertain, not pass. A passing finite poi
 Under correctness_basis=paper_grounded, faithful cited applications with satisfied hypotheses support
 the claim; you need not re-prove the paper. Check any adaptation explicitly. This does not excuse an
 unverified response or relax this verifier stage's requirement for established verdicts on all controls.
-Check the literal response contract before judging mathematical equivalence. If the question asks
-for a proof, a conclusion-only golden does not cover that request: golden_valid must fail even when
-the displayed conclusion is true. Displaying a final-result golden while adding an uncovered proof
-obligation is a target defect; stating a proposition for an already locked proof goal is legitimate.
-Do not silently reinterpret 'prove' as 'state'. For a response omitting part
+The golden is reference material, not a submitted response. Assess golden_valid as correctness of
+the reference results using the full private derivation and source evidence together. Do not require
+the golden text itself to contain a complete proof or repeat derivable intermediate steps; an omitted
+bridge in that text alone is not a golden_valid, question_complete or target_unambiguous failure.
+Concrete wrong results or inconsistent model assumptions remain defects. Judge only the supplied
+responses as submissions against the literal requested obligations, including proofs where requested.
+For a response omitting part
 of the requested domain, distinguish a supplied extension argument from one invented by the oracle;
 derivability alone does not turn an incomplete final answer into a full-domain response.

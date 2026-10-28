@@ -6,6 +6,8 @@ Under correctness_basis=paper_grounded, a faithful cited application with satisf
 evidence for the claim; it cannot justify an adaptation outside those hypotheses. Do not re-prove
 the paper or import a hidden premise into the literal question.
 Golden and hidden proof are hypotheses to attack, never additional premises available to a solver.
+The golden is reference material, not a submitted-response control required to contain a full proof.
+Use the full derivation and sources to check its results; keep proof obligations for actual responses.
 For EACH exact required_outputs entry give exactly one requirement, an exact literal question anchor,
 acceptance rule and mathematically equivalent forms. Judge only what the question actually requests.
 For every needed condition identify whether explicit, inferable from retained information, or requested

@@ -128,10 +128,10 @@ def control_coverage_errors(challenges, oracle, item):
     """只按独立oracle核定的对照计数；作者标签不提供通过资格。"""
     ids = {c.id: c for c in challenges.cases}
     cases = {c.id: c for c in oracle.cases}
-    if len(cases) != len(oracle.cases) or set(cases) != {"golden", *ids}:
+    if len(cases) != len(oracle.cases) or set(cases) != set(ids):
         return ["oracle_control_mapping_mismatch"]
     errors = []
-    if sum(c.verdict == "yes" for name, c in cases.items() if name != "golden") < 2:
+    if sum(c.verdict == "yes" for c in cases.values()) < 2:
         errors.append("insufficient_positive_controls")
     negative = [ids[name] for name, c in cases.items() if c.verdict == "no" and name in ids]
     if len(negative) < 2:
@@ -164,22 +164,19 @@ def round_errors(result, item):
         errors.append("unresolved_question_or_golden")
     cases = {c.id: c for c in result.challenges.cases}
     outcomes = {o.case_id: o for o in result.observations}
-    if set(outcomes) != {"golden", *cases} or len(outcomes) != len(result.observations):
+    if set(outcomes) != set(cases) or len(outcomes) != len(result.observations):
         errors.append("missing_or_duplicate_observations")
     oracle_cases = {o.id: o for o in oracle.cases}
     if (len(oracle_cases) != len(oracle.cases) or set(oracle_cases) != set(outcomes)
             or any(o.oracle != oracle_cases.get(o.case_id) for o in result.observations)):
         errors.append("oracle_observation_mapping_mismatch")
-    positive = [o for o in result.observations if o.oracle.verdict == "yes" and o.case_id != "golden"]
+    positive = [o for o in result.observations if o.oracle.verdict == "yes"]
     negative = [o for o in result.observations if o.oracle.verdict == "no"]
     if len(positive) < 2 or len(negative) < 2:
         errors.append("insufficient_validated_controls")
     covered = {cases[o.case_id].target_output_index for o in negative if o.case_id in cases}
     if covered != set(range(len(item.required_outputs))):
         errors.append("negative_output_coverage_incomplete")
-    golden = outcomes.get("golden")
-    if not golden or golden.oracle.verdict != "yes":
-        errors.append("golden_not_validated")
     for o in result.observations:
         if o.oracle.verdict == "uncertain" or o.verifier.correct == "uncertain":
             errors.append("unresolved_control:" + o.case_id)
@@ -297,8 +294,9 @@ class VerifierBuilder:
                 raise ModelResponseError("consistency", cid, "invalid_verifier_challenges")
             if attempts and challenges.cases[:len(attempts[-1].challenges.cases)] != attempts[-1].challenges.cases:
                 raise ModelResponseError("consistency", cid, "control_repair_changed_existing_case")
-            responses = [{"id": "golden", "response": c.item.answer}] + [
-                {"id": case.id, "response": case.response} for case in challenges.cases]
+            # 金标是参考答案，不再作为一份必须独立完成证明的答卷送审。
+            # 科学正确性仍由完整参考推导/来源及oracle.golden_valid核查。
+            responses = [{"id": case.id, "response": case.response} for case in challenges.cases]
             oracle_packet = self.packet(c, sources)
             # 刻意不传挑战者标签、规则、前次oracle或任何判分结果。
             oracle_packet["responses"] = responses

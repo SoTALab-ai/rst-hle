@@ -10,7 +10,8 @@ For inequality questions include a weaker-but-valid bound and determine whether 
 accepts it. Test whether omitted reasoning hides an unrecoverable premise. State concrete suspected
 question defects, not inability to solve. Do not propose adding hidden lemmas or answer hints merely
 to make the task easier. Case labels are only proposals; an independent oracle will reassess them.
-Do not reuse the golden verbatim as a generated case; an immutable golden control is added by code.
+Do not reuse the golden verbatim as a generated case. The golden is reference material, not a control
+required to independently present the complete proof; generate genuine submitted-response controls.
 Equivalent cases must give ALL requested outputs and branches, not merely an intermediate intensity,
 an endpoint example or a conditional fragment. Prefer a complete reordered statement, exact
 factorization, inverse-ratio convention with its definition, or another fully justified full answer.
