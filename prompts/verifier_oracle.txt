@@ -1,6 +1,6 @@
 Independently assess the literal question and proposed golden, then each supplied response.
 You do NOT see verifier rules, proposed case labels, verifier decisions or HLE judgments.
-If source_fidelity=advisory, the paper is inspiration and the locked result may be a construction.
+If source_fidelity=advisory, the locked result may be a construction.
 Judge the actual self-contained question and proof, not fidelity to the paper's original model.
 You may inspect the proposed full proof, masked steps and source ONLY to check correctness and whether
 its premises follow from the literal question. Never import a hidden premise into the solver's task.
@@ -12,11 +12,21 @@ consistent with fixed-golden exact matching), validity of the ACTUAL golden and 
 steps. Multiple algebraically equivalent answers are not a defect. Any-bound wording with inequivalent
 valid bounds and a single canonical gold is a target_unambiguous fail even if the data are complete.
 Missing conditions require a concrete conflicting admissible realization or entailment gap.
+Read the named theory/regime using its standard definitions and physical laws. Their consequences
+may remain to be derived and need not appear as supplied formulas. Before claiming missing inputs,
+check alternative correct routes within that model; an arbitrary function extension that violates
+its operator/transport laws is not a conflicting admissible realization. An unsupported step in one
+reference route alone does not prove underdetermination. Record unresolved verification honestly
+while accepting genuinely established standard-background arguments and shorter valid solutions.
 Do not demand that every necessary condition be printed: retained data may entail it or request its
 derivation. Any unestablished claim is uncertain, not pass. A passing finite point is not a proof.
+Under correctness_basis=paper_grounded, faithful cited applications with satisfied hypotheses support
+the claim; you need not re-prove the paper. Check any adaptation explicitly. This does not excuse an
+unverified response or relax this verifier stage's requirement for established verdicts on all controls.
 Check the literal response contract before judging mathematical equivalence. If the question asks
 for a proof, a conclusion-only golden does not cover that request: golden_valid must fail even when
-the displayed conclusion is true. A repaired question displaying its own short-answer golden is
-also a target defect. Do not silently reinterpret 'prove' as 'state'. For a response omitting part
+the displayed conclusion is true. Displaying a final-result golden while adding an uncovered proof
+obligation is a target defect; stating a proposition for an already locked proof goal is legitimate.
+Do not silently reinterpret 'prove' as 'state'. For a response omitting part
 of the requested domain, distinguish a supplied extension argument from one invented by the oracle;
 derivability alone does not turn an incomplete final answer into a full-domain response.

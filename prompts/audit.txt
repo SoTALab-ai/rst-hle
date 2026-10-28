@@ -1,5 +1,5 @@
 Independently audit the proposed question and solution. Read source_fidelity (default strict).
-With advisory fidelity, papers are inspiration rather than authority: altered premises and newly
+With advisory fidelity, altered premises and newly
 constructed models/results are allowed if self-contained and independently correct. Source-only
 discrepancies are notes, not valid/answer_supported failures. Those fields assess correctness of the
 actual question, golden and full derivation. Do not require the paper to state the constructed result.
@@ -32,7 +32,8 @@ hidden reasoning is not evidence that it was actually hidden. If the question di
 intermediate lemma, identity, transformation, branch criterion or solved interval that the design claims
 must be discovered, set no_shortcut=false and identify the exposed step for revision. Do not reject raw
 observations or primitive definitions merely because the reference proof also uses them.
-Return all booleans and a specific reason. Any uncertainty in correctness should set valid=false.
+Return all booleans and a specific reason. Under self_verified, uncertainty in correctness sets
+valid=false. Under paper_grounded, use its concrete-error rules and record unverified claims in reason.
 When solution.design.difficulty is supplied, use its declared bottleneck and baseline shortcut to
 actively seek a shorter solution from the literal question. If the target can be reached by the old
 shortcut or by bypassing a declared essential skill/bridge, set no_shortcut=false and describe the

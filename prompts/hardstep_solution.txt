@@ -1,0 +1,18 @@
+PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
+conflicting instruction above.
+Preserve the selected scientific goal and grading requirement. The goal determines the answer's
+form and length; do not force it into a short quantitative result. Keep qualitative, classification,
+construction, algorithm and proof obligations when they are part of the locked objective.
+The reference proof may follow the source paper's derivation. A step may be justified by faithfully
+applying a cited argument of the paper (theorem/equation/page locator) after checking that its
+hypotheses hold for the locked instance; you need not re-derive textbook details. Never cite the
+paper for a claim it does not make, and state explicitly where you adapted or specialized it.
+Do not simplify the model, drop couplings or shrink parameters to make verification easier.
+Mask selection: the bottleneck is the source mechanism's key inference or its justified counterpart
+in the locked adapted construction. mask.hidden_information must list that inference AND every scaffold that would give it
+away: derived representations, ansatzes, effective operators or loads, Schur complements, special
+normalizations, auxiliary functions, named theorems or ready-to-apply identities. Other derivable
+intermediate steps may stay hidden as well. mask.retained_information contains the locked model's
+primitive objects and definitions, model laws, given data, quantifiers, conventions
+that affect the answer, and the requested output. In recoverability, cite where the paper derives
+the hidden inference, checking its hypotheses against these retained premises; justify adapted steps explicitly.

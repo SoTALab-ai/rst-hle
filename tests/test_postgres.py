@@ -46,7 +46,65 @@ def test_pg_source_and_candidate_sample_roundtrip(pg, source, candidate):
         pg.sources()
 
 
-def test_pg_difficulty_checkpoints_and_two_stage_history_roundtrip(pg, tmp_path, source, candidate):
+def test_pg_scientific_goal_receipt_and_grading_requirement_roundtrip(pg, tmp_path, source, candidate):
+    import asyncio
+
+    from test_scientific_goals import author, replies
+
+    from diamond_factory.models import digest
+
+    run_meta(pg)
+    pg.add_source(source)
+    pipe, _offline, gateway, goal = author(tmp_path / "offline", source, candidate)
+    replies(gateway, goal, candidate.known_result)
+    result = asyncio.run(pipe.select_known_result(source, source.model_dump(),
+        {"category": "Math", "subtopic": "组合与图论"}, "line", None))
+    candidate.known_result = result
+    candidate.known_result.grading_requirement = "argument_or_witness_validation"
+    receipt = result.scientific_goal
+    pg.save_request("test", {"request_id": receipt.request_id, "role": "generator",
+        "actual_model": receipt.actual_model, "usage": {"total_tokens": 1},
+        "content": receipt.goal.model_dump_json()})
+    pg.save(candidate)
+    stored = pg.candidates()[0]
+    assert stored.known_result.scientific_goal == receipt
+    assert stored.known_result.grading_requirement == "argument_or_witness_validation"
+    assert pg.get_request(receipt.request_id)["content"] == receipt.goal.model_dump_json()
+    assert receipt.references_sha256 == digest(pipe.goal_references.model_dump())
+
+
+def test_pg_full_dependency_contract_and_question_review_roundtrip(pg, tmp_path, source, candidate):
+    import asyncio
+
+    from test_dependencies import prepared, reply
+
+    from diamond_factory.dependencies import DependencyBuilder, valid_dependency
+
+    run_meta(pg)
+    pg.add_source(source)
+    pipe, _offline, gateway, _goal = prepared(tmp_path / "offline", source, candidate)
+    reply(gateway, candidate)
+    assert asyncio.run(DependencyBuilder(pipe).question(candidate, {source.id: source}))
+    record, assessment = candidate.known_result.scientific_goal, candidate.dependency_assessment
+    receipts = [(record.request_id, "generator"), (record.premise_assessment.request_id, "consistency"),
+                (assessment.probe_request, "consistency"), (assessment.review_request, "consistency")]
+    for rid, role in receipts:
+        pg.save_request("test", {"request_id": rid, "role": role, "actual_model": "fixture",
+                                "usage": {"total_tokens": 1}, "content": "synthetic dependency receipt"})
+    pg.save(candidate)
+    stored = pg.candidates()[0]
+    # 旧蓝图字段按基类反序列化；比较持久化内容及本需求的具体类型记录。
+    assert stored.model_dump() == candidate.model_dump()
+    assert stored.known_result.scientific_goal == record
+    assert stored.solution.design.dependency_trace == candidate.solution.design.dependency_trace
+    assert stored.dependency_assessment == assessment
+    assert valid_dependency(stored, {source.id: source}, pipe.settings, pipe.prompts)
+    stored.item.question += " Now supply an intermediate that was hidden."
+    assert not valid_dependency(stored, {source.id: source}, pipe.settings, pipe.prompts)
+
+
+@pytest.mark.parametrize("shortcut", [False, True])
+def test_pg_difficulty_checkpoints_and_two_stage_history_roundtrip(pg, tmp_path, source, candidate, shortcut):
     import asyncio
 
     from test_bottleneck import prepare
@@ -58,8 +116,10 @@ def test_pg_difficulty_checkpoints_and_two_stage_history_roundtrip(pg, tmp_path,
 
     prepare(candidate, source)
     pg.add_source(source)
-    settings = load("configs/library-difficulty-adversary.toml")
-    gateway = DepthGateway(candidate, design=["too_easy", "sufficient"], question=["too_easy", "sufficient"])
+    from test_shortcut_adversary import ShortcutGateway
+
+    settings = load("configs/library-shortcut-adversary.toml" if shortcut else "configs/library-difficulty-adversary.toml")
+    gateway = (ShortcutGateway if shortcut else DepthGateway)(candidate, design=["too_easy", "sufficient"], question=["too_easy", "sufficient"])
     pipe = Pipeline(settings, pg, "depth-test", "pilot", tmp_path / "run", gateway)
     target = {"category": "Math", "subtopic": "组合与图论"}
     result = asyncio.run(pipe.generate(source, None, target, 0, 0))

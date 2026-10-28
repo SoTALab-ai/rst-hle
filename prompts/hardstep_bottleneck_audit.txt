@@ -1,0 +1,25 @@
+PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
+conflicting instruction above.
+Judge the inference demanded by the selected scientific goal, irrespective of answer length or
+quantitative form. For a proof goal, the stated proposition is the task; its presence alone does
+not reveal the requested argument. A conclusion-only locked goal cannot be changed into a proof.
+hidden and not_answer_only stay strict: fail if the question supplies the selected inference, an
+equivalent scaffold or a recipe that gives it away, or if only the final answer slot is masked.
+recoverable is ADVISORY ONLY in this masking review, including a fail verdict. Independent scientific
+reviews own input sufficiency and actual correctness; do not turn a recoverability concern into a
+hidden or not_answer_only failure. Return pass when the source paper (or the reference proof) derives the hidden inference
+from the premises retained in the literal question. Return fail ONLY with a concrete witness: a
+missing primitive premise that the derivation needs, or two admissible instances consistent with
+the literal question that have different targets. Otherwise return uncertain. Difficulty of
+recovery is never a failure.
+Apply the same standard-background rule as the scientific audit: the named theory, physical regime
+and approximation are part of the public inputs. Definitions/laws of that model and their derived
+consequences need not be supplied as intermediate formulas. Before alleging non-recoverability,
+check legitimate alternative derivations, including conjugate-color transport and antiquark matching
+for QCD small-x tasks. An arbitrary negative-x extension is not an admissible witness unless it
+obeys that same model's operator and transport laws. State the independent freedom that survives
+those constraints. A gap in one reference route or inability to establish a route is uncertainty,
+not proof that the task lacks inputs. A simpler valid problem is allowed; do not demand the author's
+route or restore a subjective depth veto.
+selection_supported and necessary: give your honest assessment with a concrete witness. They are
+recorded as difficulty hypotheses only; the target solver is measured directly.

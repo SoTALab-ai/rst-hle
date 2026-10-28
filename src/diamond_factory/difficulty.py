@@ -3,9 +3,10 @@ from pathlib import Path
 
 from .gates import correct_count, evidence_errors, sample_outcomes
 from .models import digest
+from .scientific_goals import argument_validation_required, goal_errors, load_references
 
 
-def known_result_errors(result, sources, solution=None, blueprint=None, *, source_fidelity="strict"):
+def known_result_errors(result, sources, solution=None, blueprint=None, *, source_fidelity="strict", defer_depth=False):
     if result is None:
         return ["missing_known_result"]
     errors = evidence_errors(result.evidence, sources) if source_fidelity == "strict" else []
@@ -21,7 +22,7 @@ def known_result_errors(result, sources, solution=None, blueprint=None, *, sourc
         links = blueprint.assumption_correspondence if blueprint else []
         mapped = {a.source_assumption for a in links if a.equivalent
                   and a.solution_assumption in solution.assumptions}
-        if missing and (not blueprint or not blueprint.passed(source_fidelity=source_fidelity)
+        if missing and (not blueprint or not blueprint.passed(source_fidelity=source_fidelity, defer_depth=defer_depth)
                         or blueprint.reviewed_step_count != len(solution.derivation)
                         or len({a.source_assumption for a in links}) != len(links)
                         or not missing <= mapped):
@@ -62,7 +63,7 @@ def blueprint_stamp(solution, source_data, target, known_result, prompt, model_c
 def valid_bottleneck(candidate, sources, prompt=None, model_config=None):
     assessment = candidate.bottleneck_assessment
     if (not set(candidate.source_ids) <= sources.keys() or bottleneck_mask_errors(candidate.solution)
-            or not assessment or not assessment.review.passed()):
+            or not assessment or not assessment.review.passed(basis=candidate.correctness_basis)):
         return False
     mask = candidate.solution.design.difficulty.mask
     return bool(assessment.review.step_id == mask.step_id
@@ -73,11 +74,24 @@ def valid_bottleneck(candidate, sources, prompt=None, model_config=None):
 
 def construction_ready(candidate, sources, settings, prompts):
     """导出只检查现有有效收据，不购买新的审查，也不接受旧通过标记。"""
+    from .dependencies import has_dependency_contract, valid_dependency
+
+    if (settings.require_dependency_trace or has_dependency_contract(candidate)) and (
+            not settings.require_dependency_trace or not valid_dependency(candidate, sources, settings, prompts)):
+        return False
     if candidate.source_fidelity != settings.source_fidelity:
+        return False
+    if candidate.correctness_basis != settings.correctness_basis:
+        return False
+    if argument_validation_required(candidate):
+        return False
+    if goal_errors(candidate.known_result, sources, load_references(settings),
+                   prompts.get("scientific_goal", ""), settings.generator.model_dump()):
         return False
     if settings.require_difficulty_adversary:
         from .difficulty_adversary import has_valid_difficulty, protocol_hash
-        if not has_valid_difficulty(candidate, sources, protocol_hash(settings, prompts)):
+        if not has_valid_difficulty(candidate, sources, protocol_hash(settings, prompts),
+                                    strategy=settings.difficulty_adversary_mode):
             return False
     if settings.require_verifier_adversary:
         from .verifier import has_valid_verifier, protocol_hash
@@ -86,10 +100,14 @@ def construction_ready(candidate, sources, settings, prompts):
     if settings.require_known_result:
         result = candidate.known_result
         if (known_result_errors(result, sources, candidate.solution, candidate.blueprint_audit,
-                                source_fidelity=settings.source_fidelity)
+                                source_fidelity=settings.source_fidelity,
+                                defer_depth=settings.difficulty_adversary_mode == "shortcut_blocking"
+                    or settings.correctness_basis == "paper_grounded")
                 or candidate.source_ids != [result.source_id]
                 or not candidate.blueprint_audit or not candidate.blueprint_audit.passed(
-                    source_fidelity=settings.source_fidelity)
+                    source_fidelity=settings.source_fidelity,
+                    defer_depth=settings.difficulty_adversary_mode == "shortcut_blocking"
+                    or settings.correctness_basis == "paper_grounded")
                 or candidate.blueprint_audit.reviewed_step_count != len(candidate.solution.derivation)):
             return False
         source = sources[result.source_id]

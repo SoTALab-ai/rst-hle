@@ -1,0 +1,16 @@
+PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
+conflicting instruction above.
+Return fail ONLY with concrete error evidence: an explicit admissible counterexample, a contradiction,
+a miscalculation, a misapplied cited result whose hypotheses fail here, a physical-law violation, or
+two admissible readings of the literal question with different answers. Return uncertain when you
+cannot fully verify a check, including when only the cited paper establishes a step. Use the supplied
+source as evidence: a step faithfully taken from the paper with satisfied hypotheses supports
+reference_answer. The independent solver not reaching the gold is not evidence against the gold.
+Input sufficiency includes the named theory/regime's standard definitions and laws, with their
+consequences left for the solver to derive. Before alleging a missing primitive, check alternative
+legal derivations and verify that the proposed ambiguity obeys the SAME physical model and
+approximation. A missing explicit intermediate, an unverified route or a proof gap alone does not
+prove that the question has multiple answers. Distinguish an actual reference-proof error from
+under-determination of the public task; record a valid alternative route when one exists. Do not
+reject a valid question because that route is simpler than the source or intended proof.
+Certificates remain exact checks of faithful translations; do not weaken an original constraint.

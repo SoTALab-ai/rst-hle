@@ -1,0 +1,371 @@
+{
+  "task": "shortcut-blocking-adversary-20261026",
+  "pilot_only": true,
+  "delivery_items": 0,
+  "planned_construction_roots_across_runs": 4,
+  "distinct_materials": 2,
+  "correlated_material_reuse": true,
+  "provisional_versions_across_runs": 6,
+  "formed_question_identities_across_runs": 3,
+  "actual_solver_answers_across_runs": 4,
+  "solver_deadlines_across_runs": 0,
+  "complete16_versions": 0,
+  "retained": 0,
+  "known_api_usd": 0.48124238,
+  "http_attempts": 98,
+  "unknown_usage_attempts": 0,
+  "unsettled_reserved_attempts": 0,
+  "vm_disk_network_usd": null,
+  "implementation_validation": {
+    "local_passed": 374,
+    "local_environment_skipped": 39,
+    "vm_postgres_passed": 413,
+    "dedicated_test_database": "rst_hle_shortcut_adversary_20261026_v3_test",
+    "ruff": "passed",
+    "doctor": "passed",
+    "sql_migrations_changed": false
+  },
+  "initial_trial": {
+    "run_id": "shortcut2-20261026-v1",
+    "code_commit": "08ca1ca8ff0ffcc9ccc24905380cba92e67cfc1a",
+    "uid": 1031248789,
+    "planned_lines": 2,
+    "materials": 2,
+    "status": "completed",
+    "finished": true,
+    "frozen_changed": [],
+    "proposals": 2,
+    "scientific_reviews": 2,
+    "scientific_passed": 2,
+    "blind_design_attacks": 2,
+    "design_challenges": {
+      "sufficient": 2
+    },
+    "candidates": 2,
+    "question_attacks": 2,
+    "question_challenges": {
+      "sufficient": 2
+    },
+    "diagnostics": [
+      "too_easy",
+      "too_easy"
+    ],
+    "actual_answers": 4,
+    "deadlines": 0,
+    "retained": 0,
+    "cost": {
+      "unsettled_reserved_attempts": 0,
+      "known_cost_usd": 0.28364200500000003,
+      "rmb_reference": 1.9004014335000003,
+      "http_attempts": 70,
+      "logical_request_receipts": 70,
+      "unknown_usage_attempts": 0,
+      "by_role": {
+        "solver": {
+          "http_attempts": 4,
+          "known_cost_usd": 0.05182958000000001,
+          "unknown_usage_attempts": 0
+        },
+        "generator": {
+          "http_attempts": 6,
+          "known_cost_usd": 0.054583925,
+          "unknown_usage_attempts": 0
+        },
+        "consistency": {
+          "http_attempts": 40,
+          "known_cost_usd": 0.15680982499999999,
+          "unknown_usage_attempts": 0
+        },
+        "auditor": {
+          "http_attempts": 2,
+          "known_cost_usd": 0.0168266,
+          "unknown_usage_attempts": 0
+        },
+        "judge": {
+          "http_attempts": 18,
+          "known_cost_usd": 0.0035920749999999997,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "pricing_snapshot_date": "2026-10-23",
+      "note": "Returned usage only; unknown/cancelled usage is not zero. Excludes VM and human labor."
+    },
+    "full_preflight_passed": 1,
+    "reader": {
+      "complete_materials": 50,
+      "states": [
+        {
+          "state": "stopped",
+          "limit": 50
+        }
+      ],
+      "restarted": false
+    },
+    "http_traces": 70,
+    "models": {
+      "z-ai/glm-5.2": 4,
+      "gpt-6-luna-2026-09-22": 66
+    },
+    "evidence_hashes": {
+      "request-seals.json": "25e41334d1bda7391bb4f7c934d254c76c4c44edfb61a66a4900a681f902f544",
+      "candidates-private.json": "c8bbf5f308f86e4bfdc796b82fa7d1e3d591cc1aa99ecf783e7c01ec1135401d",
+      "run-private.json": "0d6632befdc8e11525ee0a0c1c2592f28875856361525f99298bf3167de47ac9",
+      "campaigns-private.json": "2f099820a127b468b21de966d0651e4c5d99293a679eed46a95cfce9300cea25",
+      "experiment-report-private.json": "be70147d418e660d799709e645caa38c6608227d57df75fcf7e5ce68e4ef03c7"
+    },
+    "limitations": [
+      "before_lock_attack_received_retained_information_summaries_without_formulas",
+      "before_lock_review_incorrectly_imported_private_definitions",
+      "no_live_adversarial_revision_was_triggered"
+    ],
+    "outcomes": [
+      {
+        "category": "Math",
+        "preflight_passed_under_frozen_v1": true,
+        "answered": 4,
+        "correct": 4,
+        "result": "first4_all_correct_rejected"
+      },
+      {
+        "category": "Physics",
+        "answered": 0,
+        "result": "verifier_detected_ambiguous_any_bound_vs_sharp_bound"
+      }
+    ]
+  },
+  "science_prompt_component": {
+    "run_id": "shortcut-science-20261026-v2",
+    "code_commit": "aa1b53fbf86e0e68b5b215cafdf74292da608622",
+    "uid": 1031248789,
+    "planned_cases": 2,
+    "complete_reviews": 2,
+    "passed": 2,
+    "new_glm": 0,
+    "cost": {
+      "unsettled_reserved_attempts": 0,
+      "known_cost_usd": 0.018059725,
+      "rmb_reference": 0.1210001575,
+      "http_attempts": 2,
+      "logical_request_receipts": 2,
+      "unknown_usage_attempts": 0,
+      "by_role": {
+        "consistency": {
+          "http_attempts": 2,
+          "known_cost_usd": 0.018059725,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "pricing_snapshot_date": "2026-10-23",
+      "note": "Returned usage only; unknown/cancelled usage is not zero. Excludes VM and human labor."
+    },
+    "rows": [
+      {
+        "category": "Math",
+        "passed": true,
+        "issues": [],
+        "actual_model": "gpt-6-luna-2026-09-22"
+      },
+      {
+        "category": "Physics",
+        "passed": true,
+        "issues": [],
+        "actual_model": "gpt-6-luna-2026-09-22"
+      }
+    ],
+    "evidence_hashes": {
+      "reviews_private": "1541f5881bd73e624f563b87753eb924c79eca2a6380f20d0c829b7aa3d3bd05"
+    },
+    "frozen_changed": []
+  },
+  "latest_trial": {
+    "run_id": "shortcut2-20261026-v3",
+    "code_commit": "7ed95c3359a3243771e525463abee209a7fcd6f7",
+    "uid": 1031248789,
+    "planned_lines": 2,
+    "materials": 2,
+    "status": "completed_with_errors",
+    "finished": true,
+    "frozen_changed": [],
+    "proposals": 4,
+    "scientific_reviews": 4,
+    "scientific_passed": 4,
+    "blind_design_attacks": 4,
+    "design_challenges": {
+      "too_easy": 3,
+      "sufficient": 1
+    },
+    "proposal_errors": {
+      "depth_too_easy": 3
+    },
+    "candidates": 1,
+    "question_attacks": 1,
+    "question_challenges": {
+      "sufficient": 1
+    },
+    "diagnostics": [],
+    "actual_answers": 0,
+    "deadlines": 0,
+    "retained": 0,
+    "cost": {
+      "unsettled_reserved_attempts": 0,
+      "known_cost_usd": 0.17954065000000002,
+      "rmb_reference": 1.202922355,
+      "http_attempts": 26,
+      "logical_request_receipts": 26,
+      "unknown_usage_attempts": 0,
+      "by_role": {
+        "generator": {
+          "http_attempts": 5,
+          "known_cost_usd": 0.08112987499999999,
+          "unknown_usage_attempts": 0
+        },
+        "consistency": {
+          "http_attempts": 20,
+          "known_cost_usd": 0.09299047499999996,
+          "unknown_usage_attempts": 0
+        },
+        "auditor": {
+          "http_attempts": 1,
+          "known_cost_usd": 0.0054203,
+          "unknown_usage_attempts": 0
+        }
+      },
+      "pricing_snapshot_date": "2026-10-23",
+      "note": "Returned usage only; unknown/cancelled usage is not zero. Excludes VM and human labor."
+    },
+    "full_preflight_passed": 0,
+    "reader": {
+      "complete_materials": 50,
+      "states": [
+        {
+          "state": "stopped",
+          "limit": 50
+        }
+      ],
+      "restarted": false
+    },
+    "http_traces": 26,
+    "models": {
+      "gpt-6-luna-2026-09-22": 26
+    },
+    "lineages": [
+      {
+        "identity": "2b4db9c3141554d9255e0301",
+        "source_id": "shortcut-math",
+        "status": "rejected",
+        "versions": [
+          {
+            "proposal_id": "00b8f2789256d4e4f651eb35",
+            "public_task_chars": 823,
+            "outcome": "proposed",
+            "science_passed": true,
+            "attack_outcome": "solved",
+            "attack_validity": "correct",
+            "verdict": "too_easy",
+            "errors": [
+              "depth_too_easy"
+            ],
+            "rechecks": []
+          },
+          {
+            "proposal_id": "5203559bd6298841c68359e2",
+            "public_task_chars": 563,
+            "outcome": "proposed",
+            "science_passed": true,
+            "attack_outcome": "solved",
+            "attack_validity": "incorrect",
+            "verdict": "too_easy",
+            "errors": [
+              "depth_too_easy"
+            ],
+            "rechecks": [
+              {
+                "route_id": "00b8f2789256d4e4f651eb35",
+                "verdict": "blocked"
+              }
+            ]
+          },
+          {
+            "proposal_id": "55cfa85ac310092771f0027a",
+            "public_task_chars": 434,
+            "outcome": "proposed",
+            "science_passed": true,
+            "attack_outcome": "solved",
+            "attack_validity": "correct",
+            "verdict": "too_easy",
+            "errors": [
+              "depth_too_easy"
+            ],
+            "rechecks": [
+              {
+                "route_id": "00b8f2789256d4e4f651eb35",
+                "verdict": "blocked"
+              },
+              {
+                "route_id": "5203559bd6298841c68359e2",
+                "verdict": "blocked"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "identity": "dcb4b25605eb2fc7695b1ecb",
+        "source_id": "shortcut-physics",
+        "status": "passed",
+        "versions": [
+          {
+            "proposal_id": "170cde9e22281286546e644c",
+            "public_task_chars": 1058,
+            "outcome": "proposed",
+            "science_passed": true,
+            "attack_outcome": "solved",
+            "attack_validity": "correct",
+            "verdict": "sufficient",
+            "errors": [],
+            "rechecks": []
+          }
+        ]
+      }
+    ],
+    "evidence_hashes": {
+      "request-seals.json": "69d09b3567e7e064cbaa8b2e593df242eb626dcf3e13bb1973e13b6e3ad1f9ac",
+      "candidates-private.json": "6de842737eab8fbdab4a2c5b3f6cc1f8266f1fd86c71d89d43421155524854f4",
+      "run-private.json": "4cada26ee535179d24b827f18179613c9d850f3d2f2a6f3d14b88f032d9ec723",
+      "campaigns-private.json": "087196189b7cc7a22082874c29702109daec3f52fee7f21b4812db6233cb0269",
+      "experiment-report-private.json": "b2728abcd8e0c78bad4a11bfac1066ea9920f33fcd74b34f7553152a951d4be2"
+    },
+    "outcomes": [
+      {
+        "category": "Math",
+        "proposal_versions": 3,
+        "adversarial_revisions": 2,
+        "scientific_model_reviews_passed": 3,
+        "verified_short_routes": 3,
+        "old_route_rechecks": 3,
+        "question_candidates": 0,
+        "solver_answers": 0,
+        "result": "bounded_shortcut_repair_exhausted"
+      },
+      {
+        "category": "Physics",
+        "proposal_versions": 1,
+        "question_candidates": 1,
+        "question_route_review": "sufficient",
+        "audit_route_review": "bypass",
+        "solver_answers": 0,
+        "result": "unresolved_equivalent_route_or_shortcut_disagreement"
+      }
+    ]
+  },
+  "receipt_protocol_audit": {
+    "zero_new_model_calls": true,
+    "latest_explicit_design_packets_verified": 4,
+    "latest_explicit_question_packets_verified": 1,
+    "initial_new_solver_payloads_verified": 4,
+    "solver_deadline_seconds": 600,
+    "solver_tools": false,
+    "client_output_token_limit": false,
+    "original_solver_pool_overlap": 0
+  }
+}

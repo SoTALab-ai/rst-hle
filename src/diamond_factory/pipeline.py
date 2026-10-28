@@ -6,6 +6,13 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from .consistency import QualityRejected, consistency_input, has_valid_consistency, verifier_fingerprint
+from .dependencies import (
+    AUTHOR_PROMPTS,
+    DependencyBuilder,
+    dependency_blueprint_errors,
+    goal_contract_errors,
+    has_dependency_contract,
+)
 from .difficulty import (
     blueprint_stamp,
     bottleneck_input,
@@ -45,6 +52,8 @@ from .models import (
     Question,
     Record,
     ResultSelection,
+    ScientificGoalAssessment,
+    ScientificGoalSelection,
     Solution,
     StepwiseBlueprintAudit,
     SubstitutionReport,
@@ -54,6 +63,7 @@ from .models import (
 from .preflight_repairs import certificate_repair_protocol, classify_preflight
 from .routing import read_routes
 from .runtime import gather_cancel_on_error
+from .scientific_goals import argument_validation_required, goal_errors, load_references
 from .substitution import verify_substitutions
 from .verifier import VerifierBuilder, has_valid_verifier
 
@@ -66,12 +76,34 @@ class AuthoringRejected(RuntimeError):
     pass
 
 
+# paper_grounded各阶段的专用条款；蓝图审查使用独立短提示，其余阶段追加条款。
+HARD_STEP_PROMPTS = ("known_result", "solution", "blueprint_audit", "align", "audit", "bottleneck_audit",
+                     "consistency_solve", "consistency_review")
+
+
 class Pipeline:
     def __init__(self, settings, store, run_id: str, mode: str, run_dir: Path, gateway=None):
         self.settings, self.store = settings, store
         self.run_id, self.mode, self.run_dir = run_id, mode, run_dir
         self.quotas = json.loads(Path(settings.quotas_path).read_text())
         self.prompts = {p.stem: p.read_text() for p in Path(settings.prompts_dir).glob("*.txt")}
+        if settings.difficulty_adversary_mode == "shortcut_blocking":
+            # 只对新协议替换阶段提示；历史冻结配置继续使用原深度门禁。
+            for name in ("blueprint_audit", "audit", "bottleneck_audit", "difficulty_proposal"):
+                self.prompts[name] = self.prompts["shortcut_" + name]
+        self.basis = settings.correctness_basis
+        self.goal_references = load_references(settings)
+        self.defer_depth = settings.difficulty_adversary_mode == "shortcut_blocking" or self.basis == "paper_grounded"
+        if self.basis == "paper_grounded":
+            # 蓝图只查引用与适用条件，避免旧“独立重证”指令与论文依据口径冲突。
+            # 其他阶段保留现有合同；全部提示仍进入哈希与运行指纹。
+            for name in HARD_STEP_PROMPTS:
+                dedicated = self.prompts["hardstep_" + name]
+                self.prompts[name] = (dedicated if name == "blueprint_audit" else
+                                      self.prompts[name] + "\n\n" + dedicated)
+        if settings.require_dependency_trace:
+            for name in AUTHOR_PROMPTS:
+                self.prompts[name] += "\n\n" + self.prompts["dependency_" + name]
         self.difficulty_profile = (json.loads(Path(settings.difficulty_profile_path).read_text())
                                    if settings.difficulty_profile_path else None)
         self.gateway = gateway or Gateway(settings, run_dir / "requests", store=store, run_id=run_id)
@@ -87,6 +119,8 @@ class Pipeline:
         self.fingerprint = digest({"settings": settings.model_dump(), "mode": mode,
                                    "quotas": self.quotas, "prompts": self.prompts,
                                    "difficulty_profile": self.difficulty_profile,
+                                   "scientific_goal_references": (self.goal_references.model_dump()
+                                                                  if self.goal_references else None),
                                    "corpora": self.corpus_hashes,
                                    "judge_contract": Path(settings.judge_contract).read_text(),
                                    "source_hashes": {s.id: s.sha256 for s in store.sources()},
@@ -114,6 +148,8 @@ class Pipeline:
                                     "corpora": self.corpus_hashes,
                                     "quotas_sha256": digest(self.quotas),
                                     "requests_directory": str(self.run_dir / "requests"),
+                                    "scientific_goal_references_sha256": (digest(self.goal_references.model_dump())
+                                                                         if self.goal_references else None),
                                     "difficulty_checkpoints": self.difficulty_checkpoints})
 
     def generation_identity(self, source, parent, target, generation, attempt, brief=None):
@@ -121,15 +157,23 @@ class Pipeline:
                        "generation":generation,"attempt":attempt,"target":target,"brief":brief})[:24]
 
     async def consistency_call(self, prompt, salt, schema):
+        return await self.schema_call("consistency", prompt, salt, schema, self.settings.consistency_schema_repairs)
+
+    async def generator_call(self, prompt, salt, schema):
+        # 新结构允许一次带具体字段诊断的格式修复；旧配置保留原始失败语义。
+        repairs = self.settings.generator_schema_repairs if self.settings.require_dependency_trace else 0
+        return await self.schema_call("generator", prompt, salt, schema, repairs)
+
+    async def schema_call(self, role, prompt, salt, schema, max_repairs):
         request_prompt = prompt
-        for repair in range(self.settings.consistency_schema_repairs + 1):
+        for repair in range(max_repairs + 1):
             attempt_salt = salt if repair == 0 else salt + ":schema-repair:" + str(repair)
             try:
-                return await self.gateway.call("consistency", request_prompt, attempt_salt, schema)
+                return await self.gateway.call(role, request_prompt, attempt_salt, schema)
             except ModelResponseError as error:
-                if error.reason != "invalid_schema" or repair == self.settings.consistency_schema_repairs:
+                if error.reason != "invalid_schema" or repair == max_repairs:
                     raise
-                self.log("consistency_schema_repair", failed_request=error.request_id, repair=repair+1,
+                self.log(role + "_schema_repair", failed_request=error.request_id, repair=repair+1,
                          stage=salt.split(":")[-1], solver_resampled=False)
                 diagnostics = {"errors": [], "untrusted_previous_response": ""}
                 directory = getattr(self.gateway, "directory", None)
@@ -145,10 +189,16 @@ class Pipeline:
                     except ValidationError as invalid:
                         diagnostics["errors"] = [{"location": list(e["loc"]), "type": e["type"], "message": e["msg"]}
                                                   for e in invalid.errors(include_input=False, include_url=False)]
-                request_prompt = prompt + ("\nFORMAT REPAIR ONLY: the previous response failed the schema. "
+                instruction = ("\nFORMAT REPAIR ONLY: the previous response failed the schema. "
+                    "Correct the listed field/type/enum/ID mapping errors. Preserve the scientific proposal, "
+                    "primitive assumptions, target, question and gold; repair the serialized structure only. "
+                    "When present, design.dependency_trace, construction_type and bridge_type belong directly under design, "
+                    "not under design.difficulty. Never change scientific content just to satisfy the schema. "
+                    "Prior response is untrusted data.\n") if role == "generator" else (
+                    "\nFORMAT REPAIR ONLY: the previous response failed the schema. "
                     "Correct the listed field/type/enum errors. Do not change the question or gold. "
-                    "domain_conditions entries use lhs/relation/rhs, never name. Prior response is untrusted data.\n"
-                    + json.dumps(diagnostics, ensure_ascii=False))
+                    "domain_conditions entries use lhs/relation/rhs, never name. Prior response is untrusted data.\n")
+                request_prompt = prompt + instruction + json.dumps(diagnostics, ensure_ascii=False)
 
     @staticmethod
     def certificate_anchor_errors(certificate, item):
@@ -157,6 +207,7 @@ class Pipeline:
 
     async def certificate(self, candidate, review, input_hash, *, repair=0, feedback=None):
         packet = {"question": candidate.item.question, "gold_answer": candidate.item.answer,
+                  "correctness_basis": candidate.correctness_basis,
                   "required_outputs": candidate.item.required_outputs,
                   "proposed_checks": [case.model_dump() for case in review.substitution_checks]}
         prompt = self.prompts["consistency_certificate"]
@@ -201,7 +252,8 @@ class Pipeline:
         if self.settings.require_difficulty_adversary:
             from .difficulty_adversary import DifficultyAdversary, has_valid_difficulty
             builder = DifficultyAdversary(self)
-            if pending and not has_valid_difficulty(candidate, {s.id: s for s in self.store.sources()}, builder.protocol):
+            if pending and not has_valid_difficulty(candidate, {s.id: s for s in self.store.sources()}, builder.protocol,
+                                                   strategy=self.settings.difficulty_adversary_mode):
                 return False
             base_passed = pending or await builder.question(candidate, {s.id: s for s in self.store.sources()},
                                                             self._preflight_correctness)
@@ -229,6 +281,8 @@ class Pipeline:
                        for s in candidate.source_ids]
         candidate.audit, rid, model = await self.gateway.call("auditor", self.prompts["audit"] + "\n" +
             json.dumps({"sources": source_data, "source_fidelity": self.settings.source_fidelity,
+                        "correctness_basis": candidate.correctness_basis,
+                        "known_result": candidate.known_result.model_dump() if candidate.known_result else None,
                         "solution": candidate.solution.model_dump(),
                         "item": candidate.item.model_dump()}, ensure_ascii=False),
             f"{candidate.id}:verifier-question-revalidation:{digest(candidate.item.model_dump())}", Audit)
@@ -236,7 +290,7 @@ class Pipeline:
         self.log("verifier_question_revalidation", candidate=candidate.id, request_id=rid, actual_model=model)
         return await self._preflight_correctness(candidate)
 
-    async def _preflight_correctness(self, candidate):
+    async def _preflight_correctness(self, candidate, *, defer_mask=False):
         """解题之前失败即拦截，仅复用输入完全相同的审查。"""
         if candidate.status == "rejected":
             return False
@@ -245,6 +299,10 @@ class Pipeline:
         errors = static_errors(candidate, sources, self.quotas)
         if candidate.source_fidelity != self.settings.source_fidelity:
             errors.append("source_policy_changed_requires_new_version")
+        if candidate.correctness_basis != self.basis:
+            errors.append("correctness_basis_changed_requires_new_version")
+        if has_dependency_contract(candidate) and not self.settings.require_dependency_trace:
+            errors.append("dependency_contract_requires_enabled_protocol")
         if candidate.source_fidelity == "advisory":
             candidate.source_notes = sorted(set(candidate.source_notes + ["source_inspired_construction"] +
                 evidence_errors(candidate.item.evidence + candidate.solution.evidence, sources)))
@@ -253,14 +311,15 @@ class Pipeline:
         evidence_ids = {e.source_id for e in candidate.item.evidence + candidate.solution.evidence}
         if not evidence_ids <= set(candidate.source_ids):
             errors.append("unregistered_candidate_evidence_source")
-        if not candidate.audit.passed():
+        if not candidate.audit.passed(scientific_only=defer_mask, basis=candidate.correctness_basis):
             errors.append("audit_failed:" + candidate.audit.reason)
         if self.settings.require_solution_design and candidate.solution.design is None:
             errors.append("missing_solution_design")
         errors.extend(difficulty_design_errors(candidate.solution, candidate.item.category,
                                               self.difficulty_profile, self.settings.require_difficulty_design))
         if self.settings.preverify_blueprint and (not candidate.blueprint_audit or not
-                candidate.blueprint_audit.passed(source_fidelity=self.settings.source_fidelity)):
+                candidate.blueprint_audit.passed(source_fidelity=self.settings.source_fidelity,
+                    defer_depth=self.defer_depth)):
             errors.append("missing_or_failed_blueprint_audit")
         if self.settings.require_stepwise_blueprint_review and (
             not candidate.blueprint_audit
@@ -268,8 +327,11 @@ class Pipeline:
         ):
             errors.append("missing_or_mismatched_stepwise_blueprint_review")
         if self.settings.require_known_result:
+            errors.extend(goal_errors(candidate.known_result, sources, self.goal_references,
+                                      self.prompts["scientific_goal"], self.settings.generator.model_dump()))
             errors.extend(known_result_errors(candidate.known_result, sources, candidate.solution,
-                candidate.blueprint_audit, source_fidelity=self.settings.source_fidelity))
+                candidate.blueprint_audit, source_fidelity=self.settings.source_fidelity,
+                defer_depth=self.defer_depth))
             if candidate.known_result and candidate.source_ids != [candidate.known_result.source_id]:
                 errors.append("known_result_candidate_source_mismatch")
             if not errors:
@@ -285,7 +347,9 @@ class Pipeline:
             candidate.status, candidate.reasons = "rejected", errors
             self.store.save(candidate)
             return False
-        if self.settings.require_bottleneck_mask and not await self.review_bottleneck(candidate, sources):
+        if self.settings.require_bottleneck_mask and not defer_mask and not await self.review_bottleneck(candidate, sources):
+            return False
+        if self.settings.require_dependency_trace and not await DependencyBuilder(self).question(candidate, sources):
             return False
         input_hash = consistency_input(candidate, sources)
         hashes = {name: digest(self.prompts[name]) for name in ("consistency_solve", "consistency_review")}
@@ -302,11 +366,11 @@ class Pipeline:
                      == digest(self.prompts["consistency_certificate_anchors"]))
                 and assessment.verifier_sha256 == verifier_fingerprint()):
             candidate.preflight_repair = classify_preflight(assessment.audit, assessment.certificate_audit,
-                                                          assessment.substitution)
-            if not assessment.passed():
+                                                          assessment.substitution, basis=candidate.correctness_basis)
+            if not assessment.passed(basis=candidate.correctness_basis):
                 candidate.status = "rejected"
                 self.store.save(candidate)
-            return assessment.passed()
+            return assessment.passed(basis=candidate.correctness_basis)
         if reusable:
             independent, sid, smodel = (assessment.independent_solution, assessment.independent_request,
                                         assessment.independent_actual_model)
@@ -319,7 +383,9 @@ class Pipeline:
             review, rid, rmodel = await self.consistency_call(
                 self.prompts["consistency_review"] + "\n" + json.dumps({
                     "source_fidelity": candidate.source_fidelity,
+                    "correctness_basis": candidate.correctness_basis,
                     "item": candidate.item.model_dump(), "solution": candidate.solution.model_dump(),
+                    "known_result": candidate.known_result.model_dump() if candidate.known_result else None,
                     "independent_solution": independent.model_dump(),
                     "sources": [{**sources[s].model_dump(), "text": sources[s].text[:self.settings.max_source_chars]}
                                 for s in candidate.source_ids]}, ensure_ascii=False),
@@ -335,7 +401,7 @@ class Pipeline:
                                 reason="Formula translation was not verified; no scientific counterexample is established."))
             attempts.append(CertificateAttempt(certificate=certificate, substitution=substitution,
                 request_id=cid, actual_model=cmodel, anchor_request=aid, anchor_actual_model=amodel))
-            advice = classify_preflight(review, certificate, substitution)
+            advice = classify_preflight(review, certificate, substitution, basis=candidate.correctness_basis)
             if advice is None or advice.owner != "certificate" or repair == self.settings.certificate_max_repairs:
                 break
             self.log("certificate_targeted_repair", candidate=candidate.id, repair=repair+1,
@@ -357,19 +423,21 @@ class Pipeline:
         candidate.consistency.certificate_attempts = attempts
         candidate.consistency.certificate_repair_protocol_sha256 = repair_protocol
         candidate.preflight_repair = advice
-        passed = candidate.consistency.passed()
+        basis = candidate.correctness_basis
+        passed = candidate.consistency.passed(basis=basis)
         if not passed:
             candidate.status = "rejected"
-            candidate.reasons = ["consistency_failed:" + reason for reason in review.failures()]
-            if not substitution.passed():
+            candidate.reasons = ["consistency_failed:" + reason for reason in review.failures(basis=basis)]
+            if not substitution.passed(basis=basis):
                 candidate.reasons.append("substitution_" + substitution.verdict + ":" + substitution.reason)
-            if not certificate.faithful_translation:
+            if not certificate.faithful_translation and basis != "paper_grounded":
                 candidate.reasons.append("certificate_translation_unverified:" + certificate.reason)
         self.store.save(candidate)
         self.log("preflight_consistency", candidate=candidate.id, passed=passed,
                  independent_request=sid, review_request=rid, actual_model=rmodel,
                  certificate_request=cid, certificate_actual_model=cmodel,
                  substitution_verdict=substitution.verdict, uncovered_outputs=substitution.uncovered_outputs,
+                 correctness_basis=basis, faithful_translation=certificate.faithful_translation,
                  checks={name: getattr(review, name).verdict for name in
                          ("premises", "definitions", "parameter_domain", "reference_answer", "physical_regime")})
         return passed
@@ -378,19 +446,75 @@ class Pipeline:
         return blueprint_stamp(solution, source_data, target, known_result,
             self.prompts["blueprint_audit"], self.settings.consistency.model_dump(), self.settings.source_fidelity)
 
+    async def select_scientific_goal(self, source, source_data, target, identity, brief):
+        """独立选择科学目标；答案形式在后续结果选择中确定，收据随金标保存。"""
+        references = self.goal_references
+        data = {"source": source_data, "target": target, "research_brief": brief,
+                "high_difficulty_cases": references.model_dump()}
+        for repair in range(self.settings.max_repairs + 1):
+            selection, rid, model = await self.generator_call(self.prompts["scientific_goal"] + "\n" +
+                json.dumps(data, ensure_ascii=False), f"{identity}:scientific-goal:{repair}", ScientificGoalSelection)
+            if selection.outcome == "unavailable":
+                raise AuthoringRejected("scientific_goal_unavailable:" + selection.reason)
+            goal = selection.goal
+            errors = []
+            if goal.source_id != source.id:
+                errors.append("scientific_goal_source_mismatch")
+            if (len(set(goal.reference_case_ids)) != len(goal.reference_case_ids)
+                    or not set(goal.reference_case_ids) <= {c.id for c in references.cases}):
+                errors.append("invalid_scientific_goal_reference_ids")
+            premise_assessment = None
+            if self.settings.require_dependency_trace:
+                errors.extend(goal_contract_errors(goal))
+                if not errors:
+                    premise_assessment = await DependencyBuilder(self).review_goal(goal, source, source_data, identity)
+                    errors.extend("premise_boundary_failed:" + name
+                                  for name in premise_assessment.review.blocking_checks())
+            self.log("scientific_goal_selection", candidate=identity, repair=repair,
+                     request_id=rid, actual_model=model, selection=selection.model_dump(), errors=errors,
+                     references_sha256=digest(references.model_dump()), measured_difficulty=False)
+            if not errors:
+                return ScientificGoalAssessment(goal=goal, goal_sha256=digest(goal.model_dump()),
+                    request_id=rid, actual_model=model,
+                    source_sha256=source.sha256, references_sha256=digest(references.model_dump()),
+                    prompt_sha256=digest(self.prompts["scientific_goal"]),
+                    model_config_sha256=digest(self.settings.generator.model_dump()),
+                    premise_assessment=premise_assessment)
+            data["feedback"] = {"previous": selection.model_dump(), "errors": errors,
+                "premise_review": premise_assessment.review.model_dump() if premise_assessment else None}
+        raise AuthoringRejected("scientific_goal_selection_failed:" + ";".join(errors))
+
     async def select_known_result(self, source, source_data, target, identity, brief):
         """只从来源抽取已有结果；完整证明复核前不把抽取当作真值。"""
         data = {"source": source_data, "target": target, "research_brief": brief,
                 "source_fidelity": self.settings.source_fidelity}
+        goal = None
+        if self.goal_references is not None:
+            goal = await self.select_scientific_goal(source, source_data, target, identity, brief)
+            data["scientific_goal"] = goal.goal.model_dump()
+            data["goal_contract"] = ("Preserve this target verbatim and every primitive assumption. "
+                "Now choose the natural answer form and its grading_requirement. Leave scientific_goal null; "
+                "the program attaches its sealed selection receipt. No short-answer or quantitative restriction.")
         if self.difficulty_profile:
             data["construction_reference"] = profile_for_category(self.difficulty_profile, target["category"])
         for repair in range(self.settings.max_repairs + 1):
-            selection, rid, model = await self.gateway.call("generator", self.prompts["known_result"] + "\n" +
+            selection, rid, model = await self.generator_call(self.prompts["known_result"] + "\n" +
                 json.dumps(data, ensure_ascii=False), f"{identity}:known-result:{repair}", ResultSelection)
             if selection.outcome == "unavailable":
                 raise AuthoringRejected("known_result_unavailable:" + selection.reason)
             errors = known_result_errors(selection.result, {source.id: source},
                                          source_fidelity=self.settings.source_fidelity)
+            if goal is not None:
+                # 目标记录由程序绑定，模型不能另造一份目标审批。
+                if "grading_requirement" not in selection.result.model_fields_set:
+                    errors.append("missing_goal_grading_requirement")
+                if selection.result.scientific_goal not in (None, goal):
+                    errors.append("scientific_goal_receipt_changed")
+                selection.result.scientific_goal = goal
+                errors.extend(goal_errors(selection.result, {source.id: source}, self.goal_references,
+                                          self.prompts["scientific_goal"], self.settings.generator.model_dump()))
+                if self.settings.require_dependency_trace and selection.result.assumptions != goal.goal.assumptions:
+                    errors.append("result_added_or_changed_primitive_inputs")
             self.log("known_result_selection", candidate=identity, repair=repair, request_id=rid,
                      actual_model=model, result_sha256=digest(selection.result.model_dump()), errors=errors)
             if not errors:
@@ -420,27 +544,34 @@ class Pipeline:
             self.store.save(candidate)
         if assessment.review.step_id != candidate.solution.design.difficulty.mask.step_id:
             raise ModelResponseError("consistency", assessment.request_id, "invalid_bottleneck_step_mapping")
-        passed = assessment.review.passed()
+        passed = assessment.review.passed(basis=candidate.correctness_basis)
         if not passed:
             candidate.status = "rejected"
             candidate.reasons = ["bottleneck_mask_failed:" + name + ":" + getattr(assessment.review, name).reasoning
-                                 for name in assessment.review.check_names()
-                                 if getattr(assessment.review, name).verdict != "pass"]
+                                 for name in assessment.review.blocking_checks(basis=candidate.correctness_basis)]
             self.store.save(candidate)
         self.log("bottleneck_mask_review", candidate=candidate.id, passed=passed,
                  step_id=assessment.review.step_id, request_id=assessment.request_id,
+                 verdicts={name: getattr(assessment.review, name).verdict for name in assessment.review.check_names()},
                  actual_model=assessment.actual_model)
         return passed
 
-    async def review_blueprint(self, solution, source_data, target, salt, known_result=None, construction_reference=None):
-        """审完整证明；步骤映射不合法只修审查格式，不重购作者答案。"""
+    async def review_blueprint(self, solution, source_data, target, salt, known_result=None, construction_reference=None,
+                               public_task=None):
+        """论文依据模式只核引用与适用条件；步骤映射错误仍只修格式。"""
         schema = StepwiseBlueprintAudit if self.settings.require_stepwise_blueprint_review else BlueprintAudit
+        paper_basis = self.basis == "paper_grounded"
         prompt = self.prompts["blueprint_audit"] + "\n" + json.dumps({
             "solution": solution.model_dump(), "source": source_data, "target": target,
             "source_fidelity": self.settings.source_fidelity,
             "known_result": known_result.model_dump() if known_result else None,
-            "step_indexing": "One-based indices into solution.derivation; inspect every entry.",
+            "step_indexing": ("One-based indices into solution.derivation; check cited applications, "
+                              "not independent proofs of the paper's results." if paper_basis else
+                              "One-based indices into solution.derivation; inspect every entry."),
             "expected_step_count": len(solution.derivation),
+            **({"correctness_basis": self.basis, "review_scope": "paper_reference_and_premises"}
+               if paper_basis else {}),
+            **({"solver_visible_task": public_task} if public_task is not None else {}),
             **({"construction_reference": construction_reference} if construction_reference else {})}, ensure_ascii=False)
         for attempt in range(2):
             review, rid, model = await self.consistency_call(
@@ -505,6 +636,7 @@ class Pipeline:
         source_data["text"] = source.text[:self.settings.max_source_chars]
         data = {"source": source_data, "parent": parent.item.model_dump() if parent else None,
                 "source_fidelity": self.settings.source_fidelity,
+                "correctness_basis": self.basis,
                 "parent_solution": parent.solution.model_dump() if parent else None,
                 "target": target, "generation": generation, "operator": operator,
                 "feedback": feedback, "require_difficulty_design": self.settings.require_difficulty_design}
@@ -530,6 +662,8 @@ class Pipeline:
                                 "previous_solution": existing.solution.model_dump(),
                                 "bottleneck_assessment": (existing.bottleneck_assessment.model_dump()
                                                           if existing.bottleneck_assessment else None),
+                                "dependency_assessment": (existing.dependency_assessment.model_dump()
+                                                          if existing.dependency_assessment else None),
                                 "verifier_assessment": (existing.verifier_assessment.model_dump()
                                                         if existing.verifier_assessment else None),
                                 "consistency_assessment": (existing.consistency.model_dump()
@@ -552,14 +686,14 @@ class Pipeline:
                         "additional_assumptions contains only explicitly justified consequences, not new "
                         "restrictions. Prove the supplied locked gold, including every case; if false, "
                         "expose its contradiction in derivation instead of substituting another answer.")
-                    draft, rid, model = await self.gateway.call("generator", self.prompts["solution"] + instruction + "\n" +
+                    draft, rid, model = await self.generator_call(self.prompts["solution"] + instruction + "\n" +
                         json.dumps(data, ensure_ascii=False), salt + ":locked-proof", LockedProofDraft)
                     plan = draft.bind(known_result)
                     self.log("locked_proof_bound", candidate=identity, repair=repair, request_id=rid,
                         actual_model=model, draft_sha256=digest(draft.model_dump()),
                         solution_sha256=digest(plan.model_dump()), golden_changed=False)
                 else:
-                    plan, _, _ = await self.gateway.call("generator", self.prompts["solution"] + "\n" +
+                    plan, _, _ = await self.generator_call(self.prompts["solution"] + "\n" +
                         json.dumps(data, ensure_ascii=False), salt + ":solution", Solution)
             blueprint_errors = []
             if self.settings.require_solution_design and plan.design is None:
@@ -568,32 +702,37 @@ class Pipeline:
                                                              self.settings.require_difficulty_design))
             if self.settings.require_bottleneck_mask:
                 blueprint_errors.extend(bottleneck_mask_errors(plan))
+            if self.settings.require_dependency_trace:
+                blueprint_errors.extend(dependency_blueprint_errors(known_result, plan))
             if self.settings.preverify_blueprint:
                 blueprint, bid, bmodel = await self.review_blueprint(plan, source_data, target,
                                                                     salt + ":blueprint-audit", known_result)
                 self.log("blueprint_review", candidate=identity, repair=repair, request_id=bid,
                          actual_model=bmodel, solution_sha256=digest(plan.model_dump()),
-                         passed=blueprint.passed(source_fidelity=self.settings.source_fidelity),
+                         passed=blueprint.passed(source_fidelity=self.settings.source_fidelity,
+                                                 defer_depth=self.defer_depth),
                          reviewed_step_count=blueprint.reviewed_step_count,
                          issues=[issue.model_dump() for issue in blueprint.issues])
-                if not blueprint.passed(source_fidelity=self.settings.source_fidelity):
+                if not blueprint.passed(source_fidelity=self.settings.source_fidelity, defer_depth=self.defer_depth):
                     blueprint_errors.append("blueprint_failed:" + blueprint.reason)
             if self.settings.require_known_result:
                 blueprint_errors.extend(known_result_errors(known_result, {source.id: source}, plan, blueprint,
-                    source_fidelity=self.settings.source_fidelity))
+                    source_fidelity=self.settings.source_fidelity, defer_depth=self.defer_depth))
             if blueprint_errors:
                 self.log("blueprint_repair_feedback", candidate=identity, repair=repair, reasons=blueprint_errors)
                 data["feedback"] = {"original": feedback, "stage": "reference_proof",
                                     "errors": blueprint_errors, "previous": plan.model_dump(),
                                     "blueprint_review": blueprint.model_dump() if blueprint else None,
                                     "repair_instruction": "Repair the specified claims and every dependent step. "
-                                    "Return the complete corrected proof and gold; preserve independently valid steps. "
+                                    "Return the complete corrected derivation in the requested response schema; "
+                                    "preserve independently valid steps. For LockedProofDraft do not emit gold, "
+                                    "locked assumptions or design.target; the program binds them. "
                                     "Do not change the locked result, target or original premises. If it is wrong, "
                                     "identify the contradiction; never silently replace it. "
                                     "Do not write a question before the proof is approved."}
                 if blueprint and any(issue.part == "known_result" for issue in blueprint.issues):
                     raise AuthoringRejected("locked_known_result_rejected:" + blueprint.reason)
-                if blueprint and any(issue.part == "target_depth" for issue in blueprint.issues):
+                if not self.defer_depth and blueprint and any(issue.part == "target_depth" for issue in blueprint.issues):
                     # 目标偏浅不是证明错误；终止该线，不能靠反复包装或换金标加难。
                     raise AuthoringRejected("target_depth_rejected:" + blueprint.reason)
                 if repair == self.settings.max_repairs:
@@ -602,8 +741,10 @@ class Pipeline:
             if repair == 0 and seed and seed.item is not None and plan == seed.solution:
                 item, align_request = seed.item.model_copy(deep=True), "imported-seed"
             else:
-                item, align_request, _ = await self.gateway.call("generator", self.prompts["align"] + "\n" +
+                item, align_request, _ = await self.generator_call(self.prompts["align"] + "\n" +
                                                 json.dumps({"solution": plan.model_dump(), "target": target,
+                                                            "known_result": known_result.model_dump() if known_result else None,
+                                                            "correctness_basis": self.basis,
                                                             "repair_feedback": data.get("feedback"),
                                                             "previous_question": reusable.item.model_dump() if reusable else None,
                                                             "source_fidelity": self.settings.source_fidelity},
@@ -616,6 +757,8 @@ class Pipeline:
             audit, _, _ = await self.gateway.call("auditor", self.prompts["audit"] + "\n" +
                                                  json.dumps({"source": source_data,
                                                              "source_fidelity": self.settings.source_fidelity,
+                                                             "correctness_basis": self.basis,
+                                                             "known_result": known_result.model_dump() if known_result else None,
                                                              "solution": plan.model_dump(),
                                                              "item": item.model_dump(),
                                                              "parent": data["parent"]}, ensure_ascii=False),
@@ -627,7 +770,7 @@ class Pipeline:
             result = Candidate(id=identity, parent_id=parent.id if parent else None,
                                root_id=parent.root_id if parent else identity, generation=generation,
                                operator=operator, source_ids=[source.id], solution=plan, item=item, audit=audit,
-                               source_fidelity=self.settings.source_fidelity,
+                               source_fidelity=self.settings.source_fidelity, correctness_basis=self.basis,
                                origin_seed_sha256=digest(seed.model_dump()) if seed else "",
                                origin_candidate_id=seed.original_candidate_id if seed else None,
                                origin_request_ids=seed.original_request_ids if seed else [],
@@ -641,7 +784,7 @@ class Pipeline:
             errors = static_errors(result, {source.id: source}, self.quotas)
             if (item.category, item.subtopic) != (target["category"], target["subtopic"]):
                 errors.append("requested_category_mismatch")
-            if not audit.passed() and not self.settings.require_verifier_adversary:
+            if not audit.passed(basis=self.basis) and not self.settings.require_verifier_adversary:
                 errors.append("audit_failed:" + audit.reason)
             if not errors:
                 result.authoring_complete = False
@@ -669,6 +812,8 @@ class Pipeline:
                                 "previous_solution": plan.model_dump(),
                                 "bottleneck_assessment": (result.bottleneck_assessment.model_dump()
                                                           if result.bottleneck_assessment else None),
+                                "dependency_assessment": (result.dependency_assessment.model_dump()
+                                                          if result.dependency_assessment else None),
                                 "verifier_assessment": (result.verifier_assessment.model_dump()
                                                         if result.verifier_assessment else None),
                                 "consistency_assessment": (result.consistency.model_dump()
@@ -689,6 +834,10 @@ class Pipeline:
     async def sample(self, candidate, limit=None):
         if not candidate.authoring_complete:
             raise ValueError("Finish the pending author repair before paid solver evaluation")
+        if argument_validation_required(candidate):
+            # 允许选择证明/非唯一构造目标；现有HLE最终答案比对不能冒充论证或见证验收。
+            raise SampleIncomplete("evaluation_contract_uncovered:argument_or_witness_validation; "
+                                   "no solver or judge request purchased")
         limit = self.settings.samples if limit is None else limit
         if not 1 <= limit <= self.settings.samples:
             raise ValueError("Invalid sampling stage")
@@ -703,6 +852,8 @@ class Pipeline:
                 raise ValueError("Reused persisted sample response")
         if not await self.preflight(candidate):
             raise QualityRejected("Question failed preflight; no difficulty samples allowed")
+        if argument_validation_required(candidate):
+            raise SampleIncomplete("evaluation_contract_uncovered:independent_review_requires_argument_validation")
         done = {t.sample_id for t in prior}
 
         async def one(i):
@@ -868,7 +1019,7 @@ class Pipeline:
                               source_ids=sorted({ev.source_id for ev in submission.item.evidence +
                                                  submission.solution.evidence}),
                               solution=submission.solution, item=submission.item, audit=provisional_audit,
-                              source_fidelity=self.settings.source_fidelity,
+                              source_fidelity=self.settings.source_fidelity, correctness_basis=self.basis,
                               status="quality_seed", run_id=self.run_id)
                 errors = static_errors(c, sources, self.quotas)
                 if self.mode == "production" and any(sources[s].kind == "synthetic"
@@ -881,10 +1032,11 @@ class Pipeline:
                 c.audit, _, _ = await self.gateway.call("auditor", self.prompts["audit"] + "\n" +
                     json.dumps({"item": c.item.model_dump(), "solution": c.solution.model_dump(),
                                 "source_fidelity": self.settings.source_fidelity,
+                                "correctness_basis": c.correctness_basis, "known_result": None,
                                 "sources": [sources[s].model_dump() for s in c.source_ids],
                                 "parent": parent.item.model_dump() if parent else None}, ensure_ascii=False),
                     f"{identity}:audit", Audit)
-                if not c.audit.passed():
+                if not c.audit.passed(basis=c.correctness_basis):
                     c.status, c.reasons = "rejected", ["audit_failed:" + c.audit.reason]
                     self.store.save(c)
                     continue
@@ -981,7 +1133,7 @@ def report(store, quotas):
                             "subtopic": c.item.subtopic, "status": c.status, "reasons": c.reasons,
                             "consistency_passed": has_valid_consistency(c, sources),
                             "verifier_adversary_passed": has_valid_verifier(c, sources),
-                            "difficulty_measurement_valid": (c.audit.passed()
+                            "difficulty_measurement_valid": (c.audit.passed(basis=c.correctness_basis)
                                 and has_valid_consistency(c, sources) and len(sample_outcomes(c)) == 16),
                             "samples": len(sample_outcomes(c)),
                             "correct_count": correct_count(sample_outcomes(c)) if len(sample_outcomes(c)) == 16 else None}

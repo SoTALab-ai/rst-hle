@@ -193,7 +193,7 @@ def test_assessment_defect_found_after_sampling_prevents_retention_and_descendan
         async def call(self,role,prompt,salt,schema=None,**kwargs):
             if ':post-evaluation-audit-v3' in salt:
                 self.calls.append((role,prompt,salt))
-                payload=json.loads(prompt[prompt.index('\n')+1:])
+                payload=json.loads(prompt.splitlines()[-1])
                 examples=payload['graded_responses']
                 assert {x['sample_id'] for x in examples}==set(range(16))
                 assert sum(x['response']=='Final Answer: 37' for x in examples)==12

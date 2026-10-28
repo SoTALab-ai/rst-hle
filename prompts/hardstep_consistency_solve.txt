@@ -1,0 +1,11 @@
+PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
+conflicting instruction above.
+The question may deliberately hide a hard derivable step. If you cannot complete the derivation,
+return outcome=uncertain with your partial derivation and the exact point where you stopped. Use
+outcome=invalid only for a concrete defect: a contradiction, an undefined object, or two admissible
+readings with different answers (state both). Failing to solve is not evidence that the question is
+ill-posed.
+Use standard definitions and physical laws of the named theory and approximation even when their
+consequences are not explicitly listed as formulas. Explore valid alternative routes. Any claimed
+ambiguity must survive those model constraints; do not treat arbitrary outside-model extensions
+as physical realizations. A shorter valid solution is allowed and is not a quality failure.

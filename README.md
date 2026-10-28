@@ -12,7 +12,9 @@
 - [架构与模块归属](docs/synthesis-architecture.md)、[验证方法与个人VM](docs/local-validation.md)。
 - [论文下载](docs/pdf-paper-library.md)、[直接读取入库](docs/paper-library-ingestion.md)、[读取上限与20份试产](docs/reader-limits.md)、[数据库](docs/database.md)。
 - [出题设计](docs/question-design.md)、[科学检查](docs/consistency.md)、[verifier对抗](docs/verifier-adversary.md)。
-- [来源启发与自洽验收](docs/source-fidelity.md)：论文作为构造启发；新首题默认`configs/library-difficulty-adversary.toml`并启用[两阶段难度对抗](docs/difficulty-adversary.md)，旧来源启发配置及严格模式保留历史身份。
+- [来源启发与自洽验收](docs/source-fidelity.md)：论文作为构造启发；新首题默认`configs/library-shortcut-adversary.toml`（先堵短路、后置难度诊断；旧两阶段配置保留历史身份）并启用[两阶段难度对抗](docs/difficulty-adversary.md)，旧来源启发配置及严格模式保留历史身份。
+- [完整依赖挖空](docs/dependency-masking.md)：新入口`configs/library-dependency-masking.toml`先区分原始前提与推导结论，沿完整依赖链挖空，再盲查实际题面的最短解及剩余推理；难度由GLM实测。
+- [论文硬步模式](docs/paper-hard-step.md)：原入口`configs/library-paper-hard-step.toml`保留用于原协议；蓝图仅核引用与适用条件，未能独立复核只记录，真实错误仍阻断。
 - [实验协议](docs/theory-experiment.md)、[历史结果](docs/validation/README.md)、[验收](docs/acceptance.md)。
 
 ## 本地开始

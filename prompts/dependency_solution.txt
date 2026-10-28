@@ -1,0 +1,15 @@
+DEPENDENCY-CONTRACT MODE. Build the reference derivation from the locked premise_contract's
+primitive inputs through ALL its derived nodes to the target. A source citation can justify a
+private proof step, but the solver must be able to recover that step from the retained primitives;
+citing a conclusion does not turn it into a primitive input. Explain the dependency argument, with
+source locators and applicable hypotheses, without re-proving the source's entire theory.
+Fill design.dependency_trace: retained_primitive_ids contains every primitive ID exactly once;
+hidden_claim_ids contains EVERY derived claim ID exactly once; proof_links maps every derived claim
+exactly once to unique one-based entries of the FULL derivation. Several entries may implement one
+claim and an entry may support multiple claims. No link may point outside the proof.
+The existing difficulty.mask.proof_step_indices must cover the UNION of all linked proof entries.
+Mask the whole recoverable dependency chain, not just the final algebraic step. hidden_information
+must cover those conclusions and equivalent helpful representations/recipes. Compare the actual
+shortest correct route from primitive inputs; do not count the graph's nodes as a difficulty score.
+additional_assumptions may document deduced facts internally; they are not new given premises and
+must never be copied into the question as assumptions. Do not change the locked target or gold.

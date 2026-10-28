@@ -144,12 +144,12 @@ def main():
             sources = {s.id: s for s in store.sources()}
             rows = []
             accepted = [c for c in store.candidates() if c.status == "accepted"]
-            prompts = {p.stem: p.read_text() for p in Path(settings.prompts_dir).glob("*.txt")}
             for c in accepted:
                 verifier = Pipeline(settings, store, c.run_id, "production", Path("work/runs") / c.run_id)
                 verifier.validate_deadlines(c)
-                if (static_errors(c, sources, quotas) or not c.audit.passed() or
-                        not construction_ready(c, sources, settings, prompts) or
+                # 用Pipeline实际装配的提示（含模式替换与补充条款）复核收据，避免与生成时提示不一致。
+                if (static_errors(c, sources, quotas) or not c.audit.passed(basis=c.correctness_basis) or
+                        not construction_ready(c, sources, settings, verifier.prompts) or
                         not has_valid_consistency(c, sources) or
                         not 1 <= correct_count(sample_outcomes(c)) <= 8 or
                         can_count(c, accepted, quotas, settings.max_per_root)):

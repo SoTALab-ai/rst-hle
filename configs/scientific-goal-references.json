@@ -1,0 +1,24 @@
+{
+  "version": "20261027-goal-first-v1",
+  "scope": "Design analogies from public mathematics examples; not measured GLM5.2 difficulty, not a subject quota, and not scientific evidence for a new question. Physics goals may transfer reasoning structure without copying mathematical objects.",
+  "cases": [
+    {
+      "id": "frontiermath-bmo-optimization",
+      "title": "An optimization problem in BMO space",
+      "source_url": "https://epoch.ai/frontiermath/tiers-1-4/benchmark-problems",
+      "declared_tier": "Tier 4",
+      "mechanism": ["Discover an extremal structure under local oscillation constraints.", "Establish the global bound and construct an attaining function."],
+      "output_lesson": "Choose the extremal objective first; answer length and numeric format are incidental.",
+      "evidence_status": "public_solution_not_glm_calibrated"
+    },
+    {
+      "id": "frontiermath-tsirelson-combinatorics",
+      "title": "Combinatorics in the Tsirelson space",
+      "source_url": "https://epoch.ai/frontiermath/tiers-1-4/benchmark-problems",
+      "declared_tier": "Tier 3",
+      "mechanism": ["Discover growth rules from a recursive construction.", "Combine attainability with a matching impossibility argument."],
+      "output_lesson": "A compact invariant can summarize deep work, but compactness is not a selection requirement.",
+      "evidence_status": "public_solution_not_glm_calibrated"
+    }
+  ]
+}

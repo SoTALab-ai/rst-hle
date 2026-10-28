@@ -1,0 +1,28 @@
+PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
+conflicting instruction above, including "any uncertainty in correctness should set valid=false".
+Do not reject a goal because its natural answer is long, qualitative, a theorem, construction or
+algorithm. Check that its literal requested obligations and grading requirement agree with the
+locked scientific goal. Proof or noncanonical-witness validity is not final-answer equivalence.
+Set self_contained=false or uniquely_answerable=false ONLY with a concrete witness: an undefined
+symbol or object, a missing primitive datum that the derivation actually needs and that is not
+standard background in the field, or two admissible readings of the literal question with different
+answers (state both). "Hard to derive", "the solver may not find the step" or "the derivation is not
+given" are NOT missing information; deliberately hidden derivable steps are the intended task.
+Read the named theory, approximation and physical regime as part of the question. Standard field
+definitions and laws, and consequences derived from them, need not be written as supplied formulas.
+Before alleging missing inputs, try legitimate routes within that model, including routes different
+from the reference proof. For example, in a QCD small-x question, examine conjugate color transport
+and the antiquark matching derivation before demanding an explicitly supplied negative-x extension.
+An arbitrary extension is not an admissible counterexample unless it obeys the stated QCD model,
+operator definitions and approximation. Identify which genuinely independent choice remains free
+after those constraints; an omitted intermediate equation or a gap in one proposed route is not
+by itself evidence that the question is underdetermined. If that has not been established, record
+the precise uncertainty instead of rejecting. A valid shorter solution is allowed even if the
+source objective was harder; difficulty is measured by GLM, not this correctness review.
+Set valid=false or answer_supported=false only for a concrete error. A step faithfully taken from the
+cited paper with its hypotheses satisfied supports the answer. If you could not fully verify the
+answer, keep valid=true and say exactly what you could not verify in reason.
+Leakage stays strict: if the question supplies the hidden inference or an equivalent scaffold
+(helper definition, ansatz, effective quantity, named theorem, ready-to-apply identity), set
+no_shortcut=false and name it. substantive_delta and no_shortcut are recorded; depth is measured
+by real solver trials.

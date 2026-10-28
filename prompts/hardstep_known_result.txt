@@ -1,0 +1,21 @@
+PAPER HARD-STEP MODE (correctness_basis=paper_grounded). These rules take precedence over any
+conflicting instruction above.
+The scientific objective has priority over answer format. When scientific_goal is supplied,
+preserve its target verbatim and every primitive assumption; now choose the natural answer form.
+There is NO short-answer requirement, quantitative-only requirement, or ban on qualitative,
+yes/no, theorem, classification, construction, algorithm or proof targets because of their form.
+Do not inflate or shrink the goal to obtain a preferred answer length. A familiar-looking answer
+can require deep work, while a complicated formula can be obtained by routine substitution.
+Use the paper's key inference as inspiration. You may use an existing result, a justified
+adaptation or a new instance; describe the origin honestly and show adapted steps explicitly.
+Explain the shortest correct route from primitive inputs and the discovery/global obligations
+that remain. High-difficulty reference cases are design analogies, not measured GLM difficulty,
+quotas, proof evidence or a requirement to copy their mathematical objects or numeric outputs.
+The answer must cover the selected goal, including all cases and any requested argument. Keep
+source locators and sufficient primitive assumptions. Do not select a coefficient lookup merely
+to produce an easily compared number. Do not delete model definitions to manufacture difficulty.
+Keep grading_requirement faithful: final-answer equivalence can assess a long or qualitative
+result; an actual proof, noncanonical construction or algorithm needs argument/witness validation.
+Do not mislabel those obligations as final-answer equivalence to reach GLM sampling.
+Do not return unavailable merely because the natural answer is long, qualitative or hard to
+verify with elementary arithmetic. Scientific correctness and full reference review still apply.

@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import Field, ValidationError, model_validator
 
+from . import shortcut_adversary as shortcuts
 from .artifacts import LocalObjects
 from .difficulty import bottleneck_mask_errors, difficulty_design_errors, known_result_errors
 from .llm import CacheIntegrityError, ModelResponseError
@@ -83,24 +84,41 @@ def protocol_hash(settings, prompts):
         "models": {role: getattr(settings, role).model_dump() for role in endpoints},
         "endpoints_sha256": digest(endpoints), "deadline": settings.request_deadline_seconds,
         "limits": [settings.difficulty_design_max_revisions, settings.difficulty_mask_max_revisions],
-        "source_fidelity": settings.source_fidelity,
+        "source_fidelity": settings.source_fidelity, "strategy": settings.difficulty_adversary_mode,
         "code": {name: Path(__file__).with_name(name).read_text()
-                 for name in ("difficulty_adversary.py", "models.py", "difficulty.py")}})
+                 for name in ("difficulty_adversary.py", "shortcut_adversary.py", "models.py", "difficulty.py")}})
 
 
-def valid_origin(candidate, sources, expected_protocol):
+def valid_origin(candidate, sources, expected_protocol, *, strategy="depth_gate"):
     origin = candidate.difficulty_origin
-    if (not origin or origin.protocol_sha256 != expected_protocol or origin.root_id != candidate.root_id
+    if (not origin or origin.strategy != strategy or origin.protocol_sha256 != expected_protocol or origin.root_id != candidate.root_id
             or len(candidate.source_ids) != 1 or candidate.source_ids[0] not in sources
             or origin.source_sha256 != sources[candidate.source_ids[0]].sha256):
         return False
     version = origin.selected
     if (version.proposal.outcome != "proposed" or not version.blueprint
-            or not version.blueprint.passed(source_fidelity=candidate.source_fidelity)
+            or not version.blueprint.passed(source_fidelity=candidate.source_fidelity,
+                defer_depth=origin.strategy == "shortcut_blocking")
             or not version.challenge or version.challenge.verdict != "sufficient"
             or not version.blueprint_request or not version.challenge_request or not version.author_request
             or version.errors or version.proposal.result != candidate.known_result):
         return False
+    if origin.strategy == "shortcut_blocking":
+        history = origin.proposal_history
+        if not history or history[-1] != version or len(history) > 3:
+            return False
+        parent = None
+        for entry in history:
+            if entry.parent_proposal_id != parent:
+                return False
+            parent = entry.proposal_id
+            if entry.challenge and (not entry.proposal.public_task
+                    or not shortcuts.record_valid(entry.shortcut_attack, shortcuts.public_inputs(entry))
+                    or shortcuts.review_errors(entry.challenge, shortcuts.proposal_routes(
+                        history[:history.index(entry)]))):
+                return False
+        if not shortcuts.record_valid(version.shortcut_attack, shortcuts.public_inputs(version)):
+            return False
     original = version.proposal.proof.bind(version.proposal.result)
     if (version.blueprint.reviewed_step_count != len(original.derivation)
             or max(version.challenge.indispensable_proof_entries) > len(original.derivation)):
@@ -123,18 +141,27 @@ def question_input(candidate, sources):
 def valid_history(candidate, sources, expected_protocol):
     if not candidate.difficulty_rounds:
         return False
+    blocking = candidate.difficulty_origin and candidate.difficulty_origin.strategy == "shortcut_blocking"
     parent, previous_record = "", None
     for record in candidate.difficulty_rounds:
         if (record.parent_input_sha256 != parent or record.protocol_sha256 != expected_protocol
                 or not record.request_id or max(record.challenge.indispensable_proof_entries, default=0)
-                > len(record.solution.derivation) or not record.audit.passed()
-                or not record.bottleneck.review.passed() or not record.consistency.passed()):
+                > len(record.solution.derivation) or not record.audit.passed(scientific_only=blocking)
+                or (not blocking and (not record.bottleneck or not record.bottleneck.review.passed()))
+                or not record.consistency.passed()):
             return False
         if previous_record and (previous_record.revision is None
                 or previous_record.challenge.verdict != "too_easy"
                 or record.item != previous_record.item.model_copy(update={"question": previous_record.revision.question})
                 or record.solution != previous_record.solution):
             return False
+        if blocking:
+            index = candidate.difficulty_rounds.index(record)
+            routes = shortcuts.proposal_routes(candidate.difficulty_origin.proposal_history[:-1])
+            routes += shortcuts.question_routes(candidate.difficulty_rounds[:index])
+            if (not shortcuts.record_valid(record.shortcut_attack, shortcuts.public_question(record.item))
+                    or shortcuts.review_errors(record.challenge, routes)):
+                return False
         previous = candidate.model_copy(update={"item": record.item, "solution": record.solution,
             "audit": record.audit, "bottleneck_assessment": record.bottleneck, "consistency": record.consistency})
         if record.input_sha256 != question_input(previous, sources):
@@ -144,16 +171,24 @@ def valid_history(candidate, sources, expected_protocol):
     return True
 
 
-def has_valid_difficulty(candidate, sources, expected_protocol):
-    if not valid_origin(candidate, sources, expected_protocol) or not valid_history(candidate, sources, expected_protocol):
+def has_valid_difficulty(candidate, sources, expected_protocol, *, strategy="depth_gate"):
+    if not valid_origin(candidate, sources, expected_protocol, strategy=strategy) or not valid_history(candidate, sources, expected_protocol):
         return False
     last = candidate.difficulty_rounds[-1]
-    return last.challenge.verdict == "sufficient" and last.input_sha256 == question_input(candidate, sources)
+    valid = last.challenge.verdict == "sufficient" and last.input_sha256 == question_input(candidate, sources)
+    if candidate.difficulty_origin.strategy == "shortcut_blocking":
+        diagnostic = candidate.difficulty_diagnostic
+        valid = bool(valid and last.bottleneck and last.bottleneck.review.passed() and last.audit.passed()
+                     and diagnostic and diagnostic.request_id and diagnostic.actual_model
+                     and diagnostic.input_sha256 == last.input_sha256
+                     and diagnostic.assessment.verdict != "invalid")
+    return valid
 
 
 class DifficultyAdversary:
     def __init__(self, pipeline):
         self.p = pipeline
+        self.blocking = pipeline.settings.difficulty_adversary_mode == "shortcut_blocking"
         self.protocol = protocol_hash(pipeline.settings, pipeline.prompts)
         self.objects = getattr(pipeline.store, "objects", None) or LocalObjects(pipeline.run_dir / "difficulty-objects")
 
@@ -239,7 +274,8 @@ class DifficultyAdversary:
             prior = campaign.versions[index - 1] if index else None
             if index >= len(campaign.versions):
                 proposal, rid, model, graph_repair = await self.proposal(
-                    {**packet, "previous_proposal": prior.model_dump() if prior else None, "revision": index},
+                    {**packet, "previous_proposal": prior.model_dump() if prior else None, "revision": index,
+                     **({"prior_versions": [v.model_dump() for v in campaign.versions]} if self.blocking else {})},
                     f"{identity}:depth-design:{index}:author")
                 campaign.versions.append(DifficultyProposalVersion(
                     proposal_id=digest({"identity": identity, "proposal": index})[:24],
@@ -258,35 +294,49 @@ class DifficultyAdversary:
             result = version.proposal.result
             solution = version.proposal.proof.bind(result)
             errors = known_result_errors(result, {source.id: source}, source_fidelity=p.settings.source_fidelity)
+            if self.blocking and not version.proposal.public_task:
+                errors.append("missing_shortcut_public_task")
             if prior and version.proposal == prior.proposal:
                 errors.append("unchanged_difficulty_proposal")
             errors += bottleneck_mask_errors(solution)
             errors += difficulty_design_errors(solution, target["category"], p.difficulty_profile, True)
             if not errors and version.blueprint is None:
                 review, rid, model = await p.review_blueprint(solution, source_data, target,
-                    f"{identity}:depth-design:{index}:science", result, construction_reference=reference)
+                    f"{identity}:depth-design:{index}:science", result, construction_reference=reference,
+                    public_task=version.proposal.public_task if self.blocking else None)
                 version.blueprint, version.blueprint_request, version.blueprint_actual_model = review, rid, model
                 self.save_campaign(campaign)
-            if version.blueprint and not version.blueprint.passed(source_fidelity=p.settings.source_fidelity):
+            if version.blueprint and not version.blueprint.passed(source_fidelity=p.settings.source_fidelity, defer_depth=self.blocking):
                 errors.append("blueprint_rejected")
+            if not errors and self.blocking and version.shortcut_attack is None:
+                version.shortcut_attack = await shortcuts.attack(p, shortcuts.public_inputs(version),
+                    f"{identity}:shortcut-design:{index}:blind")
+                self.save_campaign(campaign)
+            prior_routes = shortcuts.proposal_routes(campaign.versions[:index]) if self.blocking else []
             if not errors and version.challenge is None:
-                challenge, rid, model = await p.consistency_call(p.prompts["difficulty_challenge"] + "\n" +
+                challenge, rid, model = await p.consistency_call(p.prompts["shortcut_challenge" if self.blocking else "difficulty_challenge"] + "\n" +
                     json.dumps({"stage": "before_lock", "reference_cards": reference,
                         "solution": solution.model_dump(), "provisional_result": result.model_dump(),
                         "solver_inputs": solution.design.difficulty.mask.retained_information,
                         "prior_challenges": [v.challenge.model_dump() for v in campaign.versions[:index]
-                                             if v.challenge]}, ensure_ascii=False),
+                                             if v.challenge], **({"blind_attack": version.shortcut_attack.response.model_dump(),
+                        "prior_shortcut": prior_routes, "blind_attack_inputs": shortcuts.public_inputs(version)}
+                        if self.blocking else {})}, ensure_ascii=False),
                     f"{identity}:depth-design:{index}:challenge", DifficultyChallenge)
                 self.check_mapping(challenge, solution, rid)
                 version.challenge, version.challenge_request, version.challenge_actual_model = challenge, rid, model
                 self.save_campaign(campaign)
+            if self.blocking and version.challenge:
+                errors.extend(shortcuts.review_errors(version.challenge, prior_routes))
             if version.challenge and version.challenge.verdict != "sufficient":
                 errors.append("depth_" + version.challenge.verdict)
             version.errors = errors
             if not errors and version.challenge:
                 campaign.status = "passed"
                 self.save_campaign(campaign)
-                return version, DifficultyOrigin(root_id=identity, source_sha256=source.sha256,
+                return version, DifficultyOrigin(strategy=p.settings.difficulty_adversary_mode,
+                    proposal_history=list(campaign.versions) if self.blocking else [],
+                    root_id=identity, source_sha256=source.sha256,
                     protocol_sha256=self.protocol, campaign_input_sha256=campaign.input_sha256, selected=version)
             self.save_campaign(campaign)
             if version.challenge and version.challenge.verdict == "uncertain":
@@ -304,6 +354,8 @@ class DifficultyAdversary:
     async def audit_item(self, candidate, source_data, salt):
         audit, rid, model = await self.p.gateway.call("auditor", self.p.prompts["audit"] + "\n" +
             json.dumps({"source": source_data, "source_fidelity": candidate.source_fidelity,
+                "correctness_basis": candidate.correctness_basis,
+                "known_result": candidate.known_result.model_dump() if candidate.known_result else None,
                 "solution": candidate.solution.model_dump(), "item": candidate.item.model_dump(),
                 "parent": None}, ensure_ascii=False), salt, Audit)
         return audit, rid, model
@@ -331,6 +383,7 @@ class DifficultyAdversary:
             if candidate is None or candidate.status == "rejected":
                 item, rid, _ = await p.gateway.call("generator", p.prompts["align"] + "\n" + json.dumps({
                     "solution": solution.model_dump(), "source_fidelity": p.settings.source_fidelity,
+                    "correctness_basis": p.basis, "known_result": version.proposal.result.model_dump(),
                     "target": target, "previous_question": candidate.item.model_dump() if candidate else None,
                     "repair_feedback": candidate.reasons if candidate else None}, ensure_ascii=False),
                     f"{identity}:depth-align:{quality_revision}", Question)
@@ -367,11 +420,11 @@ class DifficultyAdversary:
 
     async def question(self, candidate, sources, correctness):
         p = self.p
-        if not valid_origin(candidate, sources, self.protocol):
+        if not valid_origin(candidate, sources, self.protocol, strategy=p.settings.difficulty_adversary_mode):
             candidate.status, candidate.reasons = "rejected", ["missing_or_stale_difficulty_origin"]
             p.store.save(candidate)
             return False
-        if has_valid_difficulty(candidate, sources, self.protocol):
+        if has_valid_difficulty(candidate, sources, self.protocol, strategy=p.settings.difficulty_adversary_mode):
             return await correctness(candidate)
         if candidate.trials or candidate.deadline_outcomes or candidate.verifier_assessment or candidate.verifier_history:
             candidate.status, candidate.reasons = "rejected", ["difficulty_frozen_version_requires_valid_receipt"]
@@ -386,29 +439,44 @@ class DifficultyAdversary:
                     or candidate.item != prior.item.model_copy(update={"question": prior.revision.question})
                     or candidate.solution != prior.solution):
                 raise CacheIntegrityError("Unrecorded difficulty question change")
-        if candidate.difficulty_rounds and candidate.difficulty_rounds[-1].challenge.verdict == "sufficient":
+        if (not self.blocking and candidate.difficulty_rounds
+                and candidate.difficulty_rounds[-1].challenge.verdict == "sufficient"):
             raise CacheIntegrityError("Difficulty approval history is invalid")
         limit = p.settings.difficulty_mask_max_revisions if candidate.generation == 0 else 0
         for index in range(limit + 1):
-            if not await correctness(candidate):
+            scientific = (await p._preflight_correctness(candidate, defer_mask=True) if self.blocking
+                          else await correctness(candidate))
+            if not scientific:
                 return False
             input_hash = question_input(candidate, sources)
             current = next((r for r in candidate.difficulty_rounds if r.input_sha256 == input_hash), None)
             if current is None:
-                challenge, rid, model = await p.consistency_call(p.prompts["difficulty_challenge"] + "\n" + json.dumps({
+                blind = None
+                routes = []
+                if self.blocking:
+                    blind = await shortcuts.attack(p, shortcuts.public_question(candidate.item),
+                        f"{candidate.id}:shortcut-question:{input_hash}:blind")
+                    routes = shortcuts.proposal_routes(candidate.difficulty_origin.proposal_history[:-1])
+                    routes += shortcuts.question_routes(candidate.difficulty_rounds)
+                challenge, rid, model = await p.consistency_call(p.prompts["shortcut_challenge" if self.blocking else "difficulty_challenge"] + "\n" + json.dumps({
                     "stage": "actual_question", "reference_cards": references(p.settings, candidate.item.category),
                     "question": candidate.item.question, "required_outputs": candidate.item.required_outputs,
                     "solution": candidate.solution.model_dump(), "locked_result": candidate.known_result.model_dump(),
                     "independent_solution": candidate.consistency.independent_solution.model_dump(),
                     "prior_challenges": [{"previous_question": r.item.question, "challenge": r.challenge.model_dump()}
-                                         for r in candidate.difficulty_rounds]}, ensure_ascii=False),
+                                         for r in candidate.difficulty_rounds],
+                    **({"blind_attack": blind.response.model_dump(), "prior_shortcut": routes,
+                        "blind_attack_inputs": shortcuts.public_question(candidate.item)} if self.blocking else {})}, ensure_ascii=False),
                     f"{candidate.id}:depth-question:{input_hash}", DifficultyChallenge)
                 self.check_mapping(challenge, candidate.solution, rid)
+                if self.blocking and shortcuts.review_errors(challenge, routes):
+                    raise ModelResponseError("consistency", rid, ";".join(shortcuts.review_errors(challenge, routes)))
                 current = DifficultyQuestionRound(input_sha256=input_hash,
                     parent_input_sha256=candidate.difficulty_rounds[-1].input_sha256 if candidate.difficulty_rounds else "",
                     protocol_sha256=self.protocol, item=candidate.item.model_copy(deep=True),
                     solution=candidate.solution.model_copy(deep=True), audit=candidate.audit.model_copy(deep=True),
-                    bottleneck=candidate.bottleneck_assessment.model_copy(deep=True),
+                    bottleneck=candidate.bottleneck_assessment.model_copy(deep=True)
+                        if candidate.bottleneck_assessment else None, shortcut_attack=blind,
                     consistency=candidate.consistency.model_copy(deep=True), challenge=challenge, request_id=rid,
                     actual_model=model)
                 candidate.difficulty_rounds.append(current)
@@ -417,6 +485,20 @@ class DifficultyAdversary:
                     revision=len(candidate.difficulty_rounds) - 1, verdict=challenge.verdict, request_id=rid,
                     actual_model=model)
             if current.challenge.verdict == "sufficient":
+                if self.blocking:
+                    if not await correctness(candidate):
+                        return False
+                    # 只有有限攻击完成后才做完整挖空检查和难度诊断；更新到实际检查收据。
+                    current.audit = candidate.audit.model_copy(deep=True)
+                    current.bottleneck = candidate.bottleneck_assessment.model_copy(deep=True)
+                    current.consistency = candidate.consistency.model_copy(deep=True)
+                    current.input_sha256 = question_input(candidate, sources)
+                    p.store.save(candidate)
+                    diagnostic = await shortcuts.diagnose(p, candidate, current.input_sha256)
+                    if diagnostic.assessment.verdict == "invalid":
+                        candidate.status, candidate.reasons = "rejected", ["post_shortcut_scientific_defect"]
+                        p.store.save(candidate)
+                        return False
                 return True
             if current.challenge.verdict != "too_easy" or len(candidate.difficulty_rounds) > limit:
                 candidate.status, candidate.reasons = "rejected", ["difficulty_question_" + current.challenge.verdict]
@@ -441,6 +523,7 @@ class DifficultyAdversary:
             candidate.item, candidate.audit = item, audit
             current.revision, current.revision_request, current.revision_actual_model = revision, rid, model
             candidate.consistency, candidate.bottleneck_assessment, candidate.preflight_repair = None, None, None
+            candidate.difficulty_diagnostic = None
             candidate.status = "quality_seed"
             p.store.save(candidate)
         raise AssertionError("Bounded difficulty loop did not terminate")
@@ -462,7 +545,13 @@ def summarize_difficulty(pipeline, candidates):
         "question_reviewed_versions": len(rounds),
         "question_mask_revisions": sum(r.revision is not None for r in rounds),
         "question_sufficient": sum(has_valid_difficulty(c, {s.id: s for s in pipeline.store.sources()},
-            builder.protocol) for c in candidates),
+            builder.protocol, strategy=pipeline.settings.difficulty_adversary_mode) for c in candidates),
         "question_uncertain": sum(r.challenge.verdict == "uncertain" for r in rounds),
         "question_scientific_defects": sum(r.challenge.verdict == "invalid" for r in rounds),
-        "question_too_easy_reviews": sum(r.challenge.verdict == "too_easy" for r in rounds)}
+        "question_too_easy_reviews": sum(r.challenge.verdict == "too_easy" for r in rounds),
+        "shortcut_blind_attacks": sum(v.shortcut_attack is not None for v in proposals)
+            + sum(r.shortcut_attack is not None for r in rounds),
+        "shortcut_route_rechecks": sum(len(v.challenge.route_rechecks) for v in proposals if v.challenge)
+            + sum(len(r.challenge.route_rechecks) for r in rounds),
+        "post_adversary_diagnostics": [c.difficulty_diagnostic.assessment.verdict for c in candidates
+                                      if c.difficulty_diagnostic]}

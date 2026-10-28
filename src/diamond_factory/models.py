@@ -4,6 +4,13 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from .dependency_models import (
+    DependencyAssessment,
+    DependencyTrace,
+    PremiseBoundaryAssessment,
+    PremiseContract,
+)
+
 
 def digest(value: object) -> str:
     raw = json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
@@ -46,6 +53,64 @@ class InferenceStep(StrictModel):
     inference: str = Field(min_length=15)
 
 
+class ScientificGoal(StrictModel):
+    """先确定科学目标及必要推理；这一阶段不选择答案或题面格式。"""
+    source_id: str
+    target: str = Field(min_length=10)
+    assumptions: list[str] = Field(min_length=1)
+    reasoning_challenge: list[str] = Field(min_length=1)
+    reference_case_ids: list[str] = Field(min_length=1)
+    reference_comparison: str = Field(min_length=20)
+    premise_contract: PremiseContract | None = None
+
+
+class ScientificGoalSelection(StrictModel):
+    outcome: Literal["found", "unavailable"]
+    goal: ScientificGoal | None
+    reason: str = Field(min_length=10)
+
+    @model_validator(mode="after")
+    def selected_goal(self):
+        if (self.outcome == "found") != (self.goal is not None):
+            raise ValueError("Found requires a scientific goal; unavailable must not invent one")
+        return self
+
+
+class ScientificGoalAssessment(StrictModel):
+    goal: ScientificGoal
+    goal_sha256: str
+    request_id: str
+    actual_model: str
+    source_sha256: str
+    references_sha256: str
+    prompt_sha256: str
+    model_config_sha256: str
+    premise_assessment: PremiseBoundaryAssessment | None = None
+
+
+class HighDifficultyCase(StrictModel):
+    id: str
+    title: str
+    source_url: str
+    declared_tier: str
+    mechanism: list[str] = Field(min_length=1)
+    output_lesson: str
+    # 公开难度标签不冒充本项目GLM实测；不存题目全文或金标。
+    evidence_status: Literal["public_solution_not_glm_calibrated"]
+
+
+class ScientificGoalReferences(StrictModel):
+    version: str
+    scope: str
+    cases: list[HighDifficultyCase] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def unique_cases(self):
+        if len({c.id for c in self.cases}) != len(self.cases):
+            raise ValueError("Scientific goal reference IDs must be unique")
+        return self
+
+
 class KnownResult(StrictModel):
     source_id: str
     locator: str = Field(min_length=3)
@@ -54,6 +119,8 @@ class KnownResult(StrictModel):
     answer: str = Field(min_length=1)
     assumptions: list[str] = Field(min_length=1)
     evidence: list[Evidence] = Field(min_length=1)
+    scientific_goal: ScientificGoalAssessment | None = None
+    grading_requirement: Literal["final_answer_equivalence", "argument_or_witness_validation"] = "final_answer_equivalence"
 
 
 class ResultSelection(StrictModel):
@@ -127,6 +194,7 @@ class TaskDesign(StrictModel):
     inverse_construction: str = Field(min_length=20)
     answer_check: str = Field(min_length=20)
     difficulty: DifficultyDesign | None = None
+    dependency_trace: DependencyTrace | None = None
     construction_type: Literal["inverse_identification", "branch_discovery", "parameter_region", "theorem_applicability"] | None = None
     bridge_type: Literal["invariant", "representation", "auxiliary_object", "symmetry", "conservation", "decomposition"] | None = None
 
@@ -153,6 +221,7 @@ class LockedTaskDesign(StrictModel):
     inverse_construction: str = Field(min_length=20)
     answer_check: str = Field(min_length=20)
     difficulty: DifficultyDesign | None = None
+    dependency_trace: DependencyTrace | None = None
     construction_type: Literal["inverse_identification", "branch_discovery", "parameter_region", "theorem_applicability"] | None = None
     bridge_type: Literal["invariant", "representation", "auxiliary_object", "symmetry", "conservation", "decomposition"] | None = None
 
@@ -199,8 +268,10 @@ class BlueprintAudit(StrictModel):
     assumption_correspondence: list[AssumptionCorrespondence] = Field(default_factory=list)
     source_notes: list[str] = Field(default_factory=list)
 
-    def passed(self, *, source_fidelity="strict"):
-        issues = [i for i in self.issues if source_fidelity == "strict" or i.part != "source"]
+    def passed(self, *, source_fidelity="strict", defer_depth=False):
+        # paper_grounded由调用方传defer_depth=True；深度意见只记录，科学问题照常阻断。
+        issues = [i for i in self.issues if (source_fidelity == "strict" or i.part != "source")
+                  and not (defer_depth and i.part == "target_depth")]
         return (self.valid and self.answer_correct and self.derivation_complete
                 and (self.source_grounded or source_fidelity == "advisory") and not issues)
 
@@ -244,8 +315,12 @@ class Audit(StrictModel):
     no_shortcut: bool
     reason: str = Field(min_length=10)
 
-    def passed(self) -> bool:
-        return all(getattr(self, k) for k in type(self).model_fields if k != "reason")
+    def passed(self, *, scientific_only=False, basis="self_verified") -> bool:
+        # paper_grounded下no_shortcut/substantive_delta是难度意见，只记录；难度由GLM实测。
+        scientific_only = scientific_only or basis == "paper_grounded"
+        keys = ("valid", "self_contained", "uniquely_answerable", "answer_supported", "category_correct")
+        return all(getattr(self, k) for k in (keys if scientific_only else
+                   [k for k in type(self).model_fields if k != "reason"]))
 
 
 class IndependentSolution(StrictModel):
@@ -279,8 +354,16 @@ class BottleneckReview(StrictModel):
     def check_names():
         return ("selection_supported", "hidden", "necessary", "recoverable", "not_answer_only")
 
-    def passed(self):
+    def passed(self, *, basis="self_verified"):
+        if basis == "paper_grounded":
+            # 可恢复性只记录；输入充分性与科学缺陷由独立科学审查核验，避免重复否决。
+            return self.hidden.verdict == "pass" and self.not_answer_only.verdict == "pass"
         return all(getattr(self, name).verdict == "pass" for name in self.check_names())
+
+    def blocking_checks(self, *, basis="self_verified"):
+        if basis == "paper_grounded":
+            return [name for name in ("hidden", "not_answer_only") if getattr(self, name).verdict != "pass"]
+        return [name for name in self.check_names() if getattr(self, name).verdict != "pass"]
 
 
 class BottleneckAssessment(StrictModel):
@@ -329,7 +412,10 @@ class SubstitutionReport(StrictModel):
     uncovered_outputs: list[str]
     reason: str
 
-    def passed(self):
+    def passed(self, *, basis="self_verified"):
+        if basis == "paper_grounded":
+            # 未覆盖只记录；忠实翻译下的真实反例仍阻断。
+            return self.verdict != "fail"
         return self.verdict in ("pass", "not_applicable")
 
 
@@ -349,15 +435,20 @@ class ConsistencyAudit(StrictModel):
                 raise ValueError("Core correctness checks cannot be skipped")
         return self
 
-    def passed(self) -> bool:
+    def passed(self, *, basis="self_verified") -> bool:
+        if basis == "paper_grounded":
+            # 只有具体错误（fail）阻断；uncertain表示未能核实，保留记录交给后续verifier与实测。
+            return all(getattr(self, name).verdict != "fail" for name in
+                       ("premises", "definitions", "parameter_domain", "reference_answer", "physical_regime"))
         return (all(getattr(self, name).verdict == "pass" for name in
                     ("premises", "definitions", "parameter_domain", "reference_answer"))
                 and self.physical_regime.verdict in ("pass", "not_applicable"))
 
-    def failures(self) -> list[str]:
+    def failures(self, *, basis="self_verified") -> list[str]:
+        blocking = ("fail",) if basis == "paper_grounded" else ("fail", "uncertain")
         return [name + ":" + check.verdict + ":" + check.reasoning
                 for name in ("premises", "definitions", "parameter_domain", "reference_answer", "physical_regime")
-                if (check := getattr(self, name)).verdict in ("fail", "uncertain")]
+                if (check := getattr(self, name)).verdict in blocking]
 
 
 class CertificateAudit(StrictModel):
@@ -418,7 +509,7 @@ class ConsistencyAssessment(StrictModel):
     certificate_attempts: list[CertificateAttempt] = Field(default_factory=list, max_length=3)
     certificate_repair_protocol_sha256: str = ""
 
-    def passed(self):
+    def passed(self, *, basis="self_verified"):
         if self.certificate_attempts:
             final = self.certificate_attempts[-1]
             if (final.certificate != self.certificate_audit or final.substitution != self.substitution
@@ -426,6 +517,10 @@ class ConsistencyAssessment(StrictModel):
                     or any(a.certificate.faithful_translation and a.substitution.verdict == "fail"
                            for a in self.certificate_attempts[:-1])):
                 return False
+        if basis == "paper_grounded":
+            # 证书未能忠实翻译时不执行算术，等同未覆盖；任何一次忠实反例在上方已阻断。
+            return (self.audit.passed(basis=basis) and self.certificate_audit is not None
+                    and (not self.certificate_audit.faithful_translation or self.substitution.passed(basis=basis)))
         return (self.audit.passed() and self.substitution.passed()
                 and self.certificate_audit is not None and self.certificate_audit.faithful_translation)
 
@@ -649,9 +744,38 @@ class AuthoringSeed(StrictModel):
     verifier_actual_model: str = ""
 
 
+class ShortcutRecheck(StrictModel):
+    route_id: str
+    verdict: Literal["blocked", "still_bypass", "same_burden", "uncertain"]
+    evidence: str = Field(min_length=20)
+
+
+class ShortcutAttack(StrictModel):
+    outcome: Literal["solved", "uncertain", "invalid"]
+    derivation: list[str] = Field(min_length=1)
+    answer: str
+    reason: str = Field(min_length=20)
+
+
+class ShortcutAttackRecord(StrictModel):
+    input_sha256: str
+    response: ShortcutAttack
+    request_id: str
+    actual_model: str
+
+
+class DifficultyDiagnostic(StrictModel):
+    input_sha256: str
+    assessment: "DifficultyChallenge"
+    request_id: str
+    actual_model: str
+
+
 class DifficultyChallenge(StrictModel):
     verdict: Literal["sufficient", "too_easy", "invalid", "uncertain"]
     shortest_correct_route: list[str] = Field(min_length=1)
+    route_rechecks: list[ShortcutRecheck] = Field(default_factory=list)
+    attack_validity: Literal["correct", "incorrect", "uncertain"] | None = None
     route_validity: Literal["verified", "invalid", "uncertain"]
     indispensable_proof_entries: list[Annotated[int, Field(ge=1)]]
     remaining_discoveries: list[str]
@@ -671,6 +795,7 @@ class DifficultyChallenge(StrictModel):
 
 
 class DifficultyProposal(StrictModel):
+    public_task: str | None = Field(default=None, min_length=50)
     result: KnownResult | None
     proof: LockedProofDraft | None
     outcome: Literal["proposed", "unavailable"] = "proposed"
@@ -680,7 +805,8 @@ class DifficultyProposal(StrictModel):
     def available_proposal(self):
         if (self.outcome == "proposed") != (self.result is not None and self.proof is not None):
             raise ValueError("A proposed construction needs both result and proof")
-        if self.outcome == "unavailable" and (self.result is not None or self.proof is not None):
+        if self.outcome == "unavailable" and (self.result is not None or self.proof is not None
+                                              or self.public_task is not None):
             raise ValueError("Unavailable must not invent a result or proof")
         return self
 
@@ -701,6 +827,7 @@ class DifficultyProposalVersion(StrictModel):
     graph_repair_request: str = ""
     graph_repair_actual_model: str = ""
     original_author_response_sha256: str = ""
+    shortcut_attack: ShortcutAttackRecord | None = None
 
 
 class DifficultyGraphPatch(StrictModel):
@@ -717,6 +844,8 @@ class DifficultyCampaign(StrictModel):
 
 
 class DifficultyOrigin(StrictModel):
+    strategy: Literal["depth_gate", "shortcut_blocking"] = "depth_gate"
+    proposal_history: list[DifficultyProposalVersion] = Field(default_factory=list, max_length=3)
     root_id: str
     source_sha256: str
     protocol_sha256: str
@@ -738,8 +867,9 @@ class DifficultyQuestionRound(StrictModel):
     item: Question
     solution: Solution
     audit: Audit
-    bottleneck: BottleneckAssessment
+    bottleneck: BottleneckAssessment | None
     consistency: ConsistencyAssessment
+    shortcut_attack: ShortcutAttackRecord | None = None
     challenge: DifficultyChallenge
     request_id: str
     actual_model: str
@@ -756,6 +886,7 @@ class Candidate(StrictModel):
     operator: str
     source_ids: list[str]
     source_fidelity: Literal["strict", "advisory"] = "strict"
+    correctness_basis: Literal["self_verified", "paper_grounded"] = "self_verified"
     source_notes: list[str] = Field(default_factory=list)
     origin_seed_sha256: str = ""
     origin_candidate_id: str | None = None
@@ -773,8 +904,10 @@ class Candidate(StrictModel):
     blueprint_fingerprint: str = ""
     known_result: KnownResult | None = None
     bottleneck_assessment: BottleneckAssessment | None = None
+    dependency_assessment: DependencyAssessment | None = None
     difficulty_origin: DifficultyOrigin | None = None
     difficulty_rounds: list[DifficultyQuestionRound] = Field(default_factory=list, max_length=3)
+    difficulty_diagnostic: DifficultyDiagnostic | None = None
     trials: list[Trial] = Field(default_factory=list)
     deadline_outcomes: list[DeadlineOutcome] = Field(default_factory=list)
     status: Literal["quality_seed", "rejected", "screened", "accepted"]

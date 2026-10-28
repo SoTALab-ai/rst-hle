@@ -27,6 +27,7 @@ class Settings(StrictModel):
     judge: ModelConfig
     judge_schema_repairs: int = Field(default=1, ge=0, le=2)
     consistency_schema_repairs: int = Field(default=1, ge=0, le=2)
+    generator_schema_repairs: int = Field(default=0, ge=0, le=1)
     certificate_max_repairs: int = Field(default=0, ge=0, le=2)
     early_screen_samples: Literal[0, 4] = 0
     difficulty_profile_path: str | None = None
@@ -39,7 +40,12 @@ class Settings(StrictModel):
     source_fidelity: Literal["strict", "advisory"] = "strict"
     require_bottleneck_mask: bool = False
     require_difficulty_adversary: bool = False
+    difficulty_adversary_mode: Literal["depth_gate", "shortcut_blocking"] = "depth_gate"
+    # paper_grounded：以论文推导为正确性依据，只有具体错误才拦截；不确定、验算未覆盖和深度意见只记录。
+    correctness_basis: Literal["self_verified", "paper_grounded"] = "self_verified"
     difficulty_references_path: str | None = None
+    scientific_goal_references_path: str | None = None
+    require_dependency_trace: bool = False
     difficulty_design_max_revisions: int = Field(default=2, ge=0, le=2)
     difficulty_mask_max_revisions: int = Field(default=2, ge=0, le=2)
     require_verifier_adversary: bool = False
@@ -76,6 +82,22 @@ class Settings(StrictModel):
 
     @model_validator(mode="after")
     def validate_role_capacity(self):
+        if self.generator_schema_repairs and not self.require_dependency_trace:
+            raise ValueError("Bounded generator schema repair belongs to the dependency contract protocol")
+        if self.require_dependency_trace and not (
+                self.scientific_goal_references_path and self.correctness_basis == "paper_grounded"
+                and self.use_locked_proof_draft and self.freeze_question_at_verifier):
+            raise ValueError("Dependency tracing requires scientific goal selection, paper basis, locked proof and frozen verifier")
+        if self.scientific_goal_references_path and not (
+                self.correctness_basis == "paper_grounded" and self.require_known_result):
+            raise ValueError("Scientific goal references require paper-grounded result locking")
+        if self.difficulty_adversary_mode == "shortcut_blocking" and not self.require_difficulty_adversary:
+            raise ValueError("Shortcut blocking requires the difficulty adversary")
+        if self.correctness_basis == "paper_grounded" and (
+                self.require_difficulty_adversary or not self.require_verifier_adversary
+                or not self.require_bottleneck_mask):
+            # 难度交给GLM实测，不再叠加6Luna深度否决；verifier与挖空审查保留。
+            raise ValueError("Paper-grounded basis measures depth with GLM and requires verifier and mask review")
         if self.require_difficulty_adversary and not (
                 self.source_fidelity == "advisory" and self.use_locked_proof_draft
                 and self.require_bottleneck_mask and self.require_verifier_adversary
