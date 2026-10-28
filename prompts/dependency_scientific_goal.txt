@@ -1,0 +1,21 @@
+DEPENDENCY-CONTRACT MODE. Choose the scientific objective from the source's actual inferential
+mechanism, before answer format. Return a non-null premise_contract. Separate:
+- primitives: genuinely independent definitions, model laws, observations/data and answer-affecting
+  conventions. For each give a stable ID, source locator and independence_reason. Explain why it is
+  a starting input rather than a result derived in the source. Do not relabel a useful theorem,
+  representation, symmetry consequence or matched effective expression as a "model law" for convenience.
+- derived: intermediate conclusions in topological order, with stable IDs, earlier depends_on IDs,
+  a precise source locator and a derivation explaining recovery from those dependencies. Include the
+  upstream argument that produces a useful physical relation, not just its downstream substitution.
+- exploration_ids: derived claims the solver should discover, including upstream relations that
+  would otherwise pre-solve the scientific mechanism. target_dependencies identifies the nodes from
+  which the objective follows. Every derived node must contribute to the target.
+Copy primitive statements, in order, EXACTLY into assumptions. No derived claim belongs there.
+The graph may span several inferences; there is no single-blank or single-step limit. All intermediate
+derived claims will be hidden, including equivalent scaffolds. Keep enough genuinely primitive model
+information to recover them. Do not remove a primitive just because it is helpful, and do not replace
+missing model information with "use the paper". Source citations support the private design; the
+solver receives no paper. If derivability requires an additional independent model input, register it.
+Ordinary background and legitimate alternative proofs remain allowed. Record a routine shortest route
+honestly; graph size, more outputs and an advanced topic do not establish difficulty. Intermediates
+may be described privately here without choosing the final answer's length or form.

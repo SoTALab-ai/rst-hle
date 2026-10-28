@@ -73,6 +73,36 @@ def test_pg_scientific_goal_receipt_and_grading_requirement_roundtrip(pg, tmp_pa
     assert receipt.references_sha256 == digest(pipe.goal_references.model_dump())
 
 
+def test_pg_full_dependency_contract_and_question_review_roundtrip(pg, tmp_path, source, candidate):
+    import asyncio
+
+    from test_dependencies import prepared, reply
+
+    from diamond_factory.dependencies import DependencyBuilder, valid_dependency
+
+    run_meta(pg)
+    pg.add_source(source)
+    pipe, _offline, gateway, _goal = prepared(tmp_path / "offline", source, candidate)
+    reply(gateway, candidate)
+    assert asyncio.run(DependencyBuilder(pipe).question(candidate, {source.id: source}))
+    record, assessment = candidate.known_result.scientific_goal, candidate.dependency_assessment
+    receipts = [(record.request_id, "generator"), (record.premise_assessment.request_id, "consistency"),
+                (assessment.probe_request, "consistency"), (assessment.review_request, "consistency")]
+    for rid, role in receipts:
+        pg.save_request("test", {"request_id": rid, "role": role, "actual_model": "fixture",
+                                "usage": {"total_tokens": 1}, "content": "synthetic dependency receipt"})
+    pg.save(candidate)
+    stored = pg.candidates()[0]
+    # 旧蓝图字段按基类反序列化；比较持久化内容及本需求的具体类型记录。
+    assert stored.model_dump() == candidate.model_dump()
+    assert stored.known_result.scientific_goal == record
+    assert stored.solution.design.dependency_trace == candidate.solution.design.dependency_trace
+    assert stored.dependency_assessment == assessment
+    assert valid_dependency(stored, {source.id: source}, pipe.settings, pipe.prompts)
+    stored.item.question += " Now supply an intermediate that was hidden."
+    assert not valid_dependency(stored, {source.id: source}, pipe.settings, pipe.prompts)
+
+
 @pytest.mark.parametrize("shortcut", [False, True])
 def test_pg_difficulty_checkpoints_and_two_stage_history_roundtrip(pg, tmp_path, source, candidate, shortcut):
     import asyncio

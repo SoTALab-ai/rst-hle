@@ -104,7 +104,8 @@ def test_mask_leak_stays_strict_while_depth_opinions_are_advisory():
     for name in ("hidden", "not_answer_only"):
         assert not mask(**{name: "uncertain"}).passed(basis=PG)
     concrete = mask(recoverable="fail")
-    assert not concrete.passed(basis=PG) and concrete.blocking_checks(basis=PG) == ["recoverable"]
+    assert concrete.passed(basis=PG) and concrete.blocking_checks(basis=PG) == []
+    assert not concrete.passed() and concrete.blocking_checks() == ["recoverable"]
 
 
 def test_question_audit_ignores_depth_flags_but_not_missing_information():

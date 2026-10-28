@@ -24,6 +24,10 @@ def verifier_fingerprint():
 
 
 def has_valid_consistency(candidate, sources):
+    from .dependencies import has_dependency_contract, valid_dependency
+
+    if has_dependency_contract(candidate) and not valid_dependency(candidate, sources):
+        return False
     assessment = candidate.consistency
     if candidate.verifier_assessment:
         from .verifier import has_valid_verifier

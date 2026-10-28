@@ -1,5 +1,7 @@
 # 论文硬步模式（paper_grounded）
 
+2026-10-27起，后续完整依赖挖空使用[library-dependency-masking.toml](../configs/library-dependency-masking.toml)。它在本模式之上增加锁定前的原始前提/可推导结论分类、整条依赖链挖空和实际题面负担检查；见[完整依赖挖空](dependency-masking.md)。本页原配置继续用于原协议回放。
+
 2026-10-26用户口径：题面不能为了“好验证、好自足”而降低难度。论文能推出来的结论在理论上就成立；只需保留论文最难的那一步给解题者，其余以论文推导为正确性依据。配置为[library-paper-hard-step.toml](../configs/library-paper-hard-step.toml)，即来源启发配置加`correctness_basis = "paper_grounded"`。旧配置默认`self_verified`，历史run与已测成绩不追溯改判。
 
 ## 为什么改

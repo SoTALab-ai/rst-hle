@@ -12,6 +12,12 @@ consistent with fixed-golden exact matching), validity of the ACTUAL golden and 
 steps. Multiple algebraically equivalent answers are not a defect. Any-bound wording with inequivalent
 valid bounds and a single canonical gold is a target_unambiguous fail even if the data are complete.
 Missing conditions require a concrete conflicting admissible realization or entailment gap.
+Read the named theory/regime using its standard definitions and physical laws. Their consequences
+may remain to be derived and need not appear as supplied formulas. Before claiming missing inputs,
+check alternative correct routes within that model; an arbitrary function extension that violates
+its operator/transport laws is not a conflicting admissible realization. An unsupported step in one
+reference route alone does not prove underdetermination. Record unresolved verification honestly
+while accepting genuinely established standard-background arguments and shorter valid solutions.
 Do not demand that every necessary condition be printed: retained data may entail it or request its
 derivation. Any unestablished claim is uncertain, not pass. A passing finite point is not a proof.
 Under correctness_basis=paper_grounded, faithful cited applications with satisfied hypotheses support

@@ -4,6 +4,13 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from .dependency_models import (
+    DependencyAssessment,
+    DependencyTrace,
+    PremiseBoundaryAssessment,
+    PremiseContract,
+)
+
 
 def digest(value: object) -> str:
     raw = json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
@@ -54,6 +61,7 @@ class ScientificGoal(StrictModel):
     reasoning_challenge: list[str] = Field(min_length=1)
     reference_case_ids: list[str] = Field(min_length=1)
     reference_comparison: str = Field(min_length=20)
+    premise_contract: PremiseContract | None = None
 
 
 class ScientificGoalSelection(StrictModel):
@@ -77,6 +85,7 @@ class ScientificGoalAssessment(StrictModel):
     references_sha256: str
     prompt_sha256: str
     model_config_sha256: str
+    premise_assessment: PremiseBoundaryAssessment | None = None
 
 
 class HighDifficultyCase(StrictModel):
@@ -185,6 +194,7 @@ class TaskDesign(StrictModel):
     inverse_construction: str = Field(min_length=20)
     answer_check: str = Field(min_length=20)
     difficulty: DifficultyDesign | None = None
+    dependency_trace: DependencyTrace | None = None
     construction_type: Literal["inverse_identification", "branch_discovery", "parameter_region", "theorem_applicability"] | None = None
     bridge_type: Literal["invariant", "representation", "auxiliary_object", "symmetry", "conservation", "decomposition"] | None = None
 
@@ -211,6 +221,7 @@ class LockedTaskDesign(StrictModel):
     inverse_construction: str = Field(min_length=20)
     answer_check: str = Field(min_length=20)
     difficulty: DifficultyDesign | None = None
+    dependency_trace: DependencyTrace | None = None
     construction_type: Literal["inverse_identification", "branch_discovery", "parameter_region", "theorem_applicability"] | None = None
     bridge_type: Literal["invariant", "representation", "auxiliary_object", "symmetry", "conservation", "decomposition"] | None = None
 
@@ -345,16 +356,13 @@ class BottleneckReview(StrictModel):
 
     def passed(self, *, basis="self_verified"):
         if basis == "paper_grounded":
-            # 挖空泄露（hidden）与只挖答案仍是硬条件；可恢复性只在给出具体缺失前提/多解见证时判fail。
-            # 选择依据与必要性属于难度意见，交给GLM实测。
-            return (self.hidden.verdict == "pass" and self.not_answer_only.verdict == "pass"
-                    and self.recoverable.verdict != "fail")
+            # 可恢复性只记录；输入充分性与科学缺陷由独立科学审查核验，避免重复否决。
+            return self.hidden.verdict == "pass" and self.not_answer_only.verdict == "pass"
         return all(getattr(self, name).verdict == "pass" for name in self.check_names())
 
     def blocking_checks(self, *, basis="self_verified"):
         if basis == "paper_grounded":
-            return [name for name in ("hidden", "not_answer_only") if getattr(self, name).verdict != "pass"] + (
-                ["recoverable"] if self.recoverable.verdict == "fail" else [])
+            return [name for name in ("hidden", "not_answer_only") if getattr(self, name).verdict != "pass"]
         return [name for name in self.check_names() if getattr(self, name).verdict != "pass"]
 
 
@@ -896,6 +904,7 @@ class Candidate(StrictModel):
     blueprint_fingerprint: str = ""
     known_result: KnownResult | None = None
     bottleneck_assessment: BottleneckAssessment | None = None
+    dependency_assessment: DependencyAssessment | None = None
     difficulty_origin: DifficultyOrigin | None = None
     difficulty_rounds: list[DifficultyQuestionRound] = Field(default_factory=list, max_length=3)
     difficulty_diagnostic: DifficultyDiagnostic | None = None

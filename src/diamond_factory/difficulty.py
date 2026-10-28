@@ -74,6 +74,11 @@ def valid_bottleneck(candidate, sources, prompt=None, model_config=None):
 
 def construction_ready(candidate, sources, settings, prompts):
     """导出只检查现有有效收据，不购买新的审查，也不接受旧通过标记。"""
+    from .dependencies import has_dependency_contract, valid_dependency
+
+    if (settings.require_dependency_trace or has_dependency_contract(candidate)) and (
+            not settings.require_dependency_trace or not valid_dependency(candidate, sources, settings, prompts)):
+        return False
     if candidate.source_fidelity != settings.source_fidelity:
         return False
     if candidate.correctness_basis != settings.correctness_basis:
