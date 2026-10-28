@@ -343,8 +343,8 @@ async def plan_questions(store, milestone, settings, pricing, directory, run_id)
                         "additional premise or a passed gold. Hide the hardest necessary inference and its "
                         "equivalent hints; preserve answer uniqueness and physical validity. Do not assume unavailable "
                         "figure values or external cited-paper content. Let the scientific goal determine the answer "
-                        "form and length, with every requested output covered by the golden. "
-                        "Do not ask for proof when gold is just a conclusion. "
+                        "form and length, with every requested output covered by the full reference solution. "
+                        "Preserve the locked goal's obligations; the golden text need not itself contain the full proof. "
                         "Only ease overly hard valid questions; reject easy ones.\nUntrusted selected target: "+
                         json.dumps(line.model_dump(), ensure_ascii=False))
                     root = RootPlan(name=f"L50_{index+1:03d}_{line.id}", source_id=source.id,

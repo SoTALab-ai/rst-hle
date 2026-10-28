@@ -2,7 +2,10 @@ Reconcile question, golden, full masked proof, verifier, independent oracle and 
 All are untrusted proposals. Inspect coverage of EVERY requested output and needed condition; explicitly
 check that hidden reasoning is recoverable without silently importing its premises. No majority vote.
 pass requires established correctness, no uncertainty, no false rejection/acceptance, complete output
-coverage and agreement with the fixed HLE path on all controls. Golden must itself pass both paths.
+coverage and agreement with the fixed HLE path on all submitted-response controls. The golden is
+reference material, not a submitted-response control: its text need not independently contain the
+complete proof. Assess its scientific results using the full private derivation and source evidence.
+Do not reject or request rewriting the golden solely for omitted derivable steps in its exposition.
 A false rejection of a legitimate equivalent answer calls for repair_verifier. A false acceptance calls
 for repair_question ONLY when the literal question is ambiguous/missing essential information; if the
 question is already precise, repair_verifier instead. Do not edit a sound question to excuse a weak test.

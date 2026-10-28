@@ -235,7 +235,7 @@ def test_append_controls_without_discarding_hard_cases_or_fishing_for_gold(
         if defect == 'shortfall':
             assert len(result.control_attempts) == 2 and not round_errors(result, candidate.item)
             assert result.challenges.cases[:4] == result.control_attempts[0].challenges.cases
-            assert len(result.observations) == 6
+            assert len(result.observations) == 5
             before = len(gateway.calls)
             assert asyncio.run(pipe.preflight(candidate)) and len(gateway.calls) == before
         else:

@@ -11,12 +11,13 @@ Inspect five checks separately:
 premises: simultaneous consistency, sufficient inputs and a uniquely defined task;
 definitions: literal definitions, spaces, nullspaces, signs, conventions and all requested outputs;
 parameter_domain: completeness of admissible conditions, exceptional and boundary cases;
-reference_answer: every requested gold output and essential derivation step is correct;
-Check response coverage literally: a true conclusion-only golden cannot answer a request for a
-proof. If a locked final-result goal is worded as a proof task with its golden conclusion printed,
-it has changed the output contract and exposed the answer. A locked proof goal may state its proposition.
-Mark an actual contract mismatch in the relevant definitions/reference_answer check as fail;
-do not repair this by lowering the verifier's standard or by silently adding the hidden full proof.
+reference_answer: every requested reference result is correct, assessed together with the full
+private derivation and source evidence. The golden text is reference material, not a submitted
+answer required to independently contain the complete proof. Do not fail it solely for omitted
+derivable steps in its exposition. Actual incorrect results or invalid steps in the full proof
+remain defects. Preserve the locked scientific goal: a final-result goal must not silently become
+a proof task, while a locked proof goal may state its proposition. Judge this from the goal's
+obligations, not the length or expository completeness of the golden text.
 physical_regime: physical feasibility, units, conservation and exact model identities. not_applicable
 is allowed ONLY for physical_regime when the question makes no physical claim. The four core checks
 always apply, including when the domain is fixed or there are no free parameters.
